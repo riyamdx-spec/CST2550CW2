@@ -1,5 +1,6 @@
 ﻿using BettingSystem.Models;
 using Microsoft.Data.SqlClient;
+using Microsoft.VisualBasic.ApplicationServices;
 using System.Configuration;
 using System.Security.Cryptography;
 
@@ -282,33 +283,57 @@ namespace BettingSystem.Data
             return true;
         }
 
-        //update wallet balance in table AppUser
-        public async Task<bool> UpdateWalletAsync(int userID, decimal newAmount)
+        //update wallet balance and record transaction
+        public async Task<bool> ProcessWalletTransactionAsync(int userId, string transactionType, decimal newWalletAmount, decimal transactionAmount)
         {
-            string query = "UPDATE AppUser SET wallet_balance=@new_amount WHERE app_user_id=@userID";
             using (SqlConnection connection = new SqlConnection(connectionString))
-            using (SqlCommand command = new SqlCommand(query, connection))
             {
-                command.Parameters.AddWithValue("@new_amount", newAmount);
-                command.Parameters.AddWithValue("@userID", userID);
-                try
+                await connection.OpenAsync();
+                using (SqlTransaction transaction = connection.BeginTransaction())
                 {
-                    await connection.OpenAsync();
-                    int changedRows = await command.ExecuteNonQueryAsync();
-                    return changedRows > 0;
-                }
-                catch (SqlException e)
-                {
-                    Console.WriteLine($"Database error: {e.Message}");
-                    return false;
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Error: {e.Message}");
-                    return false;
-                }
+                    try
+                    {
+                        //update user's wallet balance in database
+                        string updateWalletQuery = "UPDATE AppUser SET wallet_balance=@new_amount WHERE app_user_id=@userID";
+                        using (SqlCommand updateWalletCmd = new SqlCommand(updateWalletQuery, connection, transaction))
+                        {
+                            updateWalletCmd.Parameters.AddWithValue("@new_amount", newWalletAmount);
+                            updateWalletCmd.Parameters.AddWithValue("@userID", userId);
+                            int changedRows = await updateWalletCmd.ExecuteNonQueryAsync();
+
+                            //check if a row was affected
+                            if (changedRows <= 0)
+                                throw new Exception("Wallet Update Failed");
+                        }
+
+                        // record transaction
+                        string recordTransactionQuery = "INSERT INTO SystemTransaction (app_user_id, transaction_type, amount) VALUES (@userID, @type, @amount)";
+                        using (SqlCommand recordTransactionCmd = new SqlCommand(recordTransactionQuery, connection, transaction))
+                        {
+                            recordTransactionCmd.Parameters.AddWithValue("@userID", userId);
+                            recordTransactionCmd.Parameters.AddWithValue("@type", transactionType);
+                            recordTransactionCmd.Parameters.AddWithValue("@amount", transactionAmount);
+
+                            int insertedRow = await recordTransactionCmd.ExecuteNonQueryAsync();
+
+                            //check if transaction record was inserted
+                            if (insertedRow <= 0)
+                                throw new Exception("Transaction Recording Failed");
+                        }
+
+                        transaction.Commit();
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine($"Error: {e.Message}");
+                        return false;
+                    }
+                }  
             }
-        } 
+        }
+
+       
     }
 }
-
