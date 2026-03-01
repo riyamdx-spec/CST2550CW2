@@ -334,6 +334,45 @@ namespace BettingSystem.Data
             }
         }
 
-       
+        //fetch leagues from database
+        public async Task<League[]> FetchLeagues()
+        {
+            //array to store leagues
+            League[] leagues = new League[5];
+
+            //fetch leagues info
+            string query = "SELECT * FROM League";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    int index = 0;
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            League leagueObj = new League(Convert.ToInt32(reader["league_id"]), reader["league_name"].ToString()!, reader["logo_path"].ToString() ?? "");
+
+                            //add to array
+                            leagues[index] = leagueObj;
+                            index++;
+                        }
+                    }
+                    return leagues;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return [];
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return [];
+                }
+            }
+        }
     }
 }
