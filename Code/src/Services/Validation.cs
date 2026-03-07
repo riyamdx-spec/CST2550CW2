@@ -43,6 +43,9 @@ namespace BettingSystem.Services
         //check format of email
         public (bool valid, string? message) CheckEmail(string email)
         {
+            if (email.Length > 100)
+                return (false, "Email cannot be more than 100 characters");
+
             if (emailFormat.IsMatch(email))
             {
                 return (true, null);
