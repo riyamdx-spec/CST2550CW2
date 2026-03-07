@@ -13,6 +13,8 @@ namespace BettingSystem
 
         protected void CaptureBaseLayout()
         {
+            if (DesignMode) return;
+
             _baseFormSize = new SizeF(ClientSize.Width, ClientSize.Height);
             void Capture(Control parent)
             {
@@ -30,8 +32,9 @@ namespace BettingSystem
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e); // to make sure form resizes first
-
+            if (DesignMode) return;
             if (_baseRects.Count == 0) return;
+
             float sx = ClientSize.Width / _baseFormSize.Width;
             float sy = ClientSize.Height / _baseFormSize.Height;
             void Scale(Control parent)
