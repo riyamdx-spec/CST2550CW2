@@ -1,6 +1,5 @@
 ﻿using BettingSystem.Models;
 using Microsoft.Data.SqlClient;
-using Microsoft.VisualBasic.ApplicationServices;
 using System.Configuration;
 using System.Security.Cryptography;
 
@@ -33,7 +32,7 @@ namespace BettingSystem.Data
                         //check if an account was found
                         if (!await reader.ReadAsync())
                             return (null, "Incorrect Email or Password");
-                        
+
                         //user's hashed password
                         string storedHashedPassword = reader["password_hash"].ToString()!;
 
@@ -61,7 +60,7 @@ namespace BettingSystem.Data
                             reader["user_role"].ToString()!
                          );
 
-                        return (loggedInUser, "Logged In Successfully"); 
+                        return (loggedInUser, "Logged In Successfully");
                     }
                 }
                 catch (SqlException e)
@@ -92,9 +91,9 @@ namespace BettingSystem.Data
                 {
                     return (null, "This email is already linked to an existing account");
                 }
-                
+
                 Console.WriteLine($"Database error: {e.Message}");
-                return (null, "Registration Failed. Please try again."); 
+                return (null, "Registration Failed. Please try again.");
             }
             catch (Exception e)
             {
@@ -103,7 +102,7 @@ namespace BettingSystem.Data
             }
 
         }
-   
+
         // add new user to database and return User object
         private async Task<AppUser> AddNewUserAsync(string firstName, string lastName, DateTime dob, string email, string password)
         {
@@ -117,7 +116,7 @@ namespace BettingSystem.Data
                 command.Parameters.AddWithValue("@dob", dob);
                 command.Parameters.AddWithValue("@email", email);
                 command.Parameters.AddWithValue("@password", password);
-               
+
                 await connection.OpenAsync();
 
                 //get app_user_id
@@ -127,7 +126,7 @@ namespace BettingSystem.Data
         }
 
         //update user details in table AppUser
-        public async Task<(bool valid, string message)> UpdateUserDetailsAsync(AppUser currentUser, string firstName, string lastName, string email)
+        public async Task<(bool valid, string message)> UpdateUserDetailsAsync(int userID, string firstName, string lastName, string email)
         {
             string query = "UPDATE AppUser SET first_name=@firstName, last_name=@lastName, email=@mail WHERE app_user_id=@userID";
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -136,17 +135,12 @@ namespace BettingSystem.Data
                 command.Parameters.AddWithValue("@firstName", firstName);
                 command.Parameters.AddWithValue("@lastName", lastName);
                 command.Parameters.AddWithValue("@mail", email);
-                command.Parameters.AddWithValue("@userID", currentUser.UserID);
+                command.Parameters.AddWithValue("@userID", userID);
 
                 try
                 {
                     await connection.OpenAsync();
                     await command.ExecuteNonQueryAsync();
-
-                    //update user object
-                    currentUser.FirstName = firstName;
-                    currentUser.LastName = lastName;
-                    currentUser.Email = email;
 
                     return (true, "Profile updated successfully");
                 }
@@ -216,12 +210,12 @@ namespace BettingSystem.Data
             using (SqlConnection connection = new SqlConnection(connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-               
+
                 command.Parameters.AddWithValue("@newHashPassword", newHashPassword);
                 command.Parameters.AddWithValue("@userID", userID);
 
                 await connection.OpenAsync();
-                     
+
                 int changedRows = await command.ExecuteNonQueryAsync();
                 return changedRows > 0;
             }
@@ -237,7 +231,7 @@ namespace BettingSystem.Data
             using (SqlCommand command = new SqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@userID", userID);
-          
+
                 await connection.OpenAsync();
                 using (SqlDataReader reader = await command.ExecuteReaderAsync())
 
@@ -330,12 +324,12 @@ namespace BettingSystem.Data
                         Console.WriteLine($"Error: {e.Message}");
                         return false;
                     }
-                }  
+                }
             }
         }
 
         //fetch leagues from database
-        public async Task<League[]> FetchLeagues()
+        public async Task<League[]> FetchLeaguesAsync()
         {
             //array to store leagues
             League[] leagues = new League[5];
@@ -353,7 +347,11 @@ namespace BettingSystem.Data
                     {
                         while (await reader.ReadAsync())
                         {
-                            League leagueObj = new League(Convert.ToInt32(reader["league_id"]), reader["league_name"].ToString()!, reader["logo_path"].ToString() ?? "");
+                            League leagueObj = new League(
+                                Convert.ToInt32(reader["league_id"]), 
+                                reader["league_name"].ToString()!, 
+                                reader["logo_path"].ToString() ?? ""
+                            );
 
                             //add to array
                             leagues[index] = leagueObj;
