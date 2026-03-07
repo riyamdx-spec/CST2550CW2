@@ -15,6 +15,12 @@ namespace BettingSystem.Services
             return number.IsMatch(text);
         }
 
+        //check if name contains between 3 and 50 characters
+        public bool CheckNameLength(string name)
+        {
+            return name.Length >= 3 && name.Length <= 50;
+        }
+
         //check if password contains at least 8 characters
         public bool CheckLength(string password)
         {
