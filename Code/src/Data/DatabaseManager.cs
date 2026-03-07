@@ -165,7 +165,7 @@ namespace BettingSystem.Data
         }
 
         // change user's password
-        public async Task<(bool valid, string message)> ChangePasswordAsync(string newPassword, int userID)
+        public async Task<(bool valid, string message)> ChangePasswordAsync(string currentPasswordEntered, string newPassword, int userID)
         {
             try
             {
@@ -175,6 +175,13 @@ namespace BettingSystem.Data
                 {
                     return (false, "Unable to change your password. Please try again.");
                 }
+
+                //check if old password entered is correct
+                if (!ComparePassword(currentPasswordEntered, currentHashedPassword))
+                {
+                    return (false, "Password entered does not match your current password");
+                }
+
                 //check if new password is same as old one
                 if (ComparePassword(newPassword, currentHashedPassword))
                 {
