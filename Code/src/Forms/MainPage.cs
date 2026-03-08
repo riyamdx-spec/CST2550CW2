@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Models;
+using Microsoft.VisualBasic.ApplicationServices;
 
 namespace BettingSystem.Forms
 {
@@ -20,6 +21,9 @@ namespace BettingSystem.Forms
         private void NavBar1_AccountClicked(object? sender, EventArgs e)
         {
             AccountPage profilePage = new AccountPage(CurrentUser);
+            profilePage.Size = this.Size;
+            profilePage.WindowState = this.WindowState;
+            profilePage.Location = this.Location;
             this.Hide();
             profilePage.Show();
         }

@@ -125,6 +125,8 @@ namespace BettingSystem.Forms
         {
             var form = new RegisterLoginForm(ViewPanel.SignUp);
             form.Size = this.Size;
+            form.WindowState = this.WindowState;
+            form.Location = this.Location;
             form.FormClosed += (s, args) =>
             {
                 if (form.NavigatingBack)
@@ -141,6 +143,8 @@ namespace BettingSystem.Forms
         {
             var form = new RegisterLoginForm(ViewPanel.Login);
             form.Size = this.Size;
+            form.WindowState = this.WindowState;
+            form.Location = this.Location;
             form.FormClosed += (s, args) =>
             {
                 if (form.NavigatingBack)
