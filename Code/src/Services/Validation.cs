@@ -8,6 +8,7 @@ namespace BettingSystem.Services
         private Regex number = new Regex(@"\d");
         private Regex specialChar = new Regex(@"[-+_!@#$%^&*., ?]");
         private Regex emailFormat = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+        private Regex dateFormat = new Regex(@"^\d{2}/\d{2}$"); // for expiry date in deposit money popup
 
         //check if text contains at least 1 number (used for password and names)
         public bool CheckNumber(string text)
@@ -79,5 +80,69 @@ namespace BettingSystem.Services
             }
             return (false, "You must be at least 18 years old");
         }
+
+        // check amount in deposit
+        public (bool valid, string? message) CheckAmount(string amountInput)
+        {
+            if (!decimal.TryParse(amountInput, out decimal amount))
+                return (false, "Amount should be a number.");
+
+            if (amount <= 0)
+                return (false, "Amount should be greater than 0.");
+
+            if (decimal.Round(amount, 2) != amount)
+                return (false, "Amount cannot have more than 2 decimal places");
+
+            return (true, null);
+        }
+
+        // check card number
+        public (bool valid, string? message) CheckCardNumber(string cardNumberInput)
+        {
+            if (!long.TryParse(cardNumberInput, out long cardNumber))
+                return (false, "Card number should only contain numbers.");
+
+            if (cardNumberInput.Length != 16)
+                return (false, "Card number must be 16 digits");
+
+            return (true, null);
+        }
+
+        // check expiry date
+        public (bool valid, string? message) CheckExpiryDate(string expiryDateInput)
+        {
+            if (!dateFormat.IsMatch(expiryDateInput))
+                return (false, "Expiry date should be in correct format");
+
+            DateTime expiryDate = DateTime.ParseExact(expiryDateInput, "MM/yy", null);
+
+            var currentDay = DateTime.Today;
+
+            int expiryYear = expiryDate.Year;
+            int expiryMonth = expiryDate.Month;
+
+            int currentYear = currentDay.Year;
+            int currentMonth = currentDay.Month;
+
+            if (expiryYear < currentYear || expiryYear == currentYear && expiryMonth < currentMonth)
+                return (false, "Your card has expired.");
+
+            return (true, null);
+        }
+
+        // check CVV
+        public (bool valid, string? message) CheckCVV(string cvv)
+        {
+            if (!int.TryParse(cvv, out int _))
+                return (false, "CVV must contain only numbers.");
+
+            int cvvLength = cvv.Length;
+
+            if (cvvLength != 3 && cvvLength != 4)
+                return (false, "CVV should be 3 or 4 digits.");
+
+            return (true, null);
+        }
+
     }
 }
