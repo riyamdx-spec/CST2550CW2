@@ -1,4 +1,7 @@
-﻿using System;
+﻿using BettingSystem.Data;
+using BettingSystem.Models;
+using BettingSystem.Services;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -7,9 +10,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
-using BettingSystem.Services;
-using BettingSystem.Data;
 
 namespace BettingSystem.Forms
 {
@@ -181,6 +181,8 @@ namespace BettingSystem.Forms
         {
             var landing = new landingPage();
             landing.Size = this.Size;
+            landing.WindowState = this.WindowState;
+            landing.Location = this.Location;
             NavigatingBack = true;
             this.Close();
         }
@@ -210,11 +212,15 @@ namespace BettingSystem.Forms
 
             new Notification(message, NotificationType.Success, this);
 
+            //AppUser user = new AppUser(1, "Megane", "Rayan", DateTime.Now, "test@test.com", 0, "user");
+
             //Main page
-            //var mainForm = new MainForm(user);
-            //mainForm.Size = this.Size;
-            //mainForm.Show();
-            //this.Close();
+            var mainForm = new MainPage(user);
+            mainForm.Size = this.Size;
+            mainForm.WindowState = this.WindowState;
+            mainForm.Location = this.Location;
+            mainForm.Show();
+            this.Close();
         }
 
         // Sign up button
@@ -282,11 +288,15 @@ namespace BettingSystem.Forms
 
             new Notification(message, NotificationType.Success, this);
 
+            //AppUser user = new AppUser(1, "Melanie", "Riya", DateTime.Now, "test@test.com", 0, "user");
+
             // main form
-            //var mainForm = new MainForm(user);
-            //mainForm.Size = this.Size;
-            //mainForm.Show();
-            //this.Close();
+            var mainForm = new MainPage(user);
+            mainForm.Size = this.Size;
+            mainForm.WindowState = this.WindowState;
+            mainForm.Location = this.Location;
+            mainForm.Show();
+            this.Close();
         }
     }
 }
