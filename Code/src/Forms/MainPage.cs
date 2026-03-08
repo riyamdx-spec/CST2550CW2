@@ -1,31 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
-using System.Windows.Forms;
+﻿using BettingSystem.Models;
 
 namespace BettingSystem.Forms
 {
     public partial class MainPage : Form
     {
-        public MainPage()
+        private AppUser CurrentUser;
+        public MainPage(AppUser loggedInUser)
         {
+            CurrentUser = loggedInUser;
             InitializeComponent();
             matchesFlowLayoutPanel.SizeChanged += updateMatchesPanelWidth;
             updateMatchesPanelWidth(null, null);
+            navBar1.SetCurrentUser(CurrentUser);
+            navBar1.AccountClicked += NavBar1_AccountClicked;
+            navBar1.BetSlipClicked += NavBar1_BetSlipClicked;
         }
 
-        private void championsLeagueImg_Click(object sender, EventArgs e)
+        //open profile page
+        private void NavBar1_AccountClicked(object? sender, EventArgs e)
         {
-
+            AccountPage profilePage = new AccountPage(CurrentUser);
+            this.Hide();
+            profilePage.Show();
         }
 
-
-        private void pictureBox4_Click(object sender, EventArgs e)
+        //open bet slip page
+        private void NavBar1_BetSlipClicked(object? sender, EventArgs e)
         {
-
+           
         }
 
         private void seeBetBtn_Click(object sender, EventArgs e)
@@ -40,16 +42,6 @@ namespace BettingSystem.Forms
             {
                 matchPanel.Width = matchesFlowLayoutPanel.ClientSize.Width - matchesFlowLayoutPanel.Padding.Horizontal;
             }
-        }
-
-        private void pictureBox2_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void laliguaImg_Click(object sender, EventArgs e)
-        {
-            leagueLbl.Text = "La Ligua";
         }
     }
 }

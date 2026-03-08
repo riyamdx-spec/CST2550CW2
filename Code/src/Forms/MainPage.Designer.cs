@@ -70,11 +70,11 @@
             ticketImg = new PictureBox();
             noneSelectedLbl = new Label();
             searchBarBgPanel = new Panel();
+            navBar1 = new NavBar();
             searchbarPanel = new Panel();
             clearSearchIcon = new PictureBox();
             searchbarTextBox = new TextBox();
             searchImg = new PictureBox();
-            panel2 = new Panel();
             bgPanel.SuspendLayout();
             panelLeft.SuspendLayout();
             matchesFlowLayoutPanel.SuspendLayout();
@@ -119,7 +119,7 @@
             bgPanel.Controls.Add(panelLeft);
             bgPanel.Controls.Add(PanelRight);
             bgPanel.Controls.Add(searchBarBgPanel);
-            bgPanel.Controls.Add(panel2);
+            bgPanel.Controls.Add(navBar1);
             bgPanel.Dock = DockStyle.Fill;
             bgPanel.Location = new Point(0, 0);
             bgPanel.Margin = new Padding(2, 1, 2, 1);
@@ -132,10 +132,10 @@
             panelLeft.Controls.Add(matchesFlowLayoutPanel);
             panelLeft.Controls.Add(bannerPanel);
             panelLeft.Dock = DockStyle.Fill;
-            panelLeft.Location = new Point(0, 151);
+            panelLeft.Location = new Point(0, 76);
             panelLeft.Margin = new Padding(2, 1, 2, 1);
             panelLeft.Name = "panelLeft";
-            panelLeft.Size = new Size(763, 560);
+            panelLeft.Size = new Size(763, 635);
             panelLeft.TabIndex = 6;
             // 
             // matchesFlowLayoutPanel
@@ -148,7 +148,7 @@
             matchesFlowLayoutPanel.Margin = new Padding(2, 1, 2, 1);
             matchesFlowLayoutPanel.Name = "matchesFlowLayoutPanel";
             matchesFlowLayoutPanel.Padding = new Padding(27, 9, 27, 9);
-            matchesFlowLayoutPanel.Size = new Size(763, 202);
+            matchesFlowLayoutPanel.Size = new Size(763, 277);
             matchesFlowLayoutPanel.TabIndex = 1;
             matchesFlowLayoutPanel.WrapContents = false;
             // 
@@ -242,7 +242,6 @@
             pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
             pictureBox2.TabIndex = 2;
             pictureBox2.TabStop = false;
-            pictureBox2.Click += pictureBox2_Click;
             // 
             // panel7
             // 
@@ -478,7 +477,6 @@
             laliguaImg.SizeMode = PictureBoxSizeMode.Zoom;
             laliguaImg.TabIndex = 0;
             laliguaImg.TabStop = false;
-            laliguaImg.Click += laliguaImg_Click;
             // 
             // premierLeagueBg
             // 
@@ -576,11 +574,11 @@
             // 
             PanelRight.Controls.Add(betPanel);
             PanelRight.Dock = DockStyle.Right;
-            PanelRight.Location = new Point(763, 151);
+            PanelRight.Location = new Point(763, 76);
             PanelRight.Margin = new Padding(2, 1, 2, 1);
             PanelRight.Name = "PanelRight";
             PanelRight.Padding = new Padding(11, 9, 11, 9);
-            PanelRight.Size = new Size(421, 560);
+            PanelRight.Size = new Size(421, 635);
             PanelRight.TabIndex = 5;
             // 
             // betPanel
@@ -593,7 +591,7 @@
             betPanel.Margin = new Padding(2, 1, 2, 1);
             betPanel.Name = "betPanel";
             betPanel.Padding = new Padding(3, 5, 3, 5);
-            betPanel.Size = new Size(399, 542);
+            betPanel.Size = new Size(399, 617);
             betPanel.TabIndex = 0;
             // 
             // noMatchSelectedPanel
@@ -604,7 +602,7 @@
             noMatchSelectedPanel.Location = new Point(3, 5);
             noMatchSelectedPanel.Margin = new Padding(2, 1, 2, 1);
             noMatchSelectedPanel.Name = "noMatchSelectedPanel";
-            noMatchSelectedPanel.Size = new Size(393, 532);
+            noMatchSelectedPanel.Size = new Size(393, 607);
             noMatchSelectedPanel.TabIndex = 3;
             // 
             // ticketImg
@@ -614,7 +612,7 @@
             ticketImg.Location = new Point(0, 84);
             ticketImg.Margin = new Padding(2, 1, 2, 1);
             ticketImg.Name = "ticketImg";
-            ticketImg.Size = new Size(393, 448);
+            ticketImg.Size = new Size(393, 523);
             ticketImg.SizeMode = PictureBoxSizeMode.Zoom;
             ticketImg.TabIndex = 2;
             ticketImg.TabStop = false;
@@ -636,15 +634,22 @@
             // 
             searchBarBgPanel.Controls.Add(searchbarPanel);
             searchBarBgPanel.Dock = DockStyle.Top;
-            searchBarBgPanel.Location = new Point(0, 75);
+            searchBarBgPanel.Location = new Point(0, 0);
             searchBarBgPanel.Margin = new Padding(2, 1, 2, 1);
             searchBarBgPanel.Name = "searchBarBgPanel";
             searchBarBgPanel.Size = new Size(1184, 76);
             searchBarBgPanel.TabIndex = 4;
             // 
+            // navBar1
+            // 
+            navBar1.Dock = DockStyle.Top;
+            navBar1.Location = new Point(0, 0);
+            navBar1.Name = "navBar1";
+            navBar1.Size = new Size(1184, 85);
+            navBar1.TabIndex = 3;
+            // 
             // searchbarPanel
             // 
-            searchbarPanel.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             searchbarPanel.BackColor = Color.FromArgb(48, 48, 48);
             searchbarPanel.Controls.Add(clearSearchIcon);
             searchbarPanel.Controls.Add(searchbarTextBox);
@@ -692,16 +697,6 @@
             searchImg.SizeMode = PictureBoxSizeMode.CenterImage;
             searchImg.TabIndex = 3;
             searchImg.TabStop = false;
-            // 
-            // panel2
-            // 
-            panel2.BackColor = Color.FromArgb(31, 31, 31);
-            panel2.Dock = DockStyle.Top;
-            panel2.Location = new Point(0, 0);
-            panel2.Margin = new Padding(2, 1, 2, 1);
-            panel2.Name = "panel2";
-            panel2.Size = new Size(1184, 75);
-            panel2.TabIndex = 0;
             // 
             // MainPage
             // 
@@ -755,7 +750,6 @@
         #endregion
 
         private Panel bgPanel;
-        private Panel panel2;
         private PictureBox searchImg;
         private Panel searchbarPanel;
         private TextBox searchbarTextBox;
@@ -797,9 +791,10 @@
         private Panel panel6;
         private PictureBox pictureBox2;
         private Label label2;
-        private Label label1;
+        private Label label1; 
         private Panel panel7;
         private Label label3;
         private PictureBox pictureBox3;
+        private NavBar navBar1;
     }
 }
