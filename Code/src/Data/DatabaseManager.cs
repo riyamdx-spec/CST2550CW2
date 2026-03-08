@@ -420,5 +420,74 @@ namespace BettingSystem.Data
                 }
             }
         }
+        // fetch matches from database
+        public async Task<FootballMatchCollection> FetchMatchesAsync()
+        {
+            //list to store matches in chronological order
+            SortedSet<FootballMatch> matches = new SortedSet<FootballMatch>(new FootballMatchKeyComparer());
+
+            //dictionary for league filtering
+            Dictionary<int, SortedSet<FootballMatch>> matchesByLeague = new Dictionary<int, SortedSet<FootballMatch>>();
+
+            //fetch upcoming matches in ascending order of date
+            string query = "SELECT * FROM Game WHERE game_status='Scheduled' ORDER BY game_date ASC";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            int leagueID = Convert.ToInt32(reader["league_id"]);
+
+                            FootballMatch matchObj = new FootballMatch(
+                                Convert.ToInt32(reader["game_id"]),
+                                leagueID,
+                                Convert.ToInt32(reader["home_team_id"]),
+                                Convert.ToInt32(reader["away_team_id"]),
+                                Convert.ToDateTime(reader["game_date"]),
+                                reader["game_status"].ToString()!,
+                                reader["home_team_score"] as int?,
+                                reader["away_team_score"] as int?
+                            );
+
+                            matches.Add(matchObj);
+
+                            //check if a sorted set exist for the league
+                            if (!matchesByLeague.TryGetValue(leagueID, out var leagueMatches))
+                            {
+                                leagueMatches = new SortedSet<FootballMatch>(new FootballMatchKeyComparer());
+                                matchesByLeague[leagueID] = leagueMatches;
+                            }
+                            //add match in the sorted set for that league
+                            matchesByLeague[leagueID].Add(matchObj);
+                        }
+                    }
+                    return new FootballMatchCollection(
+                        matches,
+                        matchesByLeague
+                    );
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new FootballMatchCollection(
+                        new SortedSet<FootballMatch>(),
+                        new Dictionary<int, SortedSet<FootballMatch>>()
+                    );
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new FootballMatchCollection(
+                        new SortedSet<FootballMatch>(),
+                        new Dictionary<int, SortedSet<FootballMatch>>()
+                    );
+                }
+            }
+        }
     }
 }
