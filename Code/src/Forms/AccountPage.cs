@@ -1,40 +1,97 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
-using System.Windows.Forms;
+﻿using BettingSystem.Models;
 
-namespace BettingSystem
+namespace BettingSystem.Forms
 {
     public partial class AccountPage : Form
     {
-        public AccountPage()
+        private readonly AppUser CurrentUser;
+        public AccountPage(AppUser loggedInUser)
         {
+            CurrentUser = loggedInUser;
             InitializeComponent();
-            loadAccountPage();
-
+            navBar1.SetCurrentUser(CurrentUser);
+            navBar1.MatchesClicked += NavBar1_MatchesClicked;
+            navBar1.BetSlipClicked += NavBar1_BetSlipClicked;
+            navBar1.DepositClicked += NavBar1_DepositClicked;
+            LoadAccountPage();
         }
 
-        private void loadAccountPage()
+        private void NavBar1_DepositClicked(object? sender, EventArgs e)
         {
-            navDropdownBtn.Text = $"Full Name \n $1,200.50";
-
-        }
-        private void navDropdownBtn_Click(object sender, EventArgs e)
-        {
-            dropdownList.Show(navDropdownBtn, 0, navDropdownBtn.Height);
+            DisplayBalance();
         }
 
-        private void dobPanel_Paint(object sender, PaintEventArgs e)
+        private void NavBar1_BetSlipClicked(object? sender, EventArgs e)
         {
 
         }
 
-        private void walletDepositBtn_Click(object sender, EventArgs e)
+        private void NavBar1_MatchesClicked(object? sender, EventArgs e)
         {
+            MainPage matchPage = new MainPage();
+            this.Hide();
+            matchPage.Show();
+        }
 
+        private void LoadAccountPage()
+        {
+            //display user details
+            DisplayDetails();
+
+            //display user's wallet balance
+            DisplayBalance();
+        }
+
+        private void DisplayDetails()
+        {
+            FNameLbl.Text = $"First Name: {CurrentUser.FirstName}";
+            LNameLbl.Text = $"Last Name: {CurrentUser.LastName}";
+            EmailLbl.Text = $"Email: {CurrentUser.Email}";
+            dobLbl.Text = $"Date of Birth: {CurrentUser.Dob.ToString("dd/MM/yyyy")}";
+        }
+
+        private void DisplayBalance()
+        {
+            amountLbl.Text = $"$ {CurrentUser.WalletBalance}";
+        }
+
+        //open popup to edit details
+        private void editBtn_Click(object sender, EventArgs e)
+        {
+            EditFormPopup editPopup = new EditFormPopup(CurrentUser);
+
+            //update details displayed when user makes changes
+            if (editPopup.ShowDialog() == DialogResult.OK) 
+            {
+                DisplayDetails();
+            }
+        }
+
+        //open popup to change password
+        private void changePasswordBtn_Click(object sender, EventArgs e)
+        {
+            ChangePasswordPopup changePasswordPopup = new ChangePasswordPopup();
+            changePasswordPopup.ShowDialog();
+        }
+
+        //open popup to make a deposit
+        private void depositBtn_Click(object sender, EventArgs e)
+        {
+            WalletPopup walletTransactionPopup = new WalletPopup("Deposit", CurrentUser);
+            if (walletTransactionPopup.ShowDialog() == DialogResult.OK)
+            {
+                DisplayBalance();
+            }
+        }
+
+        //open popup to withdraw money
+        private void withdrawBtn_Click(object sender, EventArgs e)
+        {
+            WalletPopup walletTransactionPopup = new WalletPopup("Withdraw", CurrentUser);
+            if (walletTransactionPopup.ShowDialog() == DialogResult.OK)
+            {
+                DisplayBalance();
+            }
         }
     }
 }
