@@ -1,4 +1,4 @@
-﻿namespace BettingSystem
+﻿namespace BettingSystem.Forms
 {
     partial class Notification
     {

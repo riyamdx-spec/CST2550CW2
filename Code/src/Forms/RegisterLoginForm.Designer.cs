@@ -1,4 +1,6 @@
-﻿namespace BettingSystem
+﻿using BettingSystem.Forms.Properties;
+
+namespace BettingSystem.Forms
 {
     partial class RegisterLoginForm : BaseForm
     {
@@ -386,7 +388,7 @@
             // piclogoLogin
             // 
             piclogoLogin.BackColor = Color.Transparent;
-            piclogoLogin.Image = Properties.Resources.app_logo;
+            piclogoLogin.Image = Resources.logo;
             piclogoLogin.Location = new Point(166, 121);
             piclogoLogin.Name = "piclogoLogin";
             piclogoLogin.Size = new Size(245, 245);
@@ -463,7 +465,7 @@
             // picLogoSignup
             // 
             picLogoSignup.BackColor = Color.Transparent;
-            picLogoSignup.Image = Properties.Resources.app_logo;
+            picLogoSignup.Image = Resources.logo;
             picLogoSignup.Location = new Point(153, 121);
             picLogoSignup.Name = "picLogoSignup";
             picLogoSignup.Size = new Size(245, 245);
@@ -574,7 +576,7 @@
             // 
             backButton.BackColor = Color.Transparent;
             backButton.Cursor = Cursors.Hand;
-            backButton.Image = Properties.Resources.backBtn;
+            backButton.Image = Resources.backBtn;
             backButton.Location = new Point(47, 48);
             backButton.Name = "backButton";
             backButton.Size = new Size(48, 48);

@@ -1,4 +1,6 @@
-﻿namespace BettingSystem
+﻿using BettingSystem.Forms.Properties;
+
+namespace BettingSystem.Forms
 {
     partial class landingPage : BaseForm
     {
@@ -40,7 +42,7 @@
             // picBackground
             // 
             picBackground.BackColor = Color.Transparent;
-            picBackground.BackgroundImage = Properties.Resources.football_pitch;
+            picBackground.BackgroundImage = Resources.football_pitch;
             picBackground.BackgroundImageLayout = ImageLayout.Stretch;
             picBackground.Dock = DockStyle.Fill;
             picBackground.Location = new Point(0, 0);
@@ -55,7 +57,7 @@
             picLogo.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             picLogo.BackColor = Color.Transparent;
             picLogo.BackgroundImageLayout = ImageLayout.Zoom;
-            picLogo.Image = Properties.Resources.app_logo;
+            picLogo.Image = Resources.logo;
             picLogo.Location = new Point(426, 37);
             picLogo.Name = "picLogo";
             picLogo.Size = new Size(331, 321);

@@ -1,6 +1,6 @@
 using System.Drawing.Drawing2D;
 
-namespace BettingSystem
+namespace BettingSystem.Forms
 {
     public partial class landingPage : BaseForm
     {

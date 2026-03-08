@@ -11,7 +11,7 @@ using System.Windows.Forms;
 using BettingSystem.Services;
 using BettingSystem.Data;
 
-namespace BettingSystem
+namespace BettingSystem.Forms
 {
     public enum ViewPanel { Login, SignUp }
     public partial class RegisterLoginForm : BaseForm

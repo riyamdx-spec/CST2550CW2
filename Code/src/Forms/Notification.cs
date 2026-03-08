@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace BettingSystem
+namespace BettingSystem.Forms
 {
     public enum NotificationType { Success, Error, Warning, Info }
     public partial class Notification : Form

@@ -1,3 +1,5 @@
+using BettingSystem.Forms;
+
 namespace BettingSystem
 {
     internal static class Program
