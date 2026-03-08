@@ -39,6 +39,7 @@
             characterNumLbl = new Label();
             passwordRequirementsLbl1 = new Label();
             newPasswordPanel = new Panel();
+            errorLbl = new Label();
             newPasswordTextbox = new UnderlineTextBox();
             newPasswordLbl = new Label();
             currentPasswordPanel = new Panel();
@@ -198,6 +199,7 @@
             // 
             // newPasswordPanel
             // 
+            newPasswordPanel.Controls.Add(errorLbl);
             newPasswordPanel.Controls.Add(newPasswordTextbox);
             newPasswordPanel.Controls.Add(newPasswordLbl);
             newPasswordPanel.Dock = DockStyle.Top;
@@ -206,6 +208,18 @@
             newPasswordPanel.Padding = new Padding(0, 0, 0, 20);
             newPasswordPanel.Size = new Size(544, 69);
             newPasswordPanel.TabIndex = 3;
+            // 
+            // errorLbl
+            // 
+            errorLbl.AutoSize = true;
+            errorLbl.Font = new Font("Times New Roman", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            errorLbl.ForeColor = Color.Firebrick;
+            errorLbl.Location = new Point(3, 51);
+            errorLbl.Name = "errorLbl";
+            errorLbl.Size = new Size(45, 19);
+            errorLbl.TabIndex = 2;
+            errorLbl.Text = "label1";
+            errorLbl.Visible = false;
             // 
             // newPasswordTextbox
             // 
@@ -219,6 +233,7 @@
             newPasswordTextbox.PasswordChar = '*';
             newPasswordTextbox.Size = new Size(544, 17);
             newPasswordTextbox.TabIndex = 1;
+            newPasswordTextbox.TextChanged += txtPassword_TextChanged;
             // 
             // newPasswordLbl
             // 
@@ -322,5 +337,6 @@
         private Label upperCaseLbl;
         private Label numberLbl;
         private Label characterNumLbl;
+        private Label errorLbl;
     }
 }
