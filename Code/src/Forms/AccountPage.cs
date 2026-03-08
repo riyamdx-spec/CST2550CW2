@@ -28,7 +28,10 @@ namespace BettingSystem.Forms
 
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
         {
-            MainPage matchPage = new MainPage();
+            MainPage matchPage = new MainPage(CurrentUser);
+            matchPage.Size = this.Size;
+            matchPage.Location = this.Location;
+            matchPage.WindowState = this.WindowState;
             this.Hide();
             matchPage.Show();
         }
@@ -70,7 +73,7 @@ namespace BettingSystem.Forms
         //open popup to change password
         private void changePasswordBtn_Click(object sender, EventArgs e)
         {
-            ChangePasswordPopup changePasswordPopup = new ChangePasswordPopup();
+            ChangePasswordPopup changePasswordPopup = new ChangePasswordPopup(CurrentUser);
             changePasswordPopup.ShowDialog();
         }
 
