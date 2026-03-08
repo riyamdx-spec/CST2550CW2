@@ -379,5 +379,46 @@ namespace BettingSystem.Data
                 }
             }
         }
+
+        //fetch teams info from database
+        public async Task<Dictionary<int, Team>> FetchTeamsAsync()
+        {
+            //store teams in dictionary keyed by id
+            Dictionary<int, Team> teamsByID = new Dictionary<int, Team>();
+
+            string query = "SELECT * FROM Team";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            int teamID = Convert.ToInt32(reader["team_id"]);
+                            Team teamObj = new Team(
+                                teamID,
+                                reader["team_name"].ToString()!,
+                                reader["logo_path"].ToString()!
+                            );
+                            teamsByID[teamID] = teamObj;
+                        }
+                    }
+                    return teamsByID;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new Dictionary<int, Team>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new Dictionary<int, Team>();
+                }
+            }
+        }
     }
 }
