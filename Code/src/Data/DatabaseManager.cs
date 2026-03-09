@@ -449,9 +449,7 @@ namespace BettingSystem.Data
                                 Convert.ToInt32(reader["home_team_id"]),
                                 Convert.ToInt32(reader["away_team_id"]),
                                 Convert.ToDateTime(reader["game_date"]),
-                                reader["game_status"].ToString()!,
-                                reader["home_team_score"] as int?,
-                                reader["away_team_score"] as int?
+                                reader["game_status"].ToString()!
                             );
 
                             matches.Add(matchObj);
