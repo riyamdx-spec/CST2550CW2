@@ -8,10 +8,8 @@
         public int AwayTeamID { get; set; }
         public DateTime GameDate { get; set; }
         public string GameStatus { get; set; }
-        public int? HomeTeamScore {  get; set; }
-        public int? AwayTeamScore { get; set; }
 
-        public FootballMatch(int gameID, int leagueID, int homeTeamID, int awayTeamID, DateTime gameDate, string gameStatus, int? homeTeamScore, int? awayTeamScore)
+        public FootballMatch(int gameID, int leagueID, int homeTeamID, int awayTeamID, DateTime gameDate, string gameStatus)
         {
             GameID = gameID;
             LeagueID = leagueID;
@@ -19,8 +17,6 @@
             AwayTeamID = awayTeamID;
             GameDate = gameDate;
             GameStatus = gameStatus;
-            HomeTeamScore = homeTeamScore;
-            AwayTeamScore = awayTeamScore;
         }
     }
 }
