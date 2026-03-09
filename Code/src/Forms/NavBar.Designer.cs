@@ -130,7 +130,6 @@
             navDropdownBtn.ForeColor = Color.FromArgb(241, 241, 241);
             navDropdownBtn.Image = Properties.Resources.dropdownArrow;
             navDropdownBtn.ImageAlign = ContentAlignment.MiddleRight;
-            navDropdownBtn.ImageSize = 20;
             navDropdownBtn.Location = new Point(202, 12);
             navDropdownBtn.Name = "navDropdownBtn";
             navDropdownBtn.Padding = new Padding(2, 2, 4, 2);

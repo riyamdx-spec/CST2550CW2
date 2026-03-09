@@ -300,7 +300,6 @@ namespace BettingSystem.Forms
             historyBtn.ForeColor = Color.FromArgb(241, 241, 241);
             historyBtn.Image = Resources.historyIcon;
             historyBtn.ImageAlign = ContentAlignment.MiddleRight;
-            //historyBtn.ImageSize = 40;
             historyBtn.Location = new Point(440, 6);
             historyBtn.Name = "historyBtn";
             historyBtn.Size = new Size(350, 75);
@@ -321,7 +320,6 @@ namespace BettingSystem.Forms
             changePasswordBtn.ForeColor = Color.FromArgb(241, 241, 241);
             changePasswordBtn.Image = Resources.lockIcon;
             changePasswordBtn.ImageAlign = ContentAlignment.MiddleRight;
-            //changePasswordBtn.ImageSize = 40;
             changePasswordBtn.Location = new Point(30, 6);
             changePasswordBtn.Name = "changePasswordBtn";
             changePasswordBtn.Size = new Size(350, 75);
