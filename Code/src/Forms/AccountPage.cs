@@ -10,17 +10,14 @@ namespace BettingSystem.Forms
             CurrentUser = loggedInUser;
             InitializeComponent();
             navBar1.SetCurrentUser(CurrentUser);
+
+            //event from navbar
             navBar1.MatchesClicked += NavBar1_MatchesClicked;
             navBar1.BetSlipClicked += NavBar1_BetSlipClicked;
-            navBar1.DepositClicked += NavBar1_DepositClicked;
             LoadAccountPage();
         }
 
-        private void NavBar1_DepositClicked(object? sender, EventArgs e)
-        {
-            DisplayBalance();
-        }
-
+        // to open bet slip page
         private void NavBar1_BetSlipClicked(object? sender, EventArgs e)
         {
 
@@ -53,7 +50,7 @@ namespace BettingSystem.Forms
             dobLbl.Text = $"Date of Birth: {CurrentUser.Dob.ToString("dd/MM/yyyy")}";
         }
 
-        private void DisplayBalance()
+        public void DisplayBalance()
         {
             amountLbl.Text = $"$ {CurrentUser.WalletBalance}";
         }
@@ -64,7 +61,7 @@ namespace BettingSystem.Forms
             EditFormPopup editPopup = new EditFormPopup(CurrentUser);
 
             //update details displayed when user makes changes
-            if (editPopup.ShowDialog() == DialogResult.OK) 
+            if (editPopup.ShowDialog() == DialogResult.OK)
             {
                 DisplayDetails();
             }
@@ -83,7 +80,7 @@ namespace BettingSystem.Forms
             WalletPopup walletTransactionPopup = new WalletPopup("Deposit", CurrentUser);
             if (walletTransactionPopup.ShowDialog() == DialogResult.OK)
             {
-                DisplayBalance();
+                navBar1.DisplayInfo(); //open label in navbar to update balance displayed
             }
         }
 
@@ -93,7 +90,7 @@ namespace BettingSystem.Forms
             WalletPopup walletTransactionPopup = new WalletPopup("Withdraw", CurrentUser);
             if (walletTransactionPopup.ShowDialog() == DialogResult.OK)
             {
-                DisplayBalance();
+                navBar1.DisplayInfo();
             }
         }
     }

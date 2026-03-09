@@ -6,11 +6,10 @@ namespace BettingSystem.Forms
     {
         private AppUser CurrentUser;
 
-        //add click events
+        //click events
         public event EventHandler MatchesClicked;
         public event EventHandler BetSlipClicked;
         public event EventHandler AccountClicked;
-        public event EventHandler DepositClicked;
 
         public NavBar()
         {
@@ -24,7 +23,7 @@ namespace BettingSystem.Forms
             DisplayInfo();
         }
 
-        private void DisplayInfo()
+        public void DisplayInfo()
         {
             navDropdownBtn.Text = $"{CurrentUser.FirstName} {CurrentUser.LastName} \n${Math.Round(CurrentUser.WalletBalance, 2)}";
         }
@@ -35,8 +34,7 @@ namespace BettingSystem.Forms
             WalletPopup walletTransactionPopup = new WalletPopup("Deposit", CurrentUser);
             if (walletTransactionPopup.ShowDialog() == DialogResult.OK)
             {
-                DisplayInfo();
-                DepositClicked?.Invoke(this, new EventArgs());
+                DisplayInfo(); //update balance displayed in nav bar
             }
         }
 
@@ -54,6 +52,7 @@ namespace BettingSystem.Forms
 
         }
 
+        // to open dropwdown menu
         private void navDropdownBtn_Click(object sender, EventArgs e)
         {
             dropdownList.Show(navDropdownBtn, 0, navDropdownBtn.Height + 10);

@@ -1,6 +1,4 @@
 ﻿using BettingSystem.Models;
-using System.Drawing.Drawing2D;
-using BettingSystem.Forms.Properties;
 using BettingSystem.Services;
 
 namespace BettingSystem.Forms
@@ -11,7 +9,6 @@ namespace BettingSystem.Forms
         private string WalletAction;
         private readonly Validation Validator;
         private readonly WalletService WalletServices;
-
 
         public WalletPopup(string action, AppUser loggedInUser)
         {
@@ -31,6 +28,7 @@ namespace BettingSystem.Forms
             confirmTransactionBtn.Text = WalletAction; ;
         }
 
+        //remove error messages
         private void ClearForm()
         {
             transactionErrorMsg.Text = "";
@@ -100,6 +98,17 @@ namespace BettingSystem.Forms
             this.Close();
         }
 
+        private void ClosePopup()
+        {
+            //check if current form is profile page to update balance displayed on it
+            if (Application.OpenForms.OfType<AccountPage>().FirstOrDefault() is AccountPage profilePage)
+            {
+                profilePage.DisplayBalance();
+            }
+            this.DialogResult = DialogResult.OK;
+            this.Close();
+        }
+
         private async void confirmTransactionBtn_Click(object sender, EventArgs e)
         {
 
@@ -113,35 +122,25 @@ namespace BettingSystem.Forms
                 return;
 
             decimal amountEntered = Math.Round(decimal.Parse(amount), 2);
+            bool valid;
+            string message;
 
             // do transaction
             if (WalletAction == "Deposit") // to deposit money
             {
-                (bool valid, string message) = await WalletServices.DepositOrPayoutAsync(CurrentUser, amountEntered, "deposit");
-                if (valid)
-                {
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
-                }
-                else
-                {
-                    DisplayErrorMessage(transactionErrorMsg, message);
-                }
-
+                (valid, message) = await WalletServices.DepositOrPayoutAsync(CurrentUser, amountEntered, "deposit");
             }
             else //to withdraw money
             {
-                (bool valid, string message) = await WalletServices.WithdrawalOrPlaceBetAsync(CurrentUser, amountEntered, "withdrawal");
-                if (valid)
-                {
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
-                }
-                else
-                {
-                    DisplayErrorMessage(transactionErrorMsg, message);
-                }
-
+                (valid, message) = await WalletServices.WithdrawalOrPlaceBetAsync(CurrentUser, amountEntered, "withdrawal");
+            }
+            if (valid)
+            {
+                ClosePopup();
+            }
+            else
+            {
+                DisplayErrorMessage(transactionErrorMsg, message);
             }
         }
     }
