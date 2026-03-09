@@ -1,13 +1,12 @@
 ﻿using System.ComponentModel;
-using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Windows.Forms;
 
 namespace BettingSystem
 {
     public class RoundedButton : Button
     {
         private int cornerRadius = 22;
+        private int imageSize = 32;
 
         [Category("Appearance")]
         [Description("The radius, in pixels, of the button's corners.")]
@@ -37,6 +36,21 @@ namespace BettingSystem
             }
         }
 
+        [Category("Appearance")]
+        [Description("The imageSize, in pixels, of the button's image.")]
+        [DefaultValue(32)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+        public int ImageSize
+        {
+            get => imageSize;
+            set
+            {
+                if (value < 0) value = 0;
+                imageSize = value;
+                Invalidate();
+            }
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
@@ -50,9 +64,23 @@ namespace BettingSystem
             path.CloseFigure();
             using var brush = new SolidBrush(BackColor);
             e.Graphics.FillPath(brush, path);
+
+            if (Image != null)
+            {
+                r.Width -= ImageSize + 5;
+            }
+
             Region = new Region(path);
             TextRenderer.DrawText(e.Graphics, Text, Font, r, ForeColor,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+
+            //draw Image
+            if (Image != null)
+            {
+                int x = Width - ImageSize - 10;
+                int y = (Height - ImageSize) / 2;
+                e.Graphics.DrawImage(Image, x, y, imageSize, imageSize);
+            }
         }
     }
 }
