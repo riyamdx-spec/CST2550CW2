@@ -107,7 +107,7 @@ namespace BettingSystem.Data
         private async Task<AppUser> AddNewUserAsync(string firstName, string lastName, DateTime dob, string email, string password)
         {
             int userId;
-            string query = "INSERT INTO AppUser (first_name, last_name, dob, email, password_hash, wallet_balance) OUTPUT INSERTED.app_user_id VALUES (@firstName, @lastName, @dob, @email, @password, 0)";
+            string query = "INSERT INTO AppUser (first_name, last_name, dob, email, password_hash) OUTPUT INSERTED.app_user_id VALUES (@firstName, @lastName, @dob, @email, @password)";
             using (SqlConnection connection = new SqlConnection(connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
