@@ -487,5 +487,212 @@ namespace BettingSystem.Data
                 }
             }
         }
+
+        // save bet slip and bets in bet slip
+        public async Task<(bool success, string message)> SaveBetSlipAsync(BetSlip betSlip)
+        {
+
+            if (!betSlip.Bets.Any())
+                return (false, "Bet slip is empty");
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // insert bet slip 
+                        string insertSlipQuery = @"INSERT INTO BetSlip (app_user_id, bet_status, total_odds, stake, payout) 
+                                         OUTPUT INSERTED.slip_id
+                                         VALUES (@userID, 'Pending', @totalOdds, @stake, @payout)";
+
+                        int slipID;
+
+                        using (SqlCommand command = new SqlCommand(insertSlipQuery, connection, transaction))
+                        {
+                            command.Parameters.AddWithValue("@userID", betSlip.UserID);
+                            command.Parameters.AddWithValue("@totalOdds", betSlip.TotalOdds);
+                            command.Parameters.AddWithValue("@stake", betSlip.Stake);
+                            command.Parameters.AddWithValue("@payout", betSlip.CalculatePayout());
+                            slipID = (int)await command.ExecuteScalarAsync();
+                        }
+
+                        // insert each bet in linked list
+                        string insertBetQuery = @"INSERT INTO Bet (slip_id, odd_id, result) 
+                                        VALUES (@slipID, @oddID, 'Pending')";
+
+                        foreach (Bet bet in betSlip.Bets)
+                        {
+                            using (SqlCommand command = new SqlCommand(insertBetQuery, connection, transaction))
+                            {
+                                command.Parameters.AddWithValue("@slipID", slipID);
+                                command.Parameters.AddWithValue("@oddID", bet.OddID);
+                                await command.ExecuteNonQueryAsync();
+                            }
+                        }
+
+                        transaction.Commit();
+                        return (true, "Bet placed successfully");
+                    }
+                    catch (SqlException e)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine($"Database error: {e.Message}");
+                        return (false, "Failed to place bet. Please try again.");
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine($"Error: {e.Message}");
+                        return (false, "Failed to place bet. Please try again.");
+                    }
+                }
+            }
+        }
+
+        // fetch odds for specific match
+        public async Task<List<Odd>> FetchOddsAsync(int gameID)
+        {
+            List<Odd> odds = new List<Odd>();
+
+            string query = @"SELECT o.odd_id, o.game_id, o.bet_type_id, o.selection, o.odd_value
+                     FROM Odd o
+                     WHERE o.game_id = @gameID";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@gameID", gameID);
+
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            Odd odd = new Odd(
+                                Convert.ToInt32(reader["odd_id"]),
+                                Convert.ToInt32(reader["game_id"]),
+                                Convert.ToInt32(reader["bet_type_id"]),
+                                reader["selection"].ToString()!,
+                                Convert.ToDecimal(reader["odd_value"])
+                            );
+                            odds.Add(odd);
+                        }
+                    }
+                    return odds;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return [];
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return [];
+                }
+            }
+        }
+
+        public async Task<List<BetHistorySlip>> FetchBetHistoryAsync(int userID)
+        {
+            List<BetHistorySlip> history = new List<BetHistorySlip>();
+
+            // fetch completed slips by most recent
+            string slipQuery = @"SELECT slip_id, app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed
+                         FROM BetSlip 
+                         WHERE app_user_id = @userID
+                         ORDER BY bet_date DESC";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(slipQuery, connection))
+            {
+                command.Parameters.AddWithValue("@userID", userID);
+
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            BetHistorySlip slip = new BetHistorySlip(
+                                Convert.ToInt32(reader["slip_id"]),
+                                Convert.ToInt32(reader["app_user_id"]),
+                                Convert.ToDateTime(reader["bet_date"]),
+                                Convert.ToDecimal(reader["stake"]),
+                                Convert.ToDecimal(reader["total_odds"]),
+                                Convert.ToDecimal(reader["payout"]),
+                                reader["bet_status"].ToString()!,
+                                Convert.ToBoolean(reader["claimed"])
+                            );
+
+                            history.Add(slip);
+                        }
+                    }
+
+                    // fetch bets for each slip
+                    string betQuery = @"SELECT b.result, o.selection, o.odd_value, bt.bet_type_name,
+                                                ht.team_name AS home_team, at.team_name AS away_team, 
+                                                g.game_date, l.league_name
+                                FROM Bet b
+                                INNER JOIN Odd o ON b.odd_id = o.odd_id
+                                INNER JOIN BetType bt ON o.bet_type_id = bt.bet_type_id
+                                INNER JOIN Game g ON o.game_id = g.game_id
+                                INNER JOIN Team ht ON g.home_team_id = ht.team_id
+                                INNER JOIN Team at ON g.away_team_id = at.team_id
+                                INNER JOIN League l ON g.league_id = l.league_id
+                                WHERE b.slip_id = @slipID";
+
+                    using (SqlConnection betConnection = new SqlConnection(connectionString))
+                    {
+                        await betConnection.OpenAsync();
+
+                        // loop through slips and fetch bets for each slip
+                        foreach (BetHistorySlip slip in history)
+                        {
+                            using (SqlCommand betCmd = new SqlCommand(betQuery, betConnection))
+                            {
+                                betCmd.Parameters.AddWithValue("@slipID", slip.SlipID);
+
+                                using (SqlDataReader betReader = await betCmd.ExecuteReaderAsync())
+                                {
+                                    while (await betReader.ReadAsync())
+                                    {
+                                        HistoryBet bet = new HistoryBet(
+                                        betReader["selection"].ToString()!,
+                                        Convert.ToDecimal(betReader["odd_value"]),
+                                        betReader["bet_type_name"].ToString()!,
+                                        betReader["result"].ToString()!,
+                                        betReader["home_team"].ToString()!,
+                                        betReader["away_team"].ToString()!,
+                                        Convert.ToDateTime(betReader["game_date"]),
+                                        betReader["league_name"].ToString()!
+                                        );
+
+                                        slip.Bets.Add(bet);
+                                    }
+                                }
+                            }
+                        }
+                    }       
+
+                    return history;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return [];
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return [];
+                }
+            }
+        }
     }
 }
