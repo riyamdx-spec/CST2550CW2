@@ -74,7 +74,7 @@ CREATE TABLE GameResult(
 	first_scorer_id INT,
 	total_corners INT NOT NULL CHECK (total_corners >= 0),
 	red_cards INT NOT NULL CHECK (red_cards >= 0),
-	yellow_cards INT NOT NULL CHECK (yellow_cards >= 0)
+	yellow_cards INT NOT NULL CHECK (yellow_cards >= 0),
 	FOREIGN KEY(game_id) REFERENCES Game(game_id)
 );
 
@@ -98,9 +98,10 @@ CREATE TABLE BetSlip(
 	app_user_id INT NOT NULL,
 	bet_date DATETIME2 NOT NULL DEFAULT GETDATE(),
 	bet_status VARCHAR(7) NOT NULL CHECK (bet_status IN ('Pending','Won','Lost')),
-    	total_odds decimal(6,3) NOT NULL CHECK (total_odds > 0),
+    	total_odds decimal(10,3) NOT NULL CHECK (total_odds > 0),
 	stake DECIMAL(10,2) NOT NULL CHECK (stake > 0),
 	payout DECIMAL(10,2) CHECK (payout >= 0),
+	claimed BIT NOT NULL, 
 	FOREIGN KEY(app_user_id) REFERENCES AppUser(app_user_id)
 );
 
