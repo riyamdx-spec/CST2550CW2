@@ -552,20 +552,19 @@ namespace BettingSystem.Data
             }
         }
 
-        // fetch odds for specific match
-        public async Task<List<Odd>> FetchOddsAsync(int gameID)
+        // fetch all odds for upcoming matches
+        public async Task<Dictionary<int, List<Odd>>> FetchOddsAsync()
         {
-            List<Odd> odds = new List<Odd>();
-
-            string query = @"SELECT o.odd_id, o.game_id, o.bet_type_id, o.selection, o.odd_value
+            Dictionary<int, List<Odd>> oddsByGameId = new Dictionary<int, List<Odd>>();
+            int gameID;
+            string query = @"SELECT odd_id, o.game_id, bet_type_id, selection, odd_value
                      FROM Odd o
-                     WHERE o.game_id = @gameID";
+                     INNER JOIN Game g ON g.game_id = o.game_id
+                     WHERE game_status = 'Scheduled'";
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                command.Parameters.AddWithValue("@gameID", gameID);
-
                 try
                 {
                     await connection.OpenAsync();
@@ -573,27 +572,36 @@ namespace BettingSystem.Data
                     {
                         while (await reader.ReadAsync())
                         {
+                            gameID = Convert.ToInt32(reader["game_id"]);
+
                             Odd odd = new Odd(
                                 Convert.ToInt32(reader["odd_id"]),
-                                Convert.ToInt32(reader["game_id"]),
+                                gameID,
                                 Convert.ToInt32(reader["bet_type_id"]),
                                 reader["selection"].ToString()!,
                                 Convert.ToDecimal(reader["odd_value"])
                             );
-                            odds.Add(odd);
+
+                            //check if a list of odds exist for the game
+                            if (!oddsByGameId.TryGetValue(gameID, out var oddList))
+                            {
+                                oddList = new List<Odd>();
+                                oddsByGameId[gameID] = oddList;
+                            }
+                            oddList.Add(odd);
                         }
                     }
-                    return odds;
+                    return oddsByGameId;
                 }
                 catch (SqlException e)
                 {
                     Console.WriteLine($"Database error: {e.Message}");
-                    return [];
+                    return new Dictionary<int, List<Odd>>();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"Error: {e.Message}");
-                    return [];
+                    return new Dictionary<int, List<Odd>>();
                 }
             }
         }
