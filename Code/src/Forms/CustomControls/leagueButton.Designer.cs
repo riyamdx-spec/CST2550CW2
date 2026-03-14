@@ -47,6 +47,7 @@
             // 
             // leagueImg
             // 
+            leagueImg.BackColor = Color.Transparent;
             leagueImg.Dock = DockStyle.Fill;
             leagueImg.ErrorImage = null;
             leagueImg.InitialImage = null;
