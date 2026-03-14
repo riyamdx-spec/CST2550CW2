@@ -357,7 +357,8 @@ namespace BettingSystem.Data
                             League leagueObj = new League(
                                 Convert.ToInt32(reader["league_id"]), 
                                 reader["league_name"].ToString()!, 
-                                reader["logo_path"].ToString() ?? ""
+                                reader["logo_path"].ToString() ?? "",
+                                reader["banner_path"].ToString() ?? ""
                             );
 
                             //add to array
