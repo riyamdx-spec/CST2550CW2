@@ -703,5 +703,61 @@ namespace BettingSystem.Data
                 }
             }
         }
+
+        // fetch players details for upcoming matches
+        public async Task<Dictionary<int, List<Player>>> FetchPlayersAsync()
+        {
+            //store players in dictionary keyed by TeamId
+            Dictionary<int, List<Player>> PlayersByTeamId = new Dictionary<int, List<Player>>();
+
+            string query = @"SELECT DISTINCT player_id, player_name, team_id, player_position 
+                             FROM Player p
+                             JOIN Game g 
+                             ON p.team_id = g.home_team_id OR p.team_id = g.away_team_id
+                             WHERE g.game_status = 'Scheduled'";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            int teamID = Convert.ToInt32(reader["team_id"]);
+                            Player playerObj = new Player(
+                                Convert.ToInt32(reader["player_id"]),
+                                reader["player_name"].ToString()!,
+                                teamID,
+                                reader["player_position"].ToString()!
+                            );
+
+                            //check if a list of players exist for the game
+                            if (!PlayersByTeamId.TryGetValue(teamID, out var playersList))
+                            {
+                                playersList = new List<Player>();
+                                PlayersByTeamId[teamID] = playersList;
+                            }
+
+                            playersList.Add(playerObj);
+                        }
+                    }
+                    return PlayersByTeamId;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new Dictionary<int, List<Player>>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new Dictionary<int, List<Player>>();
+                }
+            }
+        }
+
     }
 }
