@@ -16,3 +16,63 @@ VALUES
 ('Total Corners'),
 ('Yellow Cards'),
 ('Red Cards');
+
+-- Populate table League
+BULK INSERT League
+FROM 'DataSource/insert_leagues.csv'
+WITH (
+	FIRSTROW = 2,
+	FIELDTERMINATOR = ',',
+	ROWTERMINATOR = '\n',
+	TABLOCK
+);
+
+-- Populate table Team
+BULK INSERT Team
+FROM 'DataSource/insert_teams.csv'
+WITH (
+    FIRSTROW = 2,
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n',
+    TABLOCK
+);
+
+-- Populate table LeagueTeam
+BULK INSERT LeagueTeam
+FROM 'DataSource/insert_league_teams.csv'
+WITH (
+    FIRSTROW = 2,
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n',
+    TABLOCK
+);
+
+-- Populate table Player
+BULK INSERT Player
+FROM 'DataSource/insert_players.csv'
+WITH (
+    FIRSTROW = 2,
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n',
+    TABLOCK
+);
+
+-- Populate table Game
+BULK INSERT Game
+FROM 'DataSource/insert_games.csv'
+WITH (
+    FIRSTROW = 2,
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n',
+    TABLOCK
+);
+
+-- Populate table GameResult
+BULK INSERT GameResult
+FROM 'DataSource/insert_game_results.csv'
+WITH (
+    FIRSTROW = 2,
+    FIELDTERMINATOR = ',',
+    ROWTERMINATOR = '\n',
+    TABLOCK
+);
