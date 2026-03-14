@@ -1,0 +1,18 @@
+USE BettingSystemDB;
+GO
+
+-- reset identity counter
+DBCC CHECKIDENT ('BetType', RESEED, 0);
+
+-- Populate table BetType
+INSERT INTO BetType(bet_type_name)
+VALUES
+('Outcome'),
+('Double Chance'),
+('Correct Score'),
+('Over/Under Goals'),
+('Both Teams to Score'),
+('First Goalscorer'),
+('Total Corners'),
+('Yellow Cards'),
+('Red Cards');
