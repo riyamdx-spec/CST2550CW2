@@ -285,7 +285,7 @@ namespace BettingSystem.Data
         }
 
         //update wallet balance and record transaction
-        public async Task<bool> ProcessWalletTransactionAsync(int userId, string transactionType, decimal newWalletAmount, decimal transactionAmount)
+        public async Task<bool> ProcessWalletTransactionAsync(int userId, string transactionType, decimal newWalletAmount, decimal transactionAmount, int? slipId=null)
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -320,6 +320,19 @@ namespace BettingSystem.Data
                             //check if transaction record was inserted
                             if (insertedRow <= 0)
                                 throw new Exception("Transaction Recording Failed");
+                        }
+
+                        //update claim status bet slip
+                        if (transactionType == "payout")
+                        {
+                            string updateSlipQuery = "UPDATE BetSlip SET claimed=1 WHERE slip_id=@slipId";
+                            using (SqlCommand updateSlipCmd = new SqlCommand(updateSlipQuery, connection, transaction))
+                            {
+                                updateSlipCmd.Parameters.AddWithValue("@slipId", slipId);
+                                int updatedRow = await updateSlipCmd.ExecuteNonQueryAsync();
+                                if (updatedRow <= 0)
+                                    throw new Exception("Bet Slip Claimed Status Update Failed");
+                            }
                         }
 
                         transaction.Commit();
