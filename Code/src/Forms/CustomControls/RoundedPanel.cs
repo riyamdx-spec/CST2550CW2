@@ -1,7 +1,5 @@
 ﻿using System.ComponentModel;
-using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Windows.Forms;
 
 namespace BettingSystem
 {
@@ -28,7 +26,6 @@ namespace BettingSystem
             }
         }
 
-        
         public bool ShouldSerializeCornerRadius() => _cornerRadius != 20;
         public void ResetCornerRadius() => CornerRadius = 20;
 
@@ -41,8 +38,9 @@ namespace BettingSystem
             e.Graphics.FillPath(brush, path);
         }
 
-        protected override void OnPaintBackground(PaintEventArgs e)
+        protected override void OnResize(EventArgs e)
         {
+            base.OnResize(e);
             using var path = GetRoundedRect(ClientRectangle, CornerRadius);
             Region = new Region(path);
         }
