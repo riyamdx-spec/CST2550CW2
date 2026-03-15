@@ -7,29 +7,32 @@ namespace BettingSystem.Services
         public readonly List<BetHistorySlip> BetSlips;
         public BetSlipFilter(List<BetHistorySlip> betSlips  )
         {
+            //already sorted in descending order of date
             BetSlips = betSlips;
         }
 
-        // sort by date 
-        public List<BetHistorySlip> SortByDate(bool ascending)
+        //sort by date and filter by status
+        public List<BetHistorySlip> FilterBetSlips(string? status, bool ascending)
         {
-            if (ascending)
+            List<BetHistorySlip> filteredBetSlips = new List<BetHistorySlip>(BetSlips);
+
+            //filter by status
+            if (!String.IsNullOrWhiteSpace(status) && status != "All")
             {
-                return BetSlips
-                    .OrderBy(b => b.BetDate)
-                    .ToList();
+                filteredBetSlips = filteredBetSlips
+                                .Where(b => b.Status.Equals(status, StringComparison.OrdinalIgnoreCase))
+                                .ToList();
             }
 
-            //BetSlips is already in descending order of date
-            return BetSlips;
-        }
+            //sort in ascending order of date
+            if (ascending) 
+            {
+                filteredBetSlips = filteredBetSlips
+                               .OrderBy(b => b.BetDate)
+                               .ToList();
+            }
 
-        //filter by status
-        public List<BetHistorySlip> FilterByStatus(string status)
-        {
-            return BetSlips
-                .Where(b => b.Status.Equals(status, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            return filteredBetSlips;
         }
     }
 }
