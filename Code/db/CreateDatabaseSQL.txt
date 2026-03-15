@@ -68,8 +68,7 @@ CREATE TABLE Game(
 );
 
 CREATE TABLE GameResult(
-	result_id INT PRIMARY KEY IDENTITY(1,1),
-	game_id INT NOT NULL,
+	game_id INT PRIMARY KEY,,
 	home_team_score INT CHECK (home_team_score >= 0),
 	away_team_score INT CHECK (away_team_score >= 0),
 	first_scorer_id INT,
