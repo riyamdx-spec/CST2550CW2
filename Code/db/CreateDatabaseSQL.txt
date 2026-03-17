@@ -115,6 +115,16 @@ CREATE TABLE Bet(
 	FOREIGN KEY(odd_id) REFERENCES Odd(odd_id)
 );
 
+CREATE TABLE UserActivity(
+	activity_id INT PRIMARY KEY IDENTITY(1,1),
+	app_user_id INT NOT NULL,
+	activity_type VARCHAR(30) NOT NULL,
+	activity_date DATETIME2 NOT NULL DEFAULT GETDATE(),
+	associated_risk_point INT NOT NULL DEFAULT 0,
+	ip_address VARCHAR(45), 
+	FOREIGN KEY(app_user_id) REFERENCES AppUser(app_user_id)
+);
+
 --- prevent home and away team from being the same in a game
 ALTER TABLE Game
 ADD CONSTRAINT CHK_AwayTeam_NotEqual_HomeTeam CHECK (away_team_id <> home_team_id);
