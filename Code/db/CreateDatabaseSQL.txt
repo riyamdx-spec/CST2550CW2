@@ -61,7 +61,7 @@ CREATE TABLE Game(
 	home_team_id INT NOT NULL,
 	away_team_id INT NOT NULL,
 	game_date DATETIME2 NOT NULL,
-	game_status VARCHAR(9) NOT NULL CHECK (game_status IN ('Scheduled','Completed', 'Started')), 
+	game_status VARCHAR(9) NOT NULL DEFAULT 'Scheduled' CHECK (game_status IN ('Scheduled','Completed', 'Started')), 
 	FOREIGN KEY(league_id) REFERENCES League(league_id),
 	FOREIGN KEY(home_team_id) REFERENCES Team(team_id),
 	FOREIGN KEY(away_team_id) REFERENCES Team(team_id)
