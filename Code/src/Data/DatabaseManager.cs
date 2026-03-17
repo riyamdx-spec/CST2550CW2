@@ -656,10 +656,12 @@ namespace BettingSystem.Data
                         }
                     }
 
-                    // fetch bets for each slip
-                    string betQuery = @"SELECT b.result, o.selection, o.odd_value, bt.bet_type_name,
+                    if (history.Count > 0)
+                    {
+                        // fetch bets for each slip
+                        string betQuery = @"SELECT b.result, o.selection, o.odd_value, bt.bet_type_id, bt.bet_type_name,
                                                 ht.team_name AS home_team, at.team_name AS away_team, 
-                                                g.game_date, l.league_name
+                                                g.game_date, l.league_name, g.game_id
                                 FROM Bet b
                                 INNER JOIN Odd o ON b.odd_id = o.odd_id
                                 INNER JOIN BetType bt ON o.bet_type_id = bt.bet_type_id
@@ -669,50 +671,52 @@ namespace BettingSystem.Data
                                 INNER JOIN League l ON g.league_id = l.league_id
                                 WHERE b.slip_id = @slipID";
 
-                    using (SqlConnection betConnection = new SqlConnection(connectionString))
-                    {
-                        await betConnection.OpenAsync();
-
-                        // loop through slips and fetch bets for each slip
-                        foreach (BetHistorySlip slip in history)
+                        using (SqlConnection betConnection = new SqlConnection(connectionString))
                         {
-                            using (SqlCommand betCmd = new SqlCommand(betQuery, betConnection))
+                            await betConnection.OpenAsync();
+
+                            // loop through slips and fetch bets for each slip
+                            foreach (BetHistorySlip slip in history)
                             {
-                                betCmd.Parameters.AddWithValue("@slipID", slip.SlipID);
-
-                                using (SqlDataReader betReader = await betCmd.ExecuteReaderAsync())
+                                using (SqlCommand betCmd = new SqlCommand(betQuery, betConnection))
                                 {
-                                    while (await betReader.ReadAsync())
-                                    {
-                                        HistoryBet bet = new HistoryBet(
-                                        betReader["selection"].ToString()!,
-                                        Convert.ToDecimal(betReader["odd_value"]),
-                                        betReader["bet_type_name"].ToString()!,
-                                        betReader["result"].ToString()!,
-                                        betReader["home_team"].ToString()!,
-                                        betReader["away_team"].ToString()!,
-                                        Convert.ToDateTime(betReader["game_date"]),
-                                        betReader["league_name"].ToString()!
-                                        );
+                                    betCmd.Parameters.AddWithValue("@slipID", slip.SlipID);
 
-                                        slip.Bets.Add(bet);
+                                    using (SqlDataReader betReader = await betCmd.ExecuteReaderAsync())
+                                    {
+                                        while (await betReader.ReadAsync())
+                                        {
+                                            HistoryBet bet = new HistoryBet(
+                                                betReader["selection"].ToString()!,
+                                                Convert.ToDecimal(betReader["odd_value"]),
+                                                Convert.ToInt32(betReader["bet_type_id"]),
+                                                betReader["bet_type_name"].ToString()!,
+                                                betReader["result"].ToString()!,
+                                                betReader["home_team"].ToString()!,
+                                                betReader["away_team"].ToString()!,
+                                                Convert.ToDateTime(betReader["game_date"]),
+                                                betReader["league_name"].ToString()!,
+                                                Convert.ToInt32(betReader["game_id"])
+                                            );
+
+                                            slip.Bets.Add(bet);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }       
-
+                    }
                     return history;
                 }
                 catch (SqlException e)
                 {
                     Console.WriteLine($"Database error: {e.Message}");
-                    return [];
+                    return new List<BetHistorySlip>();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"Error: {e.Message}");
-                    return [];
+                    return new List<BetHistorySlip>();
                 }
             }
         }
