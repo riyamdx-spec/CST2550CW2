@@ -12,6 +12,7 @@ namespace BettingSystem.Forms
 
         private readonly DatabaseManager DBManager = new DatabaseManager();
         private readonly ImageLoader ImgLoader = new ImageLoader();
+        private readonly Validation validator = new Validation();
 
         private League[] Leagues;
         private Dictionary<int, Team> TeamsDict;
@@ -247,6 +248,7 @@ namespace BettingSystem.Forms
         //display panel with the bets that can be placed
         private async Task DisplayBetSelections(MatchDisplayInfo MatchDetails)
         {
+            scoreOddLbl.Visible = false;
             DisplayButtonText();
             DisplayPlayersName(MatchDetails.HomeTeam.TeamId, MatchDetails.AwayTeam.TeamId);
             await DisplayMatchBetDetails(MatchDetails);
@@ -334,7 +336,7 @@ namespace BettingSystem.Forms
             //add click event
             foreach (RoundedButton btn in BetButtons)
             {
-                    btn.Click += BetBtnClicked;
+                btn.Click += BetBtnClicked;
             }
         }
 
@@ -410,7 +412,8 @@ namespace BettingSystem.Forms
             );
 
             //add to bet slip
-            UserSlip.AddBet(newBet);
+            string message = UserSlip.AddBet(newBet);
+            new Notification(message, NotificationType.Success, this);
         }
 
         //find odd
@@ -430,13 +433,12 @@ namespace BettingSystem.Forms
             profilePage.Location = this.Location;
             this.Hide();
             profilePage.Show();
-            ReInitialise();
         }
 
         //open bet slip page
         private void NavBar1_BetSlipClicked(object? sender, EventArgs e)
         {
-            ReInitialise();
+
         }
 
         //update width of matchesPanel dynamically
@@ -480,21 +482,29 @@ namespace BettingSystem.Forms
             string homeScore = homeScoreTxt.Text;
             string awayScore = awayScoreTxt.Text;
 
+            scoreOddLbl.Visible = false;
+
             if (String.IsNullOrWhiteSpace(homeScore) || String.IsNullOrWhiteSpace(awayScore))
             {
+                scoreOddLbl.Text = "Please enter both home and away scores";
+                scoreOddLbl.ForeColor = Color.Firebrick;
+                scoreOddLbl.Visible = true;
                 return;
             }
 
-            var isHomeNumeric = int.TryParse(homeScore, out int homeInputScore);
-            var isAwayNumeric = int.TryParse(awayScore, out int awayInputScore);
-            if (!isHomeNumeric || !isAwayNumeric)
+            (bool valid, string? message) = validator.CheckScores(homeScore, awayScore);
+            if (valid) 
             {
-                return;
+                //get odds
+
+                //add to bet slip
             }
-
-            // get odds
-
-            // add to bet slip
+            else
+            {
+                scoreOddLbl.Text = message;
+                scoreOddLbl.ForeColor = Color.Firebrick;
+                scoreOddLbl.Visible = true;
+            }
         }
 
         //round corners of banner picture box
