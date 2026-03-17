@@ -139,6 +139,21 @@ namespace BettingSystem.Forms
         {
             ClearMatches();
 
+            // check if there are no matches
+            if (footballMatches.Count == 0)
+            {
+                Label noMatchLbl = new Label();
+                noMatchLbl.Text = "No Matches Found.";
+                noMatchLbl.Font = new Font("Times New Roman", 22, FontStyle.Bold);
+                noMatchLbl.ForeColor = Color.FromArgb(241, 241, 241);
+                noMatchLbl.Width = matchesFlowLayoutPanel.ClientSize.Width - matchesFlowLayoutPanel.Padding.Horizontal;
+                noMatchLbl.Height = 300;
+                noMatchLbl.TextAlign = ContentAlignment.MiddleCenter;
+                matchesFlowLayoutPanel.Controls.Add(noMatchLbl);
+                matchesFlowLayoutPanel.Show();
+                return;
+            }
+
             foreach (FootballMatch match in footballMatches)
             {
                 // get info to be displayed on the match panel
