@@ -30,7 +30,7 @@
         {
             matchRoundedPanel = new RoundedPanel();
             teamInfoPanel = new Panel();
-            tableLayoutPanel1 = new TableLayoutPanel();
+            matchTableLayoutPanel = new TableLayoutPanel();
             vsLbl = new Label();
             homeTeamPanel = new Panel();
             homeTeamLbl = new Label();
@@ -46,7 +46,7 @@
             matchDateLbl = new Label();
             matchRoundedPanel.SuspendLayout();
             teamInfoPanel.SuspendLayout();
-            tableLayoutPanel1.SuspendLayout();
+            matchTableLayoutPanel.SuspendLayout();
             homeTeamPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)homeTeamImg).BeginInit();
             awayTeamPanel.SuspendLayout();
@@ -72,7 +72,7 @@
             // 
             // teamInfoPanel
             // 
-            teamInfoPanel.Controls.Add(tableLayoutPanel1);
+            teamInfoPanel.Controls.Add(matchTableLayoutPanel);
             teamInfoPanel.Dock = DockStyle.Fill;
             teamInfoPanel.Location = new Point(148, 39);
             teamInfoPanel.Margin = new Padding(2, 1, 2, 1);
@@ -80,24 +80,24 @@
             teamInfoPanel.Size = new Size(489, 90);
             teamInfoPanel.TabIndex = 3;
             // 
-            // tableLayoutPanel1
+            // matchTableLayoutPanel
             // 
-            tableLayoutPanel1.ColumnCount = 3;
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 54F));
-            tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutPanel1.Controls.Add(vsLbl, 1, 0);
-            tableLayoutPanel1.Controls.Add(homeTeamPanel, 0, 0);
-            tableLayoutPanel1.Controls.Add(awayTeamPanel, 2, 0);
-            tableLayoutPanel1.Dock = DockStyle.Fill;
-            tableLayoutPanel1.Location = new Point(0, 0);
-            tableLayoutPanel1.Margin = new Padding(2, 1, 2, 1);
-            tableLayoutPanel1.Name = "tableLayoutPanel1";
-            tableLayoutPanel1.RowCount = 1;
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 100F));
-            tableLayoutPanel1.Size = new Size(489, 90);
-            tableLayoutPanel1.TabIndex = 0;
+            matchTableLayoutPanel.ColumnCount = 3;
+            matchTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            matchTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 54F));
+            matchTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            matchTableLayoutPanel.Controls.Add(vsLbl, 1, 0);
+            matchTableLayoutPanel.Controls.Add(homeTeamPanel, 0, 0);
+            matchTableLayoutPanel.Controls.Add(awayTeamPanel, 2, 0);
+            matchTableLayoutPanel.Dock = DockStyle.Fill;
+            matchTableLayoutPanel.Location = new Point(0, 0);
+            matchTableLayoutPanel.Margin = new Padding(2, 1, 2, 1);
+            matchTableLayoutPanel.Name = "matchTableLayoutPanel";
+            matchTableLayoutPanel.RowCount = 1;
+            matchTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            matchTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 100F));
+            matchTableLayoutPanel.Size = new Size(489, 90);
+            matchTableLayoutPanel.TabIndex = 0;
             // 
             // vsLbl
             // 
@@ -262,7 +262,7 @@
             Size = new Size(762, 129);
             matchRoundedPanel.ResumeLayout(false);
             teamInfoPanel.ResumeLayout(false);
-            tableLayoutPanel1.ResumeLayout(false);
+            matchTableLayoutPanel.ResumeLayout(false);
             homeTeamPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)homeTeamImg).EndInit();
             awayTeamPanel.ResumeLayout(false);
@@ -282,7 +282,7 @@
         private Label matchTimeLbl;
         private Label matchDateLbl;
         private Panel teamInfoPanel;
-        private TableLayoutPanel tableLayoutPanel1;
+        private TableLayoutPanel matchTableLayoutPanel;
         private Label vsLbl;
         private Panel homeTeamPanel;
         private Label homeTeamLbl;
