@@ -466,12 +466,12 @@ namespace BettingSystem.Data
 
             if (all)
             {
-                query = "SELECT * FROM Game ORDER BY game_date ASC";
+                query = "SELECT * FROM Game ORDER BY game_date DESC";
             }
-            //fetch upcoming matches in ascending order of date
+            //fetch upcoming matches in descending order of date
             else
             {
-                query = "SELECT * FROM Game WHERE game_status = 'Scheduled' ORDER BY game_date ASC";
+                query = "SELECT * FROM Game WHERE game_status = 'Scheduled' ORDER BY game_date DESC";
             }
 
             using (SqlConnection connection = new SqlConnection(connectionString))
