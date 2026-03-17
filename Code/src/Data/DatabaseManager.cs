@@ -721,6 +721,68 @@ namespace BettingSystem.Data
             }
         }
 
+        //fetch results of games
+        public async Task<Dictionary<int, GameResult>> FetchGameResultsAsync(List<int> gameIds)
+        {
+            Dictionary<int, GameResult> gameResult = new Dictionary<int, GameResult>();
+
+            if (gameIds is null || gameIds.Count == 0)
+                return gameResult;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand())
+            {
+                try
+                {
+                    command.Connection = connection;
+
+                    await connection.OpenAsync();
+                    List<string> idParams = new List<string>();
+
+                    for (int i = 0; i < gameIds.Count; i++)
+                    {
+                        command.Parameters.AddWithValue($"@game_id{i}", gameIds[i]);
+                        idParams.Add($"@game_id{i}");
+                    }
+
+                    command.CommandText = $@"SELECT game_id, home_team_score, away_team_score, player_name, total_corners, red_cards, yellow_cards
+                                            FROM GameResult gr
+                                            LEFT JOIN Player p ON gr.first_scorer_id = p.player_id
+                                            WHERE game_id IN ({String.Join(',', idParams)})";
+
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            int matchId = Convert.ToInt32(reader["game_id"]);
+                            GameResult matchResult = new GameResult(
+                                    matchId,
+                                    Convert.ToInt32(reader["home_team_score"]),
+                                    Convert.ToInt32(reader["away_team_score"]),
+                                    Convert.ToInt32(reader["total_corners"]),
+                                    Convert.ToInt32(reader["red_cards"]),
+                                    Convert.ToInt32(reader["yellow_cards"]),
+                                    reader["player_name"]?.ToString() ?? null
+                                );
+
+                            gameResult[matchId] = matchResult;
+                        }
+                    }
+                    return gameResult;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new Dictionary<int, GameResult>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new Dictionary<int, GameResult>();
+                }
+            }
+        }
+
         // fetch players details for upcoming matches
         public async Task<Dictionary<int, List<Player>>> FetchPlayersAsync()
         {
