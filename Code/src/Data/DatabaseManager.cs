@@ -2,6 +2,8 @@
 using Microsoft.Data.SqlClient;
 using System.Configuration;
 using System.Security.Cryptography;
+using System.Windows.Forms;
+using static System.ComponentModel.Design.ObjectSelectorEditor;
 
 namespace BettingSystem.Data
 {
@@ -453,16 +455,25 @@ namespace BettingSystem.Data
             }
         }
         // fetch matches from database
-        public async Task<FootballMatchCollection> FetchMatchesAsync()
+        public async Task<FootballMatchCollection> FetchMatchesAsync(bool all=false)
         {
             //list to store matches in chronological order
             SortedSet<FootballMatch> matches = new SortedSet<FootballMatch>(new FootballMatchKeyComparer());
 
             //dictionary for league filtering
             Dictionary<int, SortedSet<FootballMatch>> matchesByLeague = new Dictionary<int, SortedSet<FootballMatch>>();
+            string query;
 
+            if (all)
+            {
+                query = "SELECT * FROM Game ORDER BY game_date ASC";
+            }
             //fetch upcoming matches in ascending order of date
-            string query = "SELECT * FROM Game WHERE game_status='Scheduled' ORDER BY game_date ASC";
+            else
+            {
+                query = "SELECT * FROM Game WHERE game_status = 'Scheduled' ORDER BY game_date ASC";
+            }
+
             using (SqlConnection connection = new SqlConnection(connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
