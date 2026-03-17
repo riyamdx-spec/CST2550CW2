@@ -879,5 +879,75 @@ namespace BettingSystem.Data
             }
         }
 
+        // add new match in database
+        public async Task<bool> AddNewMatchAsync(FootballMatch newMatch, GameResult matchResult)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        int insertedGameId;
+
+                        //add match to Game table
+                        string insertMatchQuery = @"INSERT INTO Game (league_id, home_team_id, away_team_id, game_date)
+                                                 OUTPUT INSERTED.game_id
+                                                 VALUES (@leagueId, @homeTeamId, @awayTeamId, @matchDate)";
+
+                        using (SqlCommand insertMatchCmd = new SqlCommand(insertMatchQuery, connection, transaction))
+                        {
+                            insertMatchCmd.Parameters.AddWithValue("@leagueId", newMatch.LeagueID);
+                            insertMatchCmd.Parameters.AddWithValue("@homeTeamId", newMatch.HomeTeamID);
+                            insertMatchCmd.Parameters.AddWithValue("@awayTeamId", newMatch.AwayTeamID);
+                            insertMatchCmd.Parameters.AddWithValue("@matchDate", newMatch.GameDate);
+
+                            insertedGameId = (int)await insertMatchCmd.ExecuteScalarAsync();
+
+                            if (insertedGameId <= 0)
+                                throw new Exception("Insert New Match Failed");
+                        }
+
+                        // add Generated Match Result to MatchResult table
+                        string insertResultQuery = @"INSERT INTO GameResult (game_id, home_team_score, away_team_score, first_scorer_id, total_corners, red_cards, yellow_cards) 
+                                                    VALUES (@gameId, @homeScore, @awayScore, @scorerId, @corners, @redCards, @yellowCards)";
+
+                        using (SqlCommand insertResultCmd = new SqlCommand(insertResultQuery, connection, transaction))
+                        {
+                            insertResultCmd.Parameters.AddWithValue("@gameId", insertedGameId);
+                            insertResultCmd.Parameters.AddWithValue("@homeScore", matchResult.HomeTeamScore);
+                            insertResultCmd.Parameters.AddWithValue("@awayScore", matchResult.AwayTeamScore);
+                            insertResultCmd.Parameters.AddWithValue("@scorerId", matchResult.FirstScorerId is null ? DBNull.Value : matchResult.FirstScorerId);
+                            insertResultCmd.Parameters.AddWithValue("@corners", matchResult.TotalCorners);
+                            insertResultCmd.Parameters.AddWithValue("@redCards", matchResult.RedCards);
+                            insertResultCmd.Parameters.AddWithValue("@yellowCards", matchResult.YellowCards);
+
+                            int insertedRow = await insertResultCmd.ExecuteNonQueryAsync();
+
+                            //check if match result was inserted
+                            if (insertedRow <= 0)
+                                throw new Exception("Insert Match Result Failed");
+                        }
+
+                        //add generated odds to database
+
+
+                        newMatch.GameID = insertedGameId;
+                        matchResult.GameId = insertedGameId;
+
+                        transaction.Commit();
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine($"Error: {e.Message}");
+                        return false;
+                    }
+                }
+            }
+        }
+
     }
 }
