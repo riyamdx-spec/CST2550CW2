@@ -1,8 +1,10 @@
 ﻿using BettingSystem.Models;
 using Microsoft.Data.SqlClient;
+using Microsoft.VisualBasic.ApplicationServices;
 using System.Configuration;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using static System.ComponentModel.Design.ObjectSelectorEditor;
 
 namespace BettingSystem.Data
@@ -813,17 +815,26 @@ namespace BettingSystem.Data
         }
 
         // fetch players details for upcoming matches
-        public async Task<Dictionary<int, List<Player>>> FetchPlayersAsync()
+        public async Task<Dictionary<int, List<Player>>> FetchPlayersAsync(bool all=false)
         {
             //store players in dictionary keyed by TeamId
             Dictionary<int, List<Player>> PlayersByTeamId = new Dictionary<int, List<Player>>();
-
-            string query = @"SELECT DISTINCT player_id, player_name, team_id, player_position 
-                             FROM Player p
-                             JOIN Game g 
-                             ON p.team_id = g.home_team_id OR p.team_id = g.away_team_id
-                             WHERE g.game_status = 'Scheduled'";
-
+            string query;
+            if (all)
+            {
+                query = "SELECT player_id, player_name, team_id, player_position FROM Player";
+            }
+            else
+            {
+                query = @"SELECT player_id, player_name, team_id, player_position 
+                        FROM Player
+                        WHERE team_id IN (
+                                SELECT home_team_id FROM Game WHERE game_status = 'Scheduled'
+                                UNION
+                                SELECT away_team_id FROM Game WHERE game_status = 'Scheduled'
+                        )";
+            }
+                
             using (SqlConnection connection = new SqlConnection(connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
