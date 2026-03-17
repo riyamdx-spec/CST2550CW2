@@ -776,7 +776,7 @@ namespace BettingSystem.Data
                         idParams.Add($"@game_id{i}");
                     }
 
-                    command.CommandText = $@"SELECT game_id, home_team_score, away_team_score, player_name, total_corners, red_cards, yellow_cards
+                    command.CommandText = $@"SELECT game_id, home_team_score, away_team_score, first_scorer_id, player_name, total_corners, red_cards, yellow_cards
                                             FROM GameResult gr
                                             LEFT JOIN Player p ON gr.first_scorer_id = p.player_id
                                             WHERE game_id IN ({String.Join(',', idParams)})";
@@ -793,7 +793,8 @@ namespace BettingSystem.Data
                                     Convert.ToInt32(reader["total_corners"]),
                                     Convert.ToInt32(reader["red_cards"]),
                                     Convert.ToInt32(reader["yellow_cards"]),
-                                    reader["player_name"]?.ToString() ?? null
+                                    reader["player_name"]?.ToString() ?? null,
+                                    reader["first_scorer_id"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["first_scorer_id"])
                                 );
 
                             gameResult[matchId] = matchResult;
