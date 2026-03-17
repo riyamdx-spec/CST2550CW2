@@ -14,7 +14,7 @@
         }
 
         // add bet or update
-        public (bool success, string message) AddBet(Bet bet)
+        public string AddBet(Bet bet)
         {
             // check if bet exists
             foreach (Bet existingBet in Bets)
@@ -25,7 +25,7 @@
                     existingBet.Selection = bet.Selection;
                     existingBet.OddValue = bet.OddValue;
                     CalculateTotalOdds();
-                    return (true, "Bet updated");
+                    return "Bet updated";
                 }
             }
 
@@ -34,7 +34,7 @@
             // store node reference 
             bet.Node = node;
             CalculateTotalOdds();
-            return (true, "Bet added");
+            return "Bet added";
         }
 
         // remove bet with node reference
