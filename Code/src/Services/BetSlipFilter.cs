@@ -11,6 +11,23 @@ namespace BettingSystem.Services
             BetSlips = betSlips;
         }
 
+        private List<BetHistorySlip> ReverseList(List<BetHistorySlip> filteredSlips)
+        {
+            int maxIndex = filteredSlips.Count -1;
+            int startIndex = 0;
+            BetHistorySlip temp;
+
+            while (startIndex < maxIndex)
+            {
+                temp = filteredSlips[startIndex];
+                filteredSlips[startIndex] = filteredSlips[maxIndex];
+                filteredSlips[maxIndex] = temp;
+                startIndex++;
+                maxIndex--;
+            }
+            return filteredSlips;
+        }
+
         //sort by date and filter by status
         public List<BetHistorySlip> FilterBetSlips(string? status, bool ascending)
         {
@@ -24,12 +41,10 @@ namespace BettingSystem.Services
                                 .ToList();
             }
 
-            //sort in ascending order of date
+            //sort in ascending order of date by reversing the list
             if (ascending) 
             {
-                filteredBetSlips = filteredBetSlips
-                               .OrderBy(b => b.BetDate)
-                               .ToList();
+                return ReverseList(filteredBetSlips);
             }
 
             return filteredBetSlips;
