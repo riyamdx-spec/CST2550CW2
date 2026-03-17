@@ -395,12 +395,30 @@ namespace BettingSystem.Data
         }
 
         //fetch teams info from database
-        public async Task<Dictionary<int, Team>> FetchTeamsAsync()
+        public async Task<Dictionary<int, Team>> FetchTeamsAsync(bool all=false)
         {
             //store teams in dictionary keyed by id
             Dictionary<int, Team> teamsByID = new Dictionary<int, Team>();
+            string query;
 
-            string query = "SELECT * FROM Team";
+            //fetch all teams
+            if (all)
+            {
+                query = "SELECT team_id, team_name, logo_path FROM Team";
+            }
+
+            //fetch teams in upcoming matches only
+            else
+            {
+                query = @"SELECT team_id, team_name, logo_path
+                          FROM Team
+                          WHERE team_id IN (
+                                SELECT home_team_id FROM Game WHERE game_status = 'Scheduled'
+                                UNION
+                                SELECT away_team_id FROM Game WHERE game_status = 'Scheduled'
+                          )";
+            }
+
             using (SqlConnection connection = new SqlConnection(connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
