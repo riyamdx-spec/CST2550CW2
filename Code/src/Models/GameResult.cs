@@ -9,9 +9,10 @@
         public int RedCards { get; set; }
         public int YellowCards { get; set; }
 
+        public int? FirstScorerId { get; set; }
         public string? FirstScorerName { get; set; }
 
-        public GameResult(int gameId, int homeTeamScore, int awayTeamScore, int totalCorners, int redCards, int yellowCards, string? firstScorerName)
+        public GameResult(int gameId, int homeTeamScore, int awayTeamScore, int totalCorners, int redCards, int yellowCards, string? firstScorerName, int? firstScorerId)
         {
             GameId = gameId;
             HomeTeamScore = homeTeamScore;
@@ -20,6 +21,7 @@
             RedCards = redCards;
             YellowCards = yellowCards;
             FirstScorerName = firstScorerName;
+            FirstScorerId = firstScorerId;
         }
     }
 }
