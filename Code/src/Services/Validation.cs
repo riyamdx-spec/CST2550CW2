@@ -161,5 +161,17 @@ namespace BettingSystem.Services
             }
             return (true, null);
         }
+
+        //check new match detail entered by admin
+        public (bool valid, string? message) CheckMatchEntries(int homeId, int awayId)
+        {
+            if (homeId == awayId)
+            {
+                return (false, "Home and Away Teams cannot be the same");
+            }
+
+            return (true, null);
+
+        }
     }
 }
