@@ -32,6 +32,7 @@
             usersPageBtn = new Button();
             navPanel = new Panel();
             navCentrePanel = new Panel();
+            addMatchPageBtn = new Button();
             financialPageBtn = new Button();
             matchSearchPageBtn = new Button();
             rightNavPanel = new Panel();
@@ -84,6 +85,7 @@
             // navCentrePanel
             // 
             navCentrePanel.AutoSize = true;
+            navCentrePanel.Controls.Add(addMatchPageBtn);
             navCentrePanel.Controls.Add(financialPageBtn);
             navCentrePanel.Controls.Add(matchSearchPageBtn);
             navCentrePanel.Controls.Add(usersPageBtn);
@@ -93,6 +95,22 @@
             navCentrePanel.Size = new Size(567, 75);
             navCentrePanel.TabIndex = 2;
             // 
+            // addMatchPageBtn
+            // 
+            addMatchPageBtn.AutoSize = true;
+            addMatchPageBtn.Cursor = Cursors.Hand;
+            addMatchPageBtn.FlatAppearance.BorderSize = 0;
+            addMatchPageBtn.FlatStyle = FlatStyle.Flat;
+            addMatchPageBtn.Font = new Font("Times New Roman", 16.125F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            addMatchPageBtn.ForeColor = Color.FromArgb(241, 241, 241);
+            addMatchPageBtn.Location = new Point(292, 20);
+            addMatchPageBtn.Name = "addMatchPageBtn";
+            addMatchPageBtn.Size = new Size(128, 35);
+            addMatchPageBtn.TabIndex = 3;
+            addMatchPageBtn.Text = "Add Match";
+            addMatchPageBtn.UseVisualStyleBackColor = true;
+            addMatchPageBtn.Click += addMatchPageBtn_Click;
+            // 
             // financialPageBtn
             // 
             financialPageBtn.AutoSize = true;
@@ -101,11 +119,11 @@
             financialPageBtn.FlatStyle = FlatStyle.Flat;
             financialPageBtn.Font = new Font("Times New Roman", 16.125F, FontStyle.Bold, GraphicsUnit.Point, 0);
             financialPageBtn.ForeColor = Color.FromArgb(241, 241, 241);
-            financialPageBtn.Location = new Point(357, 20);
+            financialPageBtn.Location = new Point(461, 20);
             financialPageBtn.Name = "financialPageBtn";
-            financialPageBtn.Size = new Size(128, 35);
+            financialPageBtn.Size = new Size(100, 35);
             financialPageBtn.TabIndex = 2;
-            financialPageBtn.Text = "Profit/Loss";
+            financialPageBtn.Text = "Finance";
             financialPageBtn.UseVisualStyleBackColor = true;
             financialPageBtn.Click += financialPageBtn_Click;
             // 
@@ -119,9 +137,9 @@
             matchSearchPageBtn.ForeColor = Color.FromArgb(241, 241, 241);
             matchSearchPageBtn.Location = new Point(151, 20);
             matchSearchPageBtn.Name = "matchSearchPageBtn";
-            matchSearchPageBtn.Size = new Size(171, 35);
+            matchSearchPageBtn.Size = new Size(105, 35);
             matchSearchPageBtn.TabIndex = 1;
-            matchSearchPageBtn.Text = "Search Matches";
+            matchSearchPageBtn.Text = "Matches";
             matchSearchPageBtn.UseVisualStyleBackColor = true;
             matchSearchPageBtn.Click += matchSearchPageBtn_Click;
             // 
@@ -260,5 +278,6 @@
         private ToolStripMenuItem editProfileToolStripMenuItem;
         private ToolStripMenuItem changePasswordToolStripMenuItem;
         private ToolStripMenuItem logOutToolStripMenuItem;
+        private Button addMatchPageBtn;
     }
 }

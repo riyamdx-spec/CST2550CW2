@@ -9,7 +9,10 @@ namespace BettingSystem.Forms.CustomControls
         //click events
         public event EventHandler UsersPageClicked;
         public event EventHandler SearchMatchesPageClicked;
+        public event EventHandler AddMatchesPageClicked;
         public event EventHandler FinancialPageClicked;
+        public event EventHandler LogoutClicked;
+
         public AdminNavBar()
         {
             InitializeComponent();
@@ -50,9 +53,7 @@ namespace BettingSystem.Forms.CustomControls
 
         private void LogOut_Click(object sender, EventArgs e)
         {
-            ConnectedAdmin = null;
-
-            // go back to landing page
+            LogoutClicked?.Invoke(this, new EventArgs());
         }
 
         private void usersPageBtn_Click(object sender, EventArgs e)
@@ -68,6 +69,11 @@ namespace BettingSystem.Forms.CustomControls
         private void financialPageBtn_Click(object sender, EventArgs e)
         {
             FinancialPageClicked?.Invoke(this, new EventArgs());
+        }
+
+        private void addMatchPageBtn_Click(object sender, EventArgs e)
+        {
+            AddMatchesPageClicked?.Invoke(this, new EventArgs());
         }
     }
 }
