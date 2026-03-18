@@ -1,11 +1,7 @@
 ﻿using BettingSystem.Models;
 using Microsoft.Data.SqlClient;
-using Microsoft.VisualBasic.ApplicationServices;
 using System.Configuration;
 using System.Security.Cryptography;
-using System.Windows.Forms;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
-using static System.ComponentModel.Design.ObjectSelectorEditor;
 
 namespace BettingSystem.Data
 {
@@ -753,7 +749,7 @@ namespace BettingSystem.Data
         }
 
         //fetch results of games
-        public async Task<Dictionary<int, GameResult>> FetchGameResultsAsync(List<int> gameIds)
+        public async Task<Dictionary<int, GameResult>> FetchGameResultsAsync(List<int>? gameIds, bool all = false)
         {
             Dictionary<int, GameResult> gameResult = new Dictionary<int, GameResult>();
 
@@ -768,18 +764,30 @@ namespace BettingSystem.Data
                     command.Connection = connection;
 
                     await connection.OpenAsync();
-                    List<string> idParams = new List<string>();
-
-                    for (int i = 0; i < gameIds.Count; i++)
+                    if (all)
                     {
-                        command.Parameters.AddWithValue($"@game_id{i}", gameIds[i]);
-                        idParams.Add($"@game_id{i}");
+                        command.CommandText = $@"SELECT game_id, home_team_score, away_team_score, first_scorer_id, player_name, total_corners, red_cards, yellow_cards
+                                            FROM GameResult gr
+                                            LEFT JOIN Player p ON gr.first_scorer_id = p.player_id";
                     }
+                    else
+                    {
+                        if (gameIds is null || gameIds.Count == 0)
+                            return gameResult;
 
-                    command.CommandText = $@"SELECT game_id, home_team_score, away_team_score, first_scorer_id, player_name, total_corners, red_cards, yellow_cards
+                        List<string> idParams = new List<string>();
+
+                        for (int i = 0; i < gameIds.Count; i++)
+                        {
+                            command.Parameters.AddWithValue($"@game_id{i}", gameIds[i]);
+                            idParams.Add($"@game_id{i}");
+                        }
+
+                        command.CommandText = $@"SELECT game_id, home_team_score, away_team_score, first_scorer_id, player_name, total_corners, red_cards, yellow_cards
                                             FROM GameResult gr
                                             LEFT JOIN Player p ON gr.first_scorer_id = p.player_id
                                             WHERE game_id IN ({String.Join(',', idParams)})";
+                    }
 
                     using (SqlDataReader reader = await command.ExecuteReaderAsync())
                     {
@@ -948,6 +956,5 @@ namespace BettingSystem.Data
                 }
             }
         }
-
     }
 }
