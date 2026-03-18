@@ -1,5 +1,6 @@
 ﻿using BettingSystem.Models;
 using Microsoft.Data.SqlClient;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Security.Cryptography;
 
@@ -953,6 +954,47 @@ namespace BettingSystem.Data
                         Console.WriteLine($"Error: {e.Message}");
                         return false;
                     }
+                }
+            }
+        }
+        public async Task<Dictionary<int, List<int>>> FetchLeagueTeamAsync()
+        {
+            Dictionary<int, List<int>> leagueTeam = new Dictionary<int, List<int>>();
+
+            string query = "SELECT * FROM LeagueTeam";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            int TeamId = Convert.ToInt32(reader["team_id"]);
+                            int LeagueId = Convert.ToInt32(reader["league_id"]);
+
+                            if (!leagueTeam.TryGetValue(LeagueId, out var leagueTeams))
+                            {
+                                leagueTeams = new List<int>();
+                                leagueTeam[LeagueId] = leagueTeams;
+                            }
+                            //add team in the list for that league
+                            leagueTeam[LeagueId].Add(TeamId);
+                        }
+                    }
+                    return leagueTeam;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new Dictionary<int, List<int>>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new Dictionary<int, List<int>>();
                 }
             }
         }
