@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Models;
+using BettingSystem.Services;
 using Microsoft.Data.SqlClient;
 using Microsoft.VisualBasic.ApplicationServices;
 using System.Configuration;
@@ -13,10 +14,17 @@ namespace BettingSystem.Data
     public class DatabaseManager
     {
         private readonly string connectionString;
+        private readonly OddsGenerator oddsGenerator;
 
         public DatabaseManager()
         {
             connectionString = ConfigurationManager.ConnectionStrings["BettingDB"].ConnectionString;
+            oddsGenerator = new OddsGenerator(connectionString);
+        }
+
+        public OddsAutoGeneratorService CreateOddsAutoGeneratorService()
+        {
+            return new OddsAutoGeneratorService(connectionString);
         }
 
         //to login
@@ -930,13 +938,12 @@ namespace BettingSystem.Data
                                 throw new Exception("Insert Match Result Failed");
                         }
 
-                        //add generated odds to database
-
-
                         newMatch.GameID = insertedGameId;
                         matchResult.GameId = insertedGameId;
 
                         transaction.Commit();
+
+                        TryGenerateOddsForMatch(insertedGameId, newMatch);
                         return true;
                     }
                     catch (Exception e)
@@ -946,6 +953,18 @@ namespace BettingSystem.Data
                         return false;
                     }
                 }
+            }
+        }
+
+        private void TryGenerateOddsForMatch(int gameId, FootballMatch match)
+        {
+            try
+            {
+                oddsGenerator.GenerateAllOddsForGame(gameId, match.HomeTeamID, match.AwayTeamID, match.LeagueID);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Odds generation warning for game {gameId}: {e.Message}");
             }
         }
 
