@@ -10,6 +10,7 @@ namespace BettingSystem.Forms
         public event EventHandler MatchesClicked;
         public event EventHandler BetSlipClicked;
         public event EventHandler AccountClicked;
+        public event EventHandler LogoutClicked;
 
         public NavBar()
         {
@@ -50,6 +51,11 @@ namespace BettingSystem.Forms
         private void betSlipsPageBtn_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void LogOutToolStripMenuItem_Click(Object sender, EventArgs e)
+        {
+            LogoutClicked?.Invoke(this, new EventArgs());
         }
 
         // to open dropwdown menu

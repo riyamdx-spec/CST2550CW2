@@ -172,6 +172,7 @@
             logOutToolStripMenuItem.Padding = new Padding(0, 10, 0, 1);
             logOutToolStripMenuItem.Size = new Size(180, 40);
             logOutToolStripMenuItem.Text = "Log Out";
+            logOutToolStripMenuItem.Click += LogOutToolStripMenuItem_Click;
             // 
             // navDepositBtn
             // 
