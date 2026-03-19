@@ -200,8 +200,35 @@ namespace BettingSystem.Forms
             CurrentStatusFilter = "All";
             SortingDateAsc = false;
 
+            await FetchNewGameResults();
+
             applyFilterBtn_Click(null, null);
             DisplaySlips();
+        }
+
+        private async Task FetchNewGameResults()
+        {
+            var gameIds = BetSlips
+               .SelectMany(slip => slip.Bets)
+               .Select(bet => bet.GameId)
+               .Distinct()
+               .ToList();
+
+            var missingIds = gameIds
+                .Where(id => !GameResults.ContainsKey(id))
+                .ToList();
+
+            if (missingIds.Count == 0)
+                return;
+
+            //fetch game results
+            var newResults = await DbManager.FetchGameResultsAsync(missingIds);
+
+            //merge wih Game Resuls
+            foreach (var result in newResults)
+            {
+                GameResults[result.Key] = result.Value;
+            }
         }
 
         //change pages
