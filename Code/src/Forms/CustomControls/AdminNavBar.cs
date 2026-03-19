@@ -29,16 +29,6 @@ namespace BettingSystem.Forms.CustomControls
             navDropdownBtn.Text = $"{ConnectedAdmin.FirstName} {ConnectedAdmin.LastName}";
         }
 
-        // to open dropwdown menu
-        private void navDropdownBtn_Click(object sender, EventArgs e)
-        {
-            dropdownList.Show(navDropdownBtn, 0, navDropdownBtn.Height + 10);
-            dropdownList.Width = navDropdownBtn.Width;
-            editProfileToolStripMenuItem.Width = navDropdownBtn.Width;
-            changePasswordToolStripMenuItem.Width = navDropdownBtn.Width;
-            logOutToolStripMenuItem.Width = navDropdownBtn.Width;
-        }
-
         private void ChangedPassword_Click(object sender, EventArgs e)
         {
             ChangePasswordPopup passwordPopup = new ChangePasswordPopup(ConnectedAdmin);
@@ -74,6 +64,16 @@ namespace BettingSystem.Forms.CustomControls
         private void addMatchPageBtn_Click(object sender, EventArgs e)
         {
             AddMatchesPageClicked?.Invoke(this, new EventArgs());
+        }
+
+        // to open dropwdown menu
+        private void navDropdownBtn_Click_1(object sender, EventArgs e)
+        {
+            dropdownList.Show(navDropdownBtn, 0, navDropdownBtn.Height + 10);
+            dropdownList.Width = navDropdownBtn.Width;
+            changePasswordToolStripMenuItem.Width = navDropdownBtn.Width;
+            editProfileToolStripMenuItem.Width = navDropdownBtn.Width;
+            logOutToolStripMenuItem.Width = navDropdownBtn.Width;
         }
     }
 }

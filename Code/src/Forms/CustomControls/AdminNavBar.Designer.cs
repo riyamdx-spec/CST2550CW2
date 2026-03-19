@@ -173,6 +173,7 @@
             navDropdownBtn.TabStop = false;
             navDropdownBtn.TextAlign = ContentAlignment.MiddleLeft;
             navDropdownBtn.UseVisualStyleBackColor = false;
+            navDropdownBtn.Click += navDropdownBtn_Click_1;
             // 
             // dropdownList
             // 
