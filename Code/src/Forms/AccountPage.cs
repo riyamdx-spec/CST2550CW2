@@ -1,39 +1,73 @@
 ﻿using BettingSystem.Models;
+using BettingSystem.Services;
 
 namespace BettingSystem.Forms
 {
     public partial class AccountPage : Form
     {
         private readonly AppUser CurrentUser;
-        public AccountPage(AppUser loggedInUser)
+        private SessionManager CurrentSession;
+        public AccountPage(AppUser loggedInUser, SessionManager sessionManager)
         {
             CurrentUser = loggedInUser;
+            CurrentSession = sessionManager;
+
             InitializeComponent();
             navBar1.SetCurrentUser(CurrentUser);
 
             //event from navbar
             navBar1.MatchesClicked += NavBar1_MatchesClicked;
             navBar1.BetSlipClicked += NavBar1_BetSlipClicked;
+            navBar1.LogoutClicked += NavBar1_LogoutClicked;
             LoadAccountPage();
+
+            this.FormClosing += AccountPage_FormClosing;
+        }
+
+        private void AccountPage_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            {
+                logOutPopup closingPopup = new logOutPopup(false);
+                if (closingPopup.ShowDialog() == DialogResult.No)
+                {
+                    e.Cancel = true;
+                }
+                else
+                {
+                    CurrentSession.IsExiting = true;
+                    Application.Exit();
+                }
+            }
+        }
+
+        private void NavBar1_LogoutClicked(object? sender, EventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut)
+            {
+                logOutPopup closingPopup = new logOutPopup(true);
+                if (closingPopup.ShowDialog() == DialogResult.Yes)
+                    CurrentSession.LogOut(this);
+            }
         }
 
         // to open bet slip page
         private void NavBar1_BetSlipClicked(object? sender, EventArgs e)
         {
-
+            CurrentSession.OpenBetSlipPage(this);
         }
 
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
         {
-            MainPage matchPage = new MainPage(CurrentUser);
-            matchPage.Size = this.Size;
-            matchPage.Location = this.Location;
-            matchPage.WindowState = this.WindowState;
-            this.Hide();
-            matchPage.Show();
+            CurrentSession.OpenMainPage(this);
         }
 
-        private void LoadAccountPage()
+        private async void historyBtn_Click(object sender, EventArgs e)
+        {
+           await CurrentSession.OpenHistoryPage(this);
+        }
+
+        public void LoadAccountPage()
         {
             //display user details
             DisplayDetails();

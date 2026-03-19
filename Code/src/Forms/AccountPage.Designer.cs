@@ -32,7 +32,6 @@ namespace BettingSystem.Forms
         {
             components = new System.ComponentModel.Container();
             bgPanel = new Panel();
-            navBar1 = new NavBar();
             scrollablePanel = new Panel();
             ProfileTableLayoutPanel = new TableLayoutPanel();
             accountPageLbl = new Label();
@@ -55,6 +54,7 @@ namespace BettingSystem.Forms
             WithdrawBtn = new RoundedButton();
             amountLbl = new Label();
             balanceLbl = new Label();
+            navBar1 = new NavBar();
             dropdownList = new ContextMenuStrip(components);
             viewProfileToolStripMenuItem = new ToolStripMenuItem();
             logOutToolStripMenuItem = new ToolStripMenuItem();
@@ -86,22 +86,14 @@ namespace BettingSystem.Forms
             bgPanel.Size = new Size(1184, 711);
             bgPanel.TabIndex = 0;
             // 
-            // navBar1
-            // 
-            navBar1.Dock = DockStyle.Top;
-            navBar1.Location = new Point(0, 0);
-            navBar1.Name = "navBar1";
-            navBar1.Size = new Size(1184, 85);
-            navBar1.TabIndex = 3;
-            // 
             // scrollablePanel
             // 
             scrollablePanel.AutoScroll = true;
             scrollablePanel.Controls.Add(ProfileTableLayoutPanel);
             scrollablePanel.Dock = DockStyle.Fill;
-            scrollablePanel.Location = new Point(0, 0);
+            scrollablePanel.Location = new Point(0, 85);
             scrollablePanel.Name = "scrollablePanel";
-            scrollablePanel.Size = new Size(1184, 711);
+            scrollablePanel.Size = new Size(1184, 626);
             scrollablePanel.TabIndex = 1;
             // 
             // ProfileTableLayoutPanel
@@ -131,7 +123,7 @@ namespace BettingSystem.Forms
             accountPageLbl.AutoSize = true;
             accountPageLbl.Font = new Font("Times New Roman", 36F, FontStyle.Bold, GraphicsUnit.Point, 0);
             accountPageLbl.ForeColor = Color.FromArgb(241, 241, 241);
-            accountPageLbl.Location = new Point(448, 8);
+            accountPageLbl.Location = new Point(448, 10);
             accountPageLbl.Name = "accountPageLbl";
             accountPageLbl.Padding = new Padding(0, 10, 0, 0);
             accountPageLbl.Size = new Size(271, 65);
@@ -145,7 +137,7 @@ namespace BettingSystem.Forms
             detailsRoundedPanel.BackColor = Color.FromArgb(26, 26, 26);
             detailsRoundedPanel.Controls.Add(DetailsBgtableLayoutPanel);
             detailsRoundedPanel.CornerRadius = 25;
-            detailsRoundedPanel.Location = new Point(158, 85);
+            detailsRoundedPanel.Location = new Point(158, 96);
             detailsRoundedPanel.Name = "detailsRoundedPanel";
             detailsRoundedPanel.Size = new Size(850, 325);
             detailsRoundedPanel.TabIndex = 1;
@@ -281,7 +273,7 @@ namespace BettingSystem.Forms
             buttonsPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             buttonsPanel.Controls.Add(historyBtn, 1, 0);
             buttonsPanel.Controls.Add(changePasswordBtn, 0, 0);
-            buttonsPanel.Location = new Point(173, 431);
+            buttonsPanel.Location = new Point(173, 452);
             buttonsPanel.Name = "buttonsPanel";
             buttonsPanel.RowCount = 1;
             buttonsPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
@@ -307,6 +299,7 @@ namespace BettingSystem.Forms
             historyBtn.TabStop = false;
             historyBtn.Text = "View Bet History";
             historyBtn.UseVisualStyleBackColor = false;
+            historyBtn.Click += historyBtn_Click;
             // 
             // changePasswordBtn
             // 
@@ -336,7 +329,7 @@ namespace BettingSystem.Forms
             balancePanel.Controls.Add(balanceBtnPanel);
             balancePanel.Controls.Add(amountLbl);
             balancePanel.Controls.Add(balanceLbl);
-            balancePanel.Location = new Point(208, 561);
+            balancePanel.Location = new Point(208, 592);
             balancePanel.Name = "balancePanel";
             balancePanel.Size = new Size(750, 240);
             balancePanel.TabIndex = 3;
@@ -419,6 +412,14 @@ namespace BettingSystem.Forms
             balanceLbl.TabIndex = 0;
             balanceLbl.Text = "Current Balance";
             balanceLbl.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // navBar1
+            // 
+            navBar1.Dock = DockStyle.Top;
+            navBar1.Location = new Point(0, 0);
+            navBar1.Name = "navBar1";
+            navBar1.Size = new Size(1184, 85);
+            navBar1.TabIndex = 3;
             // 
             // dropdownList
             // 
