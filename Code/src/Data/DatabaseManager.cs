@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace BettingSystem.Data
 {
@@ -947,12 +948,14 @@ namespace BettingSystem.Data
                                 throw new Exception("Insert Match Result Failed");
                         }
 
+                        //generate odds for the new match
+                        oddsGenerator.GenerateAllOddsForGame(insertedGameId, newMatch.HomeTeamID, newMatch.AwayTeamID, newMatch.LeagueID);
+
                         newMatch.GameID = insertedGameId;
                         matchResult.GameId = insertedGameId;
 
                         transaction.Commit();
 
-                        TryGenerateOddsForMatch(insertedGameId, newMatch);
                         return true;
                     }
                     catch (Exception e)
@@ -1003,17 +1006,6 @@ namespace BettingSystem.Data
                     return new Dictionary<int, List<int>>();
                 }
             }
-        }
-        private void TryGenerateOddsForMatch(int gameId, FootballMatch match)
-        {
-            try
-            {
-                oddsGenerator.GenerateAllOddsForGame(gameId, match.HomeTeamID, match.AwayTeamID, match.LeagueID);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Odds generation warning for game {gameId}: {e.Message}");
-            }
-        }        
+        }     
     }
 }
