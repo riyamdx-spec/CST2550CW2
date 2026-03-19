@@ -18,16 +18,19 @@ namespace BettingSystem.Services
             AwayTeamPlayers = awayTeamPlayers;
         }
 
-        public async Task<(bool valid, string message)> AddMatchToDatabase()
+        //insert to database
+        public async Task<(bool valid, string message, GameResult? generatedResult)> AddMatchToDatabase()
         {
-            bool valid = await DbManager.AddNewMatchAsync(NewMatch, GenerateGameResults());
+            GameResult generatedResult = GenerateGameResults();
+            bool valid = await DbManager.AddNewMatchAsync(NewMatch, generatedResult);
             if (valid)
             {
-                return (true, "Match Successfully Added");
+                return (true, "Match Successfully Added", generatedResult);
             }
-            return (false, "Failed to Add Match");
+            return (false, "Failed to Add Match", generatedResult);
         }
 
+        // generate random results for match
         private GameResult GenerateGameResults()
         {
             int homeScore = Rdm.Next(0, 7);
