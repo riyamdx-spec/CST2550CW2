@@ -1,10 +1,8 @@
 ﻿using BettingSystem.Models;
 using BettingSystem.Services;
 using Microsoft.Data.SqlClient;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 
 namespace BettingSystem.Data
 {
@@ -834,25 +832,11 @@ namespace BettingSystem.Data
         }
 
         // fetch players details for upcoming matches
-        public async Task<Dictionary<int, List<Player>>> FetchPlayersAsync(bool all=false)
+        public async Task<Dictionary<int, List<Player>>> FetchPlayersAsync()
         {
             //store players in dictionary keyed by TeamId
             Dictionary<int, List<Player>> PlayersByTeamId = new Dictionary<int, List<Player>>();
-            string query;
-            if (all)
-            {
-                query = "SELECT player_id, player_name, team_id, player_position FROM Player";
-            }
-            else
-            {
-                query = @"SELECT player_id, player_name, team_id, player_position 
-                        FROM Player
-                        WHERE team_id IN (
-                                SELECT home_team_id FROM Game WHERE game_status = 'Scheduled'
-                                UNION
-                                SELECT away_team_id FROM Game WHERE game_status = 'Scheduled'
-                        )";
-            }
+            string query = "SELECT player_id, player_name, team_id, player_position FROM Player";
                 
             using (SqlConnection connection = new SqlConnection(connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
@@ -1006,6 +990,7 @@ namespace BettingSystem.Data
                     return new Dictionary<int, List<int>>();
                 }
             }
-        }     
+        }
+
     }
 }
