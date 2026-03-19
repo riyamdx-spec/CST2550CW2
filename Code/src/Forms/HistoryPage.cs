@@ -9,16 +9,24 @@ namespace BettingSystem.Forms
     {
         private AppUser CurrentUser;
         private readonly DatabaseManager DbManager = new DatabaseManager();
-        private List<BetHistorySlip> BetSlip;
+        private SessionManager CurrentSession;
+
+        private List<BetHistorySlip> BetSlips;
         private BetSlipFilter SlipFilter;
         private Dictionary<int, GameResult> GameResults;
         private string CurrentStatusFilter = "All";
         private bool SortingDateAsc = false;
 
 
-        public HistoryPage(AppUser loggedInUser)
+        public HistoryPage(AppUser loggedInUser, SessionManager sessionManager)
         {
             CurrentUser = loggedInUser;
+            CurrentSession = sessionManager;
+            BetSlips = CurrentSession.HistoryBetSlips;
+            SlipFilter = new BetSlipFilter(BetSlips);
+
+            //GameResults = sessionManager.GameResults;
+
             InitializeComponent();
 
             navBar1.SetCurrentUser(CurrentUser);
@@ -30,11 +38,40 @@ namespace BettingSystem.Forms
             navBar1.MatchesClicked += NavBar1_MatchesClicked;
             navBar1.BetSlipClicked += NavBar1_BetSlipClicked;
             navBar1.AccountClicked += NavBar1_AccountClicked;
+            navBar1.LogoutClicked += NavBar1_LogoutClicked;
 
             //resize bet slips panels
             slipsFlowLayoutPanel.SizeChanged += UpdateSlipPanel;
+
+            this.FormClosing += HistoryPage_FormClosing;
         }
 
+        private void HistoryPage_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            {
+                logOutPopup closingPopup = new logOutPopup(false);
+                if (closingPopup.ShowDialog() == DialogResult.No)
+                {
+                    e.Cancel = true;
+                }
+                else
+                {
+                    CurrentSession.IsExiting = true;
+                    Application.Exit();
+                }
+            }
+        }
+
+        private void NavBar1_LogoutClicked(object? sender, EventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut)
+            {
+                logOutPopup closingPopup = new logOutPopup(true);
+                if (closingPopup.ShowDialog() == DialogResult.Yes)
+                    CurrentSession.LogOut(this);
+            }
+        }
         private void SetRadioBtnTag()
         {
             newestRadioBtn.Tag = false;
@@ -51,11 +88,7 @@ namespace BettingSystem.Forms
 
         private async Task FetchData()
         {
-            // fetch Bet slips
-            BetSlip = await DbManager.FetchBetHistoryAsync(CurrentUser.UserID);
-            SlipFilter = new BetSlipFilter(BetSlip);
-
-            var gameIds = BetSlip
+            var gameIds = BetSlips
                 .SelectMany(slip => slip.Bets)
                 .Select(bet => bet.GameId)
                 .Distinct()
@@ -78,7 +111,7 @@ namespace BettingSystem.Forms
             slipsFlowLayoutPanel.Controls.Clear();
 
             // check if user has no bet slips
-            if (BetSlip is null || BetSlip.Count == 0)
+            if (BetSlips is null || BetSlips.Count == 0)
             {
                 Label noSlipsLbl = new Label();
                 noSlipsLbl.Text = "No Bet Slips Found.";
@@ -93,7 +126,7 @@ namespace BettingSystem.Forms
             }
 
             //display slips
-            foreach (BetHistorySlip slip in BetSlip)
+            foreach (BetHistorySlip slip in BetSlips)
             {
                 BetSlipPanel slipPanel = new BetSlipPanel(slip, CurrentUser);
                 slipPanel.Margin = new Padding(0, 15, 0, 0);
@@ -154,12 +187,12 @@ namespace BettingSystem.Forms
                 SortingDateAsc = selectedSortingDateAsc;
                 CurrentStatusFilter = selectedStatus;
 
-                BetSlip = SlipFilter.FilterBetSlips(selectedStatus, selectedSortingDateAsc);
+                BetSlips = SlipFilter.FilterBetSlips(selectedStatus, selectedSortingDateAsc);
                 DisplaySlips();
             }
         }
 
-        private void ReInitialisePage()
+        public async Task ReInitialisePage()
         {
             newestRadioBtn.Checked = true;
             allRadioBtn.Checked = true;
@@ -174,12 +207,15 @@ namespace BettingSystem.Forms
         //change pages
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
         {
+            CurrentSession.OpenMainPage(this);
         }
         private void NavBar1_BetSlipClicked(object? sender, EventArgs e)
         {
+            CurrentSession.OpenBetSlipPage(this);
         }
         private void NavBar1_AccountClicked(object? sender, EventArgs e)
         {
+            CurrentSession.OpenMainPage(this);
         }
     }
 }
