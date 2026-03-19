@@ -694,7 +694,7 @@ namespace BettingSystem.Data
                     if (history.Count > 0)
                     {
                         // fetch bets for each slip
-                        string betQuery = @"SELECT b.result, o.selection, o.odd_value, bt.bet_type_id, bt.bet_type_name,
+                        string betQuery = @"SELECT b.bet_id, b.result, o.selection, o.odd_value, bt.bet_type_id, bt.bet_type_name,
                                                 ht.team_name AS home_team, at.team_name AS away_team, 
                                                 g.game_date, l.league_name, g.game_id
                                 FROM Bet b
@@ -722,6 +722,7 @@ namespace BettingSystem.Data
                                         while (await betReader.ReadAsync())
                                         {
                                             HistoryBet bet = new HistoryBet(
+                                                Convert.ToInt32(betReader["bet_id"]),
                                                 betReader["selection"].ToString()!,
                                                 Convert.ToDecimal(betReader["odd_value"]),
                                                 Convert.ToInt32(betReader["bet_type_id"]),
