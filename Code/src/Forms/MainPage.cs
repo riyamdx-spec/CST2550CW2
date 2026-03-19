@@ -21,6 +21,7 @@ namespace BettingSystem.Forms
         private FootballMatchCollection MatchesCollection;
 
         private MatchManager MatchFilter;
+        private SessionManager CurrentSession;
 
         private BetSlip UserSlip;
         private int CurrentMatchId;
@@ -30,13 +31,14 @@ namespace BettingSystem.Forms
         private readonly List<TableLayoutPanel> BtnParentPanel;
         private List<RoundedButton> BetButtons;
 
-        public MainPage(AppUser loggedInUser)
+        public MainPage(AppUser loggedInUser, SessionManager sessionManager)
         {
             CurrentUser = loggedInUser;
+            CurrentSession = sessionManager;
             InitializeComponent();
 
             navBar1.SetCurrentUser(CurrentUser);
-            UserSlip = new BetSlip(CurrentUser.UserID);
+            UserSlip = CurrentSession.UserSlip;
 
             // list of panels that contain bet buttons
             BtnParentPanel = new List<TableLayoutPanel> 
@@ -61,6 +63,7 @@ namespace BettingSystem.Forms
             //navbar events
             navBar1.AccountClicked += NavBar1_AccountClicked;
             navBar1.BetSlipClicked += NavBar1_BetSlipClicked;
+            navBar1.LogoutClicked += NavBar1_LogoutClicked;
 
             //make a search
             searchbarTextBox.KeyDown += Searchbar_KeyDown;
@@ -74,6 +77,7 @@ namespace BettingSystem.Forms
             playersComboBox.SelectedIndexChanged += PlayersComboBox_SelectedIndexChanged;
 
             this.Load += MainPage_Load;
+            this.FormClosing += MainPage_FormClosing;
         }
 
         private async void MainPage_Load(object sender, EventArgs e)
@@ -81,6 +85,7 @@ namespace BettingSystem.Forms
             CurrentLeague = 0;
 
             Leagues = await DBManager.FetchLeaguesAsync();
+
             await FetchData();
             Odds = await DBManager.FetchOddsAsync();
 
@@ -90,6 +95,33 @@ namespace BettingSystem.Forms
             LoadMatches(MatchesCollection.AllMatches);
 
             SetButtonTags();
+        }
+
+        private void MainPage_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            {
+                logOutPopup closingPopup = new logOutPopup(false);
+                if (closingPopup.ShowDialog() == DialogResult.No)
+                {
+                    e.Cancel = true;
+                }
+                else
+                {
+                    CurrentSession.IsExiting = true;
+                    Application.Exit();
+                }
+            }
+        }
+
+        private void NavBar1_LogoutClicked(object? sender, EventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut)
+            {
+                logOutPopup closingPopup = new logOutPopup(true);
+                if (closingPopup.ShowDialog() == DialogResult.Yes)
+                    CurrentSession.LogOut(this);
+            }
         }
 
         //fetch teams, matches and players initially
@@ -106,12 +138,12 @@ namespace BettingSystem.Forms
         }
 
         //display league buttons
-        private void DisplayLeagueButtons()
+        private async void DisplayLeagueButtons()
         {
             //button for viewing all matches
             leagueButton allMatchBtn = new leagueButton();
 
-            allMatchBtn.setImage(@"..\..\..\..\Assets\globe.png");
+            await allMatchBtn.setImage(@"..\..\..\..\Assets\globe.png");
             allMatchBtn.Dock = DockStyle.Fill;
             allMatchBtn.Margin = new Padding(12, 0, 12, 4);
             allMatchBtn.Cursor = Cursors.Hand;
@@ -122,8 +154,9 @@ namespace BettingSystem.Forms
             foreach (League league in Leagues)
             {
                 leagueButton leagueBtn = new leagueButton();
+                
+                await leagueBtn.setImage(league.LogoPath);
 
-                leagueBtn.setImage(league.LogoPath);
                 leagueBtn.Tag = league;
                 leagueBtn.Dock = DockStyle.Fill;
                 leagueBtn.Margin = new Padding(12, 0, 12, 4);
@@ -199,7 +232,7 @@ namespace BettingSystem.Forms
 
             CurrentLeague = 0;
             leagueLbl.Text = "All Matches";
-            bannerImg.Image = Image.FromFile(@"..\..\..\..\allMatchBaner.jpg");
+            bannerImg.Image = Image.FromFile(@"..\..\..\..\Assets\allMatchBaner.jpg");
             LoadMatches(MatchesCollection.AllMatches);
         }
 
@@ -442,12 +475,7 @@ namespace BettingSystem.Forms
         //open profile page
         private void NavBar1_AccountClicked(object? sender, EventArgs e)
         {
-            AccountPage profilePage = new AccountPage(CurrentUser);
-            profilePage.Size = this.Size;
-            profilePage.WindowState = this.WindowState;
-            profilePage.Location = this.Location;
-            this.Hide();
-            profilePage.Show();
+            CurrentSession.OpenProfilePage(this);
         }
 
         //open bet slip page
@@ -483,7 +511,7 @@ namespace BettingSystem.Forms
         }
 
         //reinitialse page
-        private void ReInitialise()
+        public void ReInitialise()
         {
             searchbarTextBox.Text = "";
             CurrentSearchTerm = "";
