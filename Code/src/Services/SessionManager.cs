@@ -117,7 +117,21 @@ namespace BettingSystem.Services
 
         public void OpenBetSlipPage(Form currentForm)
         {
+            BetSlipPage? betSlipPage = Application.OpenForms.OfType<BetSlipPage>().FirstOrDefault();
+            if (betSlipPage is null)
+            {
+                betSlipPage = new BetSlipPage(CurrentUser, this);
+            }
+            else
+            {
+                betSlipPage.ReloadSlip();
+            }
 
+            betSlipPage.Size = currentForm.Size;
+            betSlipPage.Location = currentForm.Location;
+            betSlipPage.WindowState = currentForm.WindowState;
+            currentForm.Hide();
+            betSlipPage.Show();
         }
 
         // forms on admin side
