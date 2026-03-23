@@ -481,7 +481,7 @@ namespace BettingSystem.Forms
         //open bet slip page
         private void NavBar1_BetSlipClicked(object? sender, EventArgs e)
         {
-
+            CurrentSession.OpenBetSlipPage(this);
         }
 
         //update width of matchesPanel dynamically
