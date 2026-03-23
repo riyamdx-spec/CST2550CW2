@@ -14,17 +14,21 @@ namespace BettingSystem.Services
         }
 
         //add money to wallet during deposit or payout
-        public async Task<(bool updated, string message)> DepositOrPayoutAsync(AppUser currentUser, decimal amount, string transactionType)
+        public async Task<(bool updated, string message)> DepositOrPayoutAsync(AppUser currentUser, decimal amount, string transactionType, int? slipId=null)
         {
             //check if user is adding more than 0
             if (amount <= 0)
                 return (false, "Amount must be greater than 0");
-            
+
+            //check if no slip id provided for payout
+            if (transactionType == "payout" && slipId == null)
+                return (false, "Invalid payout request");
+
             //calculate new wallet amount
             decimal newAmount = currentUser.WalletBalance + amount;
 
             //update user's wallet and record transaction in database 
-            bool success = await DBManager.ProcessWalletTransactionAsync(currentUser.UserID, transactionType, newAmount, amount);
+            bool success = await DBManager.ProcessWalletTransactionAsync(currentUser.UserID, transactionType, newAmount, amount, slipId);
 
             if (!success)
                 return (false, "Failed to process your transaction. Please try again.");

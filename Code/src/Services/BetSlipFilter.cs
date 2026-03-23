@@ -7,29 +7,47 @@ namespace BettingSystem.Services
         public readonly List<BetHistorySlip> BetSlips;
         public BetSlipFilter(List<BetHistorySlip> betSlips  )
         {
+            //already sorted in descending order of date
             BetSlips = betSlips;
         }
 
-        // sort by date 
-        public List<BetHistorySlip> SortByDate(bool ascending)
+        private List<BetHistorySlip> ReverseList(List<BetHistorySlip> filteredSlips)
         {
-            if (ascending)
-            {
-                return BetSlips
-                    .OrderBy(b => b.BetDate)
-                    .ToList();
-            }
+            int maxIndex = filteredSlips.Count -1;
+            int startIndex = 0;
+            BetHistorySlip temp;
 
-            //BetSlips is already in descending order of date
-            return BetSlips;
+            while (startIndex < maxIndex)
+            {
+                temp = filteredSlips[startIndex];
+                filteredSlips[startIndex] = filteredSlips[maxIndex];
+                filteredSlips[maxIndex] = temp;
+                startIndex++;
+                maxIndex--;
+            }
+            return filteredSlips;
         }
 
-        //filter by status
-        public List<BetHistorySlip> FilterByStatus(string status)
+        //sort by date and filter by status
+        public List<BetHistorySlip> FilterBetSlips(string? status, bool ascending)
         {
-            return BetSlips
-                .Where(b => b.Status.Equals(status, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            List<BetHistorySlip> filteredBetSlips = new List<BetHistorySlip>(BetSlips);
+
+            //filter by status
+            if (!String.IsNullOrWhiteSpace(status) && status != "All")
+            {
+                filteredBetSlips = filteredBetSlips
+                                .Where(b => b.Status.Equals(status, StringComparison.OrdinalIgnoreCase))
+                                .ToList();
+            }
+
+            //sort in ascending order of date by reversing the list
+            if (ascending) 
+            {
+                return ReverseList(filteredBetSlips);
+            }
+
+            return filteredBetSlips;
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿namespace BettingSystem.Forms
+﻿namespace BettingSystem.Forms.CustomControls
 {
-    partial class NavBar
+    partial class AdminNavBar
     {
         /// <summary> 
         /// Required designer variable.
@@ -29,16 +29,18 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            usersPageBtn = new Button();
             navPanel = new Panel();
             navCentrePanel = new Panel();
-            betSlipsPageBtn = new Button();
-            homeBtn = new Button();
+            addMatchPageBtn = new Button();
+            financialPageBtn = new Button();
+            matchSearchPageBtn = new Button();
             rightNavPanel = new Panel();
             navDropdownBtn = new RoundedButton();
             dropdownList = new ContextMenuStrip(components);
-            viewProfileToolStripMenuItem = new ToolStripMenuItem();
+            editProfileToolStripMenuItem = new ToolStripMenuItem();
+            changePasswordToolStripMenuItem = new ToolStripMenuItem();
             logOutToolStripMenuItem = new ToolStripMenuItem();
-            navDepositBtn = new RoundedButton();
             leftNavPanel = new Panel();
             lblAppName = new Label();
             navLogo = new PictureBox();
@@ -50,67 +52,100 @@
             ((System.ComponentModel.ISupportInitialize)navLogo).BeginInit();
             SuspendLayout();
             // 
+            // usersPageBtn
+            // 
+            usersPageBtn.AutoSize = true;
+            usersPageBtn.Cursor = Cursors.Hand;
+            usersPageBtn.FlatAppearance.BorderSize = 0;
+            usersPageBtn.FlatStyle = FlatStyle.Flat;
+            usersPageBtn.Font = new Font("Times New Roman", 16.125F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            usersPageBtn.ForeColor = Color.FromArgb(241, 241, 241);
+            usersPageBtn.Location = new Point(0, 20);
+            usersPageBtn.Name = "usersPageBtn";
+            usersPageBtn.Size = new Size(127, 35);
+            usersPageBtn.TabIndex = 0;
+            usersPageBtn.Text = "View Users";
+            usersPageBtn.UseVisualStyleBackColor = true;
+            usersPageBtn.Click += usersPageBtn_Click;
+            // 
             // navPanel
             // 
             navPanel.BackColor = Color.FromArgb(31, 31, 31);
             navPanel.Controls.Add(navCentrePanel);
             navPanel.Controls.Add(rightNavPanel);
             navPanel.Controls.Add(leftNavPanel);
-            navPanel.Dock = DockStyle.Top;
+            navPanel.Dock = DockStyle.Fill;
             navPanel.Location = new Point(0, 0);
             navPanel.Margin = new Padding(0);
             navPanel.Name = "navPanel";
             navPanel.Padding = new Padding(5);
             navPanel.Size = new Size(1200, 85);
-            navPanel.TabIndex = 1;
+            navPanel.TabIndex = 2;
             // 
             // navCentrePanel
             // 
             navCentrePanel.AutoSize = true;
-            navCentrePanel.Controls.Add(betSlipsPageBtn);
-            navCentrePanel.Controls.Add(homeBtn);
+            navCentrePanel.Controls.Add(addMatchPageBtn);
+            navCentrePanel.Controls.Add(financialPageBtn);
+            navCentrePanel.Controls.Add(matchSearchPageBtn);
+            navCentrePanel.Controls.Add(usersPageBtn);
             navCentrePanel.Dock = DockStyle.Fill;
             navCentrePanel.Location = new Point(244, 5);
             navCentrePanel.Name = "navCentrePanel";
             navCentrePanel.Size = new Size(567, 75);
             navCentrePanel.TabIndex = 2;
             // 
-            // betSlipsPageBtn
+            // addMatchPageBtn
             // 
-            betSlipsPageBtn.AutoSize = true;
-            betSlipsPageBtn.Cursor = Cursors.Hand;
-            betSlipsPageBtn.FlatAppearance.BorderSize = 0;
-            betSlipsPageBtn.FlatStyle = FlatStyle.Flat;
-            betSlipsPageBtn.Font = new Font("Times New Roman", 16.125F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            betSlipsPageBtn.ForeColor = Color.FromArgb(241, 241, 241);
-            betSlipsPageBtn.Location = new Point(151, 20);
-            betSlipsPageBtn.Name = "betSlipsPageBtn";
-            betSlipsPageBtn.Size = new Size(105, 35);
-            betSlipsPageBtn.TabIndex = 1;
-            betSlipsPageBtn.Text = "Bet Slip";
-            betSlipsPageBtn.UseVisualStyleBackColor = true;
-            betSlipsPageBtn.Click += betSlipsPageBtn_Click;
+            addMatchPageBtn.AutoSize = true;
+            addMatchPageBtn.Cursor = Cursors.Hand;
+            addMatchPageBtn.FlatAppearance.BorderSize = 0;
+            addMatchPageBtn.FlatStyle = FlatStyle.Flat;
+            addMatchPageBtn.Font = new Font("Times New Roman", 16.125F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            addMatchPageBtn.ForeColor = Color.FromArgb(241, 241, 241);
+            addMatchPageBtn.Location = new Point(292, 20);
+            addMatchPageBtn.Name = "addMatchPageBtn";
+            addMatchPageBtn.Size = new Size(128, 35);
+            addMatchPageBtn.TabIndex = 3;
+            addMatchPageBtn.Text = "Add Match";
+            addMatchPageBtn.UseVisualStyleBackColor = true;
+            addMatchPageBtn.Click += addMatchPageBtn_Click;
             // 
-            // homeBtn
+            // financialPageBtn
             // 
-            homeBtn.AutoSize = true;
-            homeBtn.Cursor = Cursors.Hand;
-            homeBtn.FlatAppearance.BorderSize = 0;
-            homeBtn.FlatStyle = FlatStyle.Flat;
-            homeBtn.Font = new Font("Times New Roman", 16.125F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            homeBtn.ForeColor = Color.FromArgb(241, 241, 241);
-            homeBtn.Location = new Point(0, 20);
-            homeBtn.Name = "homeBtn";
-            homeBtn.Size = new Size(105, 35);
-            homeBtn.TabIndex = 0;
-            homeBtn.Text = "Matches";
-            homeBtn.UseVisualStyleBackColor = true;
-            homeBtn.Click += homeBtn_Click;
+            financialPageBtn.AutoSize = true;
+            financialPageBtn.Cursor = Cursors.Hand;
+            financialPageBtn.FlatAppearance.BorderSize = 0;
+            financialPageBtn.FlatStyle = FlatStyle.Flat;
+            financialPageBtn.Font = new Font("Times New Roman", 16.125F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            financialPageBtn.ForeColor = Color.FromArgb(241, 241, 241);
+            financialPageBtn.Location = new Point(461, 20);
+            financialPageBtn.Name = "financialPageBtn";
+            financialPageBtn.Size = new Size(100, 35);
+            financialPageBtn.TabIndex = 2;
+            financialPageBtn.Text = "Finance";
+            financialPageBtn.UseVisualStyleBackColor = true;
+            financialPageBtn.Click += financialPageBtn_Click;
+            // 
+            // matchSearchPageBtn
+            // 
+            matchSearchPageBtn.AutoSize = true;
+            matchSearchPageBtn.Cursor = Cursors.Hand;
+            matchSearchPageBtn.FlatAppearance.BorderSize = 0;
+            matchSearchPageBtn.FlatStyle = FlatStyle.Flat;
+            matchSearchPageBtn.Font = new Font("Times New Roman", 16.125F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            matchSearchPageBtn.ForeColor = Color.FromArgb(241, 241, 241);
+            matchSearchPageBtn.Location = new Point(151, 20);
+            matchSearchPageBtn.Name = "matchSearchPageBtn";
+            matchSearchPageBtn.Size = new Size(105, 35);
+            matchSearchPageBtn.TabIndex = 1;
+            matchSearchPageBtn.Text = "Matches";
+            matchSearchPageBtn.UseVisualStyleBackColor = true;
+            matchSearchPageBtn.Click += matchSearchPageBtn_Click;
             // 
             // rightNavPanel
             // 
             rightNavPanel.Controls.Add(navDropdownBtn);
-            rightNavPanel.Controls.Add(navDepositBtn);
             rightNavPanel.Dock = DockStyle.Right;
             rightNavPanel.Location = new Point(811, 5);
             rightNavPanel.Name = "rightNavPanel";
@@ -138,7 +173,7 @@
             navDropdownBtn.TabStop = false;
             navDropdownBtn.TextAlign = ContentAlignment.MiddleLeft;
             navDropdownBtn.UseVisualStyleBackColor = false;
-            navDropdownBtn.Click += navDropdownBtn_Click;
+            navDropdownBtn.Click += navDropdownBtn_Click_1;
             // 
             // dropdownList
             // 
@@ -147,50 +182,32 @@
             dropdownList.Font = new Font("Times New Roman", 10.125F, FontStyle.Bold, GraphicsUnit.Point, 0);
             dropdownList.ForeColor = Color.FromArgb(241, 241, 241);
             dropdownList.ImageScalingSize = new Size(32, 32);
-            dropdownList.Items.AddRange(new ToolStripItem[] { viewProfileToolStripMenuItem, logOutToolStripMenuItem });
+            dropdownList.Items.AddRange(new ToolStripItem[] { editProfileToolStripMenuItem, changePasswordToolStripMenuItem, logOutToolStripMenuItem });
             dropdownList.Margin = new Padding(0, 40, 0, 0);
             dropdownList.Name = "dropdownList";
             dropdownList.RenderMode = ToolStripRenderMode.System;
-            dropdownList.Size = new Size(181, 85);
+            dropdownList.Size = new Size(181, 100);
             // 
-            // viewProfileToolStripMenuItem
+            // editProfileToolStripMenuItem
             // 
-            viewProfileToolStripMenuItem.AutoSize = false;
-            viewProfileToolStripMenuItem.Font = new Font("Times New Roman", 10.875F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            viewProfileToolStripMenuItem.Name = "viewProfileToolStripMenuItem";
-            viewProfileToolStripMenuItem.Padding = new Padding(0, 10, 0, 1);
-            viewProfileToolStripMenuItem.Size = new Size(180, 40);
-            viewProfileToolStripMenuItem.Text = "View Profile";
-            viewProfileToolStripMenuItem.Click += viewProfileToolStripMenuItem_Click;
+            editProfileToolStripMenuItem.Name = "editProfileToolStripMenuItem";
+            editProfileToolStripMenuItem.Size = new Size(183, 22);
+            editProfileToolStripMenuItem.Text = "Edit Profile";
+            editProfileToolStripMenuItem.Click += EditProfile_Click;
+            // 
+            // changePasswordToolStripMenuItem
+            // 
+            changePasswordToolStripMenuItem.Name = "changePasswordToolStripMenuItem";
+            changePasswordToolStripMenuItem.Size = new Size(183, 22);
+            changePasswordToolStripMenuItem.Text = "Change Password";
+            changePasswordToolStripMenuItem.Click += ChangedPassword_Click;
             // 
             // logOutToolStripMenuItem
             // 
-            logOutToolStripMenuItem.AutoSize = false;
-            logOutToolStripMenuItem.Font = new Font("Times New Roman", 10.875F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            logOutToolStripMenuItem.ImageAlign = ContentAlignment.MiddleRight;
             logOutToolStripMenuItem.Name = "logOutToolStripMenuItem";
-            logOutToolStripMenuItem.Padding = new Padding(0, 10, 0, 1);
-            logOutToolStripMenuItem.Size = new Size(180, 40);
+            logOutToolStripMenuItem.Size = new Size(183, 22);
             logOutToolStripMenuItem.Text = "Log Out";
-            logOutToolStripMenuItem.Click += LogOutToolStripMenuItem_Click;
-            // 
-            // navDepositBtn
-            // 
-            navDepositBtn.BackColor = Color.FromArgb(93, 185, 64);
-            navDepositBtn.CornerRadius = 12;
-            navDepositBtn.Cursor = Cursors.Hand;
-            navDepositBtn.FlatAppearance.BorderSize = 0;
-            navDepositBtn.FlatStyle = FlatStyle.Flat;
-            navDepositBtn.Font = new Font("Times New Roman", 13.875F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            navDepositBtn.ForeColor = Color.FromArgb(241, 241, 241);
-            navDepositBtn.Location = new Point(17, 13);
-            navDepositBtn.Name = "navDepositBtn";
-            navDepositBtn.Size = new Size(137, 51);
-            navDepositBtn.TabIndex = 2;
-            navDepositBtn.TabStop = false;
-            navDepositBtn.Text = "+ Deposit";
-            navDepositBtn.UseVisualStyleBackColor = false;
-            navDepositBtn.Click += navDepositBtn_Click;
+            logOutToolStripMenuItem.Click += LogOut_Click;
             // 
             // leftNavPanel
             // 
@@ -226,12 +243,12 @@
             navLogo.TabIndex = 0;
             navLogo.TabStop = false;
             // 
-            // NavBar
+            // AdminNavBar
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(navPanel);
-            Name = "NavBar";
+            Name = "AdminNavBar";
             Size = new Size(1200, 85);
             navPanel.ResumeLayout(false);
             navPanel.PerformLayout();
@@ -247,18 +264,21 @@
 
         #endregion
 
+        private Button usersPageBtn;
         private Panel navPanel;
         private Panel navCentrePanel;
-        private Button betSlipsPageBtn;
-        private Button homeBtn;
+        private Button matchSearchPageBtn;
         private Panel rightNavPanel;
-        private RoundedButton navDropdownBtn;
+        private ContextMenuStrip dropdownList;
         private RoundedButton navDepositBtn;
         private Panel leftNavPanel;
         private Label lblAppName;
         private PictureBox navLogo;
-        private ContextMenuStrip dropdownList;
-        private ToolStripMenuItem viewProfileToolStripMenuItem;
+        private Button financialPageBtn;
+        private RoundedButton navDropdownBtn;
+        private ToolStripMenuItem editProfileToolStripMenuItem;
+        private ToolStripMenuItem changePasswordToolStripMenuItem;
         private ToolStripMenuItem logOutToolStripMenuItem;
+        private Button addMatchPageBtn;
     }
 }

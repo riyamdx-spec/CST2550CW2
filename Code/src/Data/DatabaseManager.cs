@@ -1,7 +1,10 @@
 ﻿using BettingSystem.Models;
+using BettingSystem.Services;
 using Microsoft.Data.SqlClient;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace BettingSystem.Data
 {
@@ -9,10 +12,17 @@ namespace BettingSystem.Data
     public class DatabaseManager
     {
         private readonly string connectionString;
+        private readonly OddsGenerator oddsGenerator;
 
         public DatabaseManager()
         {
             connectionString = ConfigurationManager.ConnectionStrings["BettingDB"].ConnectionString;
+            oddsGenerator = new OddsGenerator(connectionString);
+        }
+
+        public OddsAutoGeneratorService CreateOddsAutoGeneratorService()
+        {
+            return new OddsAutoGeneratorService(connectionString);
         }
 
         //to login
@@ -285,7 +295,7 @@ namespace BettingSystem.Data
         }
 
         //update wallet balance and record transaction
-        public async Task<bool> ProcessWalletTransactionAsync(int userId, string transactionType, decimal newWalletAmount, decimal transactionAmount)
+        public async Task<bool> ProcessWalletTransactionAsync(int userId, string transactionType, decimal newWalletAmount, decimal transactionAmount, int? slipId=null)
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -320,6 +330,19 @@ namespace BettingSystem.Data
                             //check if transaction record was inserted
                             if (insertedRow <= 0)
                                 throw new Exception("Transaction Recording Failed");
+                        }
+
+                        //update claim status bet slip
+                        if (transactionType == "payout")
+                        {
+                            string updateSlipQuery = "UPDATE BetSlip SET claimed=1 WHERE slip_id=@slipId";
+                            using (SqlCommand updateSlipCmd = new SqlCommand(updateSlipQuery, connection, transaction))
+                            {
+                                updateSlipCmd.Parameters.AddWithValue("@slipId", slipId);
+                                int updatedRow = await updateSlipCmd.ExecuteNonQueryAsync();
+                                if (updatedRow <= 0)
+                                    throw new Exception("Bet Slip Claimed Status Update Failed");
+                            }
                         }
 
                         transaction.Commit();
@@ -382,12 +405,30 @@ namespace BettingSystem.Data
         }
 
         //fetch teams info from database
-        public async Task<Dictionary<int, Team>> FetchTeamsAsync()
+        public async Task<Dictionary<int, Team>> FetchTeamsAsync(bool all=false)
         {
             //store teams in dictionary keyed by id
             Dictionary<int, Team> teamsByID = new Dictionary<int, Team>();
+            string query;
 
-            string query = "SELECT * FROM Team";
+            //fetch all teams
+            if (all)
+            {
+                query = "SELECT team_id, team_name, logo_path FROM Team";
+            }
+
+            //fetch teams in upcoming matches only
+            else
+            {
+                query = @"SELECT team_id, team_name, logo_path
+                          FROM Team
+                          WHERE team_id IN (
+                                SELECT home_team_id FROM Game WHERE game_status = 'Scheduled'
+                                UNION
+                                SELECT away_team_id FROM Game WHERE game_status = 'Scheduled'
+                          )";
+            }
+
             using (SqlConnection connection = new SqlConnection(connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
@@ -422,16 +463,25 @@ namespace BettingSystem.Data
             }
         }
         // fetch matches from database
-        public async Task<FootballMatchCollection> FetchMatchesAsync()
+        public async Task<FootballMatchCollection> FetchMatchesAsync(bool all=false)
         {
             //list to store matches in chronological order
             SortedSet<FootballMatch> matches = new SortedSet<FootballMatch>(new FootballMatchKeyComparer());
 
             //dictionary for league filtering
             Dictionary<int, SortedSet<FootballMatch>> matchesByLeague = new Dictionary<int, SortedSet<FootballMatch>>();
+            string query;
 
-            //fetch upcoming matches in ascending order of date
-            string query = "SELECT * FROM Game WHERE game_status='Scheduled' ORDER BY game_date ASC";
+            if (all)
+            {
+                query = "SELECT * FROM Game ORDER BY game_date DESC";
+            }
+            //fetch upcoming matches in descending order of date
+            else
+            {
+                query = "SELECT * FROM Game WHERE game_status = 'Scheduled' ORDER BY game_date DESC";
+            }
+
             using (SqlConnection connection = new SqlConnection(connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
@@ -643,10 +693,12 @@ namespace BettingSystem.Data
                         }
                     }
 
-                    // fetch bets for each slip
-                    string betQuery = @"SELECT b.result, o.selection, o.odd_value, bt.bet_type_name,
+                    if (history.Count > 0)
+                    {
+                        // fetch bets for each slip
+                        string betQuery = @"SELECT b.result, o.selection, o.odd_value, bt.bet_type_id, bt.bet_type_name,
                                                 ht.team_name AS home_team, at.team_name AS away_team, 
-                                                g.game_date, l.league_name
+                                                g.game_date, l.league_name, g.game_id
                                 FROM Bet b
                                 INNER JOIN Odd o ON b.odd_id = o.odd_id
                                 INNER JOIN BetType bt ON o.bet_type_id = bt.bet_type_id
@@ -656,66 +708,152 @@ namespace BettingSystem.Data
                                 INNER JOIN League l ON g.league_id = l.league_id
                                 WHERE b.slip_id = @slipID";
 
-                    using (SqlConnection betConnection = new SqlConnection(connectionString))
-                    {
-                        await betConnection.OpenAsync();
-
-                        // loop through slips and fetch bets for each slip
-                        foreach (BetHistorySlip slip in history)
+                        using (SqlConnection betConnection = new SqlConnection(connectionString))
                         {
-                            using (SqlCommand betCmd = new SqlCommand(betQuery, betConnection))
+                            await betConnection.OpenAsync();
+
+                            // loop through slips and fetch bets for each slip
+                            foreach (BetHistorySlip slip in history)
                             {
-                                betCmd.Parameters.AddWithValue("@slipID", slip.SlipID);
-
-                                using (SqlDataReader betReader = await betCmd.ExecuteReaderAsync())
+                                using (SqlCommand betCmd = new SqlCommand(betQuery, betConnection))
                                 {
-                                    while (await betReader.ReadAsync())
-                                    {
-                                        HistoryBet bet = new HistoryBet(
-                                        betReader["selection"].ToString()!,
-                                        Convert.ToDecimal(betReader["odd_value"]),
-                                        betReader["bet_type_name"].ToString()!,
-                                        betReader["result"].ToString()!,
-                                        betReader["home_team"].ToString()!,
-                                        betReader["away_team"].ToString()!,
-                                        Convert.ToDateTime(betReader["game_date"]),
-                                        betReader["league_name"].ToString()!
-                                        );
+                                    betCmd.Parameters.AddWithValue("@slipID", slip.SlipID);
 
-                                        slip.Bets.Add(bet);
+                                    using (SqlDataReader betReader = await betCmd.ExecuteReaderAsync())
+                                    {
+                                        while (await betReader.ReadAsync())
+                                        {
+                                            HistoryBet bet = new HistoryBet(
+                                                betReader["selection"].ToString()!,
+                                                Convert.ToDecimal(betReader["odd_value"]),
+                                                Convert.ToInt32(betReader["bet_type_id"]),
+                                                betReader["bet_type_name"].ToString()!,
+                                                betReader["result"].ToString()!,
+                                                betReader["home_team"].ToString()!,
+                                                betReader["away_team"].ToString()!,
+                                                Convert.ToDateTime(betReader["game_date"]),
+                                                betReader["league_name"].ToString()!,
+                                                Convert.ToInt32(betReader["game_id"])
+                                            );
+
+                                            slip.Bets.Add(bet);
+                                        }
                                     }
                                 }
                             }
                         }
-                    }       
-
+                    }
                     return history;
                 }
                 catch (SqlException e)
                 {
                     Console.WriteLine($"Database error: {e.Message}");
-                    return [];
+                    return new List<BetHistorySlip>();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"Error: {e.Message}");
-                    return [];
+                    return new List<BetHistorySlip>();
+                }
+            }
+        }
+
+        //fetch results of games
+        public async Task<Dictionary<int, GameResult>> FetchGameResultsAsync(List<int>? gameIds, bool all = false)
+        {
+            Dictionary<int, GameResult> gameResult = new Dictionary<int, GameResult>();
+
+            if (gameIds is null || gameIds.Count == 0)
+                return gameResult;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand())
+            {
+                try
+                {
+                    command.Connection = connection;
+
+                    await connection.OpenAsync();
+                    if (all)
+                    {
+                        command.CommandText = $@"SELECT game_id, home_team_score, away_team_score, first_scorer_id, player_name, total_corners, red_cards, yellow_cards
+                                            FROM GameResult gr
+                                            LEFT JOIN Player p ON gr.first_scorer_id = p.player_id";
+                    }
+                    else
+                    {
+                        if (gameIds is null || gameIds.Count == 0)
+                            return gameResult;
+
+                        List<string> idParams = new List<string>();
+
+                        for (int i = 0; i < gameIds.Count; i++)
+                        {
+                            command.Parameters.AddWithValue($"@game_id{i}", gameIds[i]);
+                            idParams.Add($"@game_id{i}");
+                        }
+
+                        command.CommandText = $@"SELECT game_id, home_team_score, away_team_score, first_scorer_id, player_name, total_corners, red_cards, yellow_cards
+                                            FROM GameResult gr
+                                            LEFT JOIN Player p ON gr.first_scorer_id = p.player_id
+                                            WHERE game_id IN ({String.Join(',', idParams)})";
+                    }
+
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            int matchId = Convert.ToInt32(reader["game_id"]);
+                            GameResult matchResult = new GameResult(
+                                    matchId,
+                                    Convert.ToInt32(reader["home_team_score"]),
+                                    Convert.ToInt32(reader["away_team_score"]),
+                                    Convert.ToInt32(reader["total_corners"]),
+                                    Convert.ToInt32(reader["red_cards"]),
+                                    Convert.ToInt32(reader["yellow_cards"]),
+                                    reader["player_name"]?.ToString() ?? null,
+                                    reader["first_scorer_id"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["first_scorer_id"])
+                                );
+
+                            gameResult[matchId] = matchResult;
+                        }
+                    }
+                    return gameResult;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new Dictionary<int, GameResult>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new Dictionary<int, GameResult>();
                 }
             }
         }
 
         // fetch players details for upcoming matches
-        public async Task<Dictionary<int, List<Player>>> FetchPlayersAsync()
+        public async Task<Dictionary<int, List<Player>>> FetchPlayersAsync(bool all=false)
         {
             //store players in dictionary keyed by TeamId
             Dictionary<int, List<Player>> PlayersByTeamId = new Dictionary<int, List<Player>>();
-
-            string query = @"SELECT DISTINCT player_id, player_name, team_id, player_position 
-                             FROM Player p
-                             JOIN Game g 
-                             ON p.team_id = g.home_team_id OR p.team_id = g.away_team_id
-                             WHERE g.game_status = 'Scheduled'";
-
+            string query;
+            if (all)
+            {
+                query = "SELECT player_id, player_name, team_id, player_position FROM Player";
+            }
+            else
+            {
+                query = @"SELECT player_id, player_name, team_id, player_position 
+                        FROM Player
+                        WHERE team_id IN (
+                                SELECT home_team_id FROM Game WHERE game_status = 'Scheduled'
+                                UNION
+                                SELECT away_team_id FROM Game WHERE game_status = 'Scheduled'
+                        )";
+            }
+                
             using (SqlConnection connection = new SqlConnection(connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
@@ -759,5 +897,115 @@ namespace BettingSystem.Data
             }
         }
 
+        // add new match in database
+        public async Task<bool> AddNewMatchAsync(FootballMatch newMatch, GameResult matchResult)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        int insertedGameId;
+
+                        //add match to Game table
+                        string insertMatchQuery = @"INSERT INTO Game (league_id, home_team_id, away_team_id, game_date)
+                                                 OUTPUT INSERTED.game_id
+                                                 VALUES (@leagueId, @homeTeamId, @awayTeamId, @matchDate)";
+
+                        using (SqlCommand insertMatchCmd = new SqlCommand(insertMatchQuery, connection, transaction))
+                        {
+                            insertMatchCmd.Parameters.AddWithValue("@leagueId", newMatch.LeagueID);
+                            insertMatchCmd.Parameters.AddWithValue("@homeTeamId", newMatch.HomeTeamID);
+                            insertMatchCmd.Parameters.AddWithValue("@awayTeamId", newMatch.AwayTeamID);
+                            insertMatchCmd.Parameters.AddWithValue("@matchDate", newMatch.GameDate);
+
+                            insertedGameId = (int)await insertMatchCmd.ExecuteScalarAsync();
+
+                            if (insertedGameId <= 0)
+                                throw new Exception("Insert New Match Failed");
+                        }
+
+                        // add Generated Match Result to MatchResult table
+                        string insertResultQuery = @"INSERT INTO GameResult (game_id, home_team_score, away_team_score, first_scorer_id, total_corners, red_cards, yellow_cards) 
+                                                    VALUES (@gameId, @homeScore, @awayScore, @scorerId, @corners, @redCards, @yellowCards)";
+
+                        using (SqlCommand insertResultCmd = new SqlCommand(insertResultQuery, connection, transaction))
+                        {
+                            insertResultCmd.Parameters.AddWithValue("@gameId", insertedGameId);
+                            insertResultCmd.Parameters.AddWithValue("@homeScore", matchResult.HomeTeamScore);
+                            insertResultCmd.Parameters.AddWithValue("@awayScore", matchResult.AwayTeamScore);
+                            insertResultCmd.Parameters.AddWithValue("@scorerId", matchResult.FirstScorerId is null ? DBNull.Value : matchResult.FirstScorerId);
+                            insertResultCmd.Parameters.AddWithValue("@corners", matchResult.TotalCorners);
+                            insertResultCmd.Parameters.AddWithValue("@redCards", matchResult.RedCards);
+                            insertResultCmd.Parameters.AddWithValue("@yellowCards", matchResult.YellowCards);
+
+                            int insertedRow = await insertResultCmd.ExecuteNonQueryAsync();
+
+                            //check if match result was inserted
+                            if (insertedRow <= 0)
+                                throw new Exception("Insert Match Result Failed");
+                        }
+
+                        //generate odds for the new match
+                        oddsGenerator.GenerateAllOddsForGame(insertedGameId, newMatch.HomeTeamID, newMatch.AwayTeamID, newMatch.LeagueID);
+
+                        newMatch.GameID = insertedGameId;
+                        matchResult.GameId = insertedGameId;
+
+                        transaction.Commit();
+
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine($"Error: {e.Message}");
+                        return false;
+                    }
+                }
+            }
+        }
+        public async Task<Dictionary<int, List<int>>> FetchLeagueTeamAsync()
+        {
+            Dictionary<int, List<int>> leagueTeam = new Dictionary<int, List<int>>();
+            string query = "SELECT * FROM LeagueTeam";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            int TeamId = Convert.ToInt32(reader["team_id"]);
+                            int LeagueId = Convert.ToInt32(reader["league_id"]);
+
+                            if (!leagueTeam.TryGetValue(LeagueId, out var leagueTeams))
+                            {
+                                leagueTeams = new List<int>();
+                                leagueTeam[LeagueId] = leagueTeams;
+                            }
+                            //add team in the list for that league
+                            leagueTeam[LeagueId].Add(TeamId);
+                        }
+                    }
+                    return leagueTeam;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new Dictionary<int, List<int>>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new Dictionary<int, List<int>>();
+                }
+            }
+        }     
     }
 }

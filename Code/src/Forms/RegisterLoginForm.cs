@@ -1,15 +1,6 @@
 ﻿using BettingSystem.Data;
 using BettingSystem.Models;
 using BettingSystem.Services;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace BettingSystem.Forms
 {
@@ -184,7 +175,7 @@ namespace BettingSystem.Forms
             landing.WindowState = this.WindowState;
             landing.Location = this.Location;
             NavigatingBack = true;
-            this.Close();
+            this.Hide();
         }
 
         // Button login 
@@ -212,15 +203,9 @@ namespace BettingSystem.Forms
 
             new Notification(message, NotificationType.Success, this);
 
-            //AppUser user = new AppUser(1, "Megane", "Rayan", DateTime.Now, "test@test.com", 0, "user");
-
             //Main page
-            var mainForm = new MainPage(user);
-            mainForm.Size = this.Size;
-            mainForm.WindowState = this.WindowState;
-            mainForm.Location = this.Location;
-            mainForm.Show();
-            this.Close();
+            await OpenMainPage(user);
+
         }
 
         // Sign up button
@@ -288,15 +273,25 @@ namespace BettingSystem.Forms
 
             new Notification(message, NotificationType.Success, this);
 
-            //AppUser user = new AppUser(1, "Melanie", "Riya", DateTime.Now, "test@test.com", 0, "user");
 
             // main form
-            var mainForm = new MainPage(user);
-            mainForm.Size = this.Size;
-            mainForm.WindowState = this.WindowState;
-            mainForm.Location = this.Location;
-            mainForm.Show();
-            this.Close();
+            await OpenMainPage(user);
+        }
+
+        private async Task OpenMainPage(AppUser user)
+        {
+            SessionManager currentSession = new SessionManager(user);
+
+            if (user.Role == "admin")
+            {
+                await currentSession.FetchAdminData();
+                currentSession.OpenAdminMatchPage(this);
+            }
+            else
+            {
+                await currentSession.FetchUserData();
+                currentSession.OpenMainPage(this);
+            }
         }
     }
 }

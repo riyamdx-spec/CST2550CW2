@@ -9,7 +9,7 @@
         public DateTime GameDate { get; set; }
         public string GameStatus { get; set; }
 
-        public FootballMatch(int gameID, int leagueID, int homeTeamID, int awayTeamID, DateTime gameDate, string gameStatus)
+        public FootballMatch(int gameID, int leagueID, int homeTeamID, int awayTeamID, DateTime gameDate, string gameStatus="Scheduled")
         {
             GameID = gameID;
             LeagueID = leagueID;

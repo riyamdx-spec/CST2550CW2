@@ -1,0 +1,230 @@
+﻿using BettingSystem.Data;
+using BettingSystem.Models;
+using BettingSystem.Services;
+using System.Data;
+
+namespace BettingSystem.Forms
+{
+    public partial class AdminAddMatchPage : Form
+    {
+        private readonly Validation Validator = new Validation();
+        private readonly DatabaseManager DbManager = new DatabaseManager();
+        private Dictionary<int, List<int>> LeagueTeams;
+        private League[] Leagues;
+        private Dictionary<int, Team> TeamsDict;
+        private Dictionary<int, List<Player>> Players;
+        private Dictionary<int, GameResult> GameResults;
+        private FootballMatchCollection MatchesCollection;
+
+        private int CurrentLeagueID = -1;
+        private SessionManager CurrentSession;
+
+        public AdminAddMatchPage(AppUser admin, SessionManager currentSession)
+        {
+            InitializeComponent();
+        
+            CenterPanel(null, null);
+            contentPanel.Resize += CenterPanel;
+
+            CurrentSession = currentSession;
+            Leagues = CurrentSession.Leagues;
+            TeamsDict = CurrentSession.TeamsDict;
+            Players = CurrentSession.Players;
+            GameResults = CurrentSession.GameResults;
+            MatchesCollection = CurrentSession.MatchesCollection;
+
+            adminNavBar1.SetAdmin(admin);
+
+            //navbar events
+            adminNavBar1.UsersPageClicked += AdminNavBar1_UsersPageClicked;
+            adminNavBar1.SearchMatchesPageClicked += AdminNavBar1_SearchMatchesPageClicked;
+            adminNavBar1.LogoutClicked += AdminNavBar1_LogoutClicked;
+            adminNavBar1.FinancialPageClicked += AdminNavBar1_FinancialPageClicked;
+
+            this.Load += LoadPage;
+            this.FormClosing += AdminAddMatchPage_FormClosing;
+            leagueComboBox.SelectedIndexChanged += LeagueComboBox_SelectedIndexChanged;
+        }
+
+        private void AdminAddMatchPage_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            {
+                logOutPopup closingPopup = new logOutPopup(false);
+                if (closingPopup.ShowDialog() == DialogResult.No)
+                {
+                    e.Cancel = true;
+                }
+                else
+                {
+                    CurrentSession.IsExiting = true;
+                    Application.Exit();
+                }
+            }
+        }
+
+        private void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut)
+            {
+                logOutPopup closingPopup = new logOutPopup(true);
+                if (closingPopup.ShowDialog() == DialogResult.Yes)
+                    CurrentSession.LogOut(this);
+            }
+        }
+
+        //to open other pages
+        private void AdminNavBar1_FinancialPageClicked(object? sender, EventArgs e)
+        {
+            CurrentSession.OpenAdminFinancialPage(this);
+        }
+
+
+        private void AdminNavBar1_SearchMatchesPageClicked(object? sender, EventArgs e)
+        {
+            CurrentSession.OpenAdminMatchPage(this);
+        }
+
+        private void AdminNavBar1_UsersPageClicked(object? sender, EventArgs e)
+        {
+            CurrentSession.OpenAdminViewUsersPage(this);
+        }
+
+        private void LeagueComboBox_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+
+            AddMatchComboItems selectedLeague = leagueComboBox.SelectedItem as AddMatchComboItems;
+            if (selectedLeague == null)
+            {
+                CurrentLeagueID = -1;
+                homeTeamComboBox.Items.Clear();
+                awayTeamComboBox.Items.Clear();
+                return;
+            }
+            if (CurrentLeagueID == selectedLeague.ID)
+                return;
+
+            CurrentLeagueID = selectedLeague.ID;
+            DisplayTeams();
+        }
+
+        private void CenterPanel(object? sender, EventArgs e)
+        {
+            addMatchFormBg.Top = (contentPanel.Height - addMatchFormBg.Height) / 2;
+            addMatchFormBg.Left = (contentPanel.Width - addMatchFormBg.Width) / 2;
+        }
+
+        public async void LoadPage(object sender, EventArgs e)
+        {
+            LeagueTeams = await DbManager.FetchLeagueTeamAsync();
+            DisplayLeagueNames();
+            SetDateTimePicker();
+            leagueComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            homeTeamComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            awayTeamComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+        }
+
+        private void SetDateTimePicker()
+        {
+            selectedMatchDate.Format = DateTimePickerFormat.Custom;
+            selectedMatchDate.CustomFormat = "dd/MM/yyyy HH:mm";
+            selectedMatchDate.ShowUpDown = false;
+            selectedMatchDate.MinDate = DateTime.Now.AddMinutes(5);
+        }
+        public void DisplayLeagueNames()
+        {
+            foreach (League league in Leagues)
+            {
+                AddMatchComboItems leagueComboItem = new AddMatchComboItems(league.LeagueId, league.Name);
+                leagueComboBox.Items.Add(leagueComboItem);
+            }
+
+            leagueComboBox.SelectedIndex = -1;
+        }
+
+        public void DisplayTeams()
+        {
+            homeTeamComboBox.Text = "";
+            awayTeamComboBox.Text = "";
+
+            homeTeamComboBox.Items.Clear();
+            awayTeamComboBox.Items.Clear();
+
+            AddMatchComboItems selectedLeague = leagueComboBox.SelectedItem as AddMatchComboItems;
+            var teams = LeagueTeams[selectedLeague.ID]
+                .Select(id => TeamsDict[id])
+                .ToList();
+
+            foreach (var team in teams)
+            {
+                AddMatchComboItems teamComboItem = new AddMatchComboItems(team.TeamId, team.TeamName);
+                homeTeamComboBox.Items.Add(teamComboItem);
+                awayTeamComboBox.Items.Add(teamComboItem);
+            }
+            homeTeamComboBox.SelectedIndex = -1;
+            awayTeamComboBox.SelectedIndex = -1;
+        }
+
+        private async void addMatchBtn_Click(object sender, EventArgs e)
+        {
+            if (leagueComboBox.SelectedIndex == -1 || homeTeamComboBox.SelectedIndex == -1 || awayTeamComboBox.SelectedIndex == -1)
+            {
+                new Notification("All fields must be filled", NotificationType.Warning, this);
+                return;
+            }
+            AddMatchComboItems selectedHomeTeam = homeTeamComboBox.SelectedItem as AddMatchComboItems;
+            AddMatchComboItems selectedAwayTeam = awayTeamComboBox.SelectedItem as AddMatchComboItems;
+
+            if (selectedHomeTeam is null || selectedAwayTeam is null)
+            {
+                new Notification("Selections Invalid", NotificationType.Error, this);
+                return;
+            }
+
+            (bool valid, string? message) = Validator.CheckMatchEntries(selectedHomeTeam.ID, selectedAwayTeam.ID);
+            if (!valid)
+            {
+                new Notification(message, NotificationType.Warning, this);
+                return;
+            }
+
+            AddMatchComboItems selectedLeague = leagueComboBox.SelectedItem as AddMatchComboItems;
+            DateTime matchDate = selectedMatchDate.Value;
+
+            FootballMatch newMatch = new FootballMatch(0, selectedLeague.ID, selectedHomeTeam.ID, selectedAwayTeam.ID, matchDate);
+            AddNewMatchService addNewMatch = new AddNewMatchService(newMatch, Players[selectedHomeTeam.ID], Players[selectedAwayTeam.ID]);
+            (valid, message, GameResult generatedResult) = await addNewMatch.AddMatchToDatabase();
+            if (!valid)
+            {
+                new Notification(message, NotificationType.Error, this);
+                return;
+            }
+            Reset();
+            new Notification(message, NotificationType.Success, this);
+        }
+
+        public void AddNewMatchInMemory(FootballMatch newMatch, GameResult generatedResult)
+        {
+            GameResults[newMatch.GameID] = generatedResult;
+            MatchesCollection.AllMatches.Add(newMatch);
+            MatchesCollection.MatchesByLeague[newMatch.LeagueID].Add(newMatch);
+        }
+
+        public void Reset()
+        {
+            CurrentLeagueID = -1;
+            leagueComboBox.SelectedIndex = -1;
+            homeTeamComboBox.Text = "";
+            awayTeamComboBox.Text = "";
+            homeTeamComboBox.Items.Clear();
+            awayTeamComboBox.Items.Clear();
+            homeTeamComboBox.SelectedIndex = -1;
+            awayTeamComboBox.SelectedIndex = -1;
+            selectedMatchDate.Value = DateTime.Now.AddMinutes(5);
+        }
+        private void cancelBtn_Click(object sender, EventArgs e)
+        {
+            Reset();
+        }
+    }
+}

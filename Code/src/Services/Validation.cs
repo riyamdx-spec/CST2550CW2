@@ -144,5 +144,34 @@ namespace BettingSystem.Services
             return (true, null);
         }
 
+        // check scores entered
+        public (bool valid, string? message) CheckScores(string homeScore, string awayScore)
+        {
+            var isHomeNumeric = int.TryParse(homeScore, out int homeInputScore);
+            var isAwayNumeric = int.TryParse(awayScore, out int awayInputScore);
+           
+            if (!isHomeNumeric || !isAwayNumeric)
+            {
+                return (false, "Scores must be numbers");
+            }
+
+            if (homeInputScore < 0 || awayInputScore < 0)
+            {
+                return (false, "Scores must be greater or equal to 0");
+            }
+            return (true, null);
+        }
+
+        //check new match detail entered by admin
+        public (bool valid, string? message) CheckMatchEntries(int homeId, int awayId)
+        {
+            if (homeId == awayId)
+            {
+                return (false, "Home and Away Teams cannot be the same");
+            }
+
+            return (true, null);
+
+        }
     }
 }

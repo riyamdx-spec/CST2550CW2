@@ -61,22 +61,22 @@ CREATE TABLE Game(
 	home_team_id INT NOT NULL,
 	away_team_id INT NOT NULL,
 	game_date DATETIME2 NOT NULL,
-	game_status VARCHAR(9) NOT NULL CHECK (game_status IN ('Scheduled','Completed', 'Started')), 
+	game_status VARCHAR(9) NOT NULL DEFAULT 'Scheduled' CHECK (game_status IN ('Scheduled','Completed', 'Started')), 
 	FOREIGN KEY(league_id) REFERENCES League(league_id),
 	FOREIGN KEY(home_team_id) REFERENCES Team(team_id),
 	FOREIGN KEY(away_team_id) REFERENCES Team(team_id)
 );
 
 CREATE TABLE GameResult(
-	result_id INT PRIMARY KEY IDENTITY(1,1),
-	game_id INT NOT NULL,
+	game_id INT PRIMARY KEY,,
 	home_team_score INT CHECK (home_team_score >= 0),
 	away_team_score INT CHECK (away_team_score >= 0),
 	first_scorer_id INT,
 	total_corners INT NOT NULL CHECK (total_corners >= 0),
 	red_cards INT NOT NULL CHECK (red_cards >= 0),
 	yellow_cards INT NOT NULL CHECK (yellow_cards >= 0),
-	FOREIGN KEY(game_id) REFERENCES Game(game_id)
+	FOREIGN KEY(game_id) REFERENCES Game(game_id),
+	FOREIGN KEY(first_scorer_id) REFERENCES Player(player_id)
 );
 
 CREATE TABLE BetType(
@@ -102,7 +102,7 @@ CREATE TABLE BetSlip(
     	total_odds decimal(10,3) NOT NULL CHECK (total_odds > 0),
 	stake DECIMAL(10,2) NOT NULL CHECK (stake > 0),
 	payout DECIMAL(10,2) CHECK (payout >= 0),
-	claimed BIT NOT NULL, 
+	claimed BIT NOT NULL DEFAULT 0, 
 	FOREIGN KEY(app_user_id) REFERENCES AppUser(app_user_id)
 );
 
@@ -113,6 +113,16 @@ CREATE TABLE Bet(
 	result VARCHAR(10) NOT NULL CHECK (result IN ('Pending', 'Won', 'Lost')),
 	FOREIGN KEY(slip_id) REFERENCES BetSlip(slip_id),
 	FOREIGN KEY(odd_id) REFERENCES Odd(odd_id)
+);
+
+CREATE TABLE UserActivity(
+	activity_id INT PRIMARY KEY IDENTITY(1,1),
+	app_user_id INT NOT NULL,
+	activity_type VARCHAR(30) NOT NULL,
+	activity_date DATETIME2 NOT NULL DEFAULT GETDATE(),
+	associated_risk_point INT NOT NULL DEFAULT 0,
+	ip_address VARCHAR(45), 
+	FOREIGN KEY(app_user_id) REFERENCES AppUser(app_user_id)
 );
 
 --- prevent home and away team from being the same in a game
