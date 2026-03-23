@@ -1006,6 +1006,39 @@ namespace BettingSystem.Data
                     return new Dictionary<int, List<int>>();
                 }
             }
-        }     
+        }
+
+        public async Task<Dictionary<int, string>> FetchBetTypesAsync()
+        {
+            Dictionary<int, string> betTypes = new Dictionary<int, string>();
+            string query = "SELECT bet_type_id, bet_type_name FROM BetType";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            betTypes[Convert.ToInt32(reader["bet_type_id"])] = reader["bet_type_name"].ToString()!;
+                        }
+                    }
+                    return betTypes;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new Dictionary<int, string>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new Dictionary<int, string>();
+                }
+            }
+        }
     }
 }
