@@ -23,6 +23,8 @@ namespace BettingSystem.Services
         public bool IsLoggingOut { get; private set; }
         public bool IsExiting { get; set; }
 
+        public Simulator AppSimulator;
+
 
         public SessionManager(AppUser currentUser)
         {
@@ -33,23 +35,26 @@ namespace BettingSystem.Services
             if (CurrentUser.Role == "user")
             {
                 UserSlip = new BetSlip(currentUser.UserID);
-                HistoryBetSlips = new List<BetHistorySlip>();
                 GameResults = new Dictionary<int, GameResult>();
             }
+            //start timer for simulator
+            AppSimulator = new Simulator(CurrentUser, this);
         }
         
         public async Task FetchUserData()
         {
+            MatchesCollection = await DbManager.FetchMatchesAsync();
             HistoryBetSlips = await DbManager.FetchBetHistoryAsync(CurrentUser.UserID);
+            Players = await DbManager.FetchPlayersAsync();
         }
 
         public async Task FetchAdminData()
         {
-            MatchesCollection = await DbManager.FetchMatchesAsync();
+            MatchesCollection = await DbManager.FetchMatchesAsync(true);
             GameResults = await DbManager.FetchGameResultsAsync(null, true);
             Leagues = await DbManager.FetchLeaguesAsync();
             TeamsDict = await DbManager.FetchTeamsAsync(true);
-            Players = await DbManager.FetchPlayersAsync(true);
+            Players = await DbManager.FetchPlayersAsync();
         }
 
         public void OpenProfilePage(Form currentForm)
@@ -125,7 +130,7 @@ namespace BettingSystem.Services
         {
 
         }
-        public void OpenAdminMatchPage(Form currentForm)
+        public async Task OpenAdminMatchPage(Form currentForm)
         {
             AdminMatchPage? matchPage = Application.OpenForms.OfType<AdminMatchPage>().FirstOrDefault();
 
@@ -136,7 +141,7 @@ namespace BettingSystem.Services
             else
             {
                 // reinitialise content on page
-                matchPage.Reset();
+                await matchPage.Reset();
             }
 
             matchPage.Size = currentForm.Size;
