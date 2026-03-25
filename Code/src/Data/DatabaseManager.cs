@@ -993,5 +993,43 @@ namespace BettingSystem.Data
             }
         }
 
+        // methods for the simulator to update database
+
+        // update match status in table to started or completed
+        private async Task<(List<int> startedGames, List<int> completedGames)> UpdateMatchStatusAsync(SqlConnection sqlConnection, SqlTransaction sqlTransaction)
+        {
+            List<int> startedGames = new List<int>();
+            List<int> completedGames = new List<int>();
+
+            string query = @"UPDATE Game
+                            SET game_status = CASE 
+                                WHEN GETDATE() >= DATEADD(MINUTE, 5, game_date) THEN 'Completed'
+                                WHEN GETDATE() >= game_date  THEN 'Started'
+                                ELSE game_status
+                            END
+                            OUTPUT inserted.game_id, inserted.game_status
+                            WHERE CAST(game_date AS DATE) = CAST(GETDATE() AS DATE)";
+
+            using (SqlCommand command = new SqlCommand(query, sqlConnection, sqlTransaction))
+            {
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        string gameStatus = reader["game_status"].ToString()!;
+                        if (gameStatus == "Completed")
+                        {
+                            completedGames.Add(Convert.ToInt32(reader["game_id"]));
+                        }
+                        else if (gameStatus == "Started")
+                        {
+                            startedGames.Add(Convert.ToInt32(reader["game_id"]));
+                        }
+                    }
+                }
+                //return list of ids for games whose status was modified
+                return (startedGames, completedGames);
+            }
+        }
     }
 }
