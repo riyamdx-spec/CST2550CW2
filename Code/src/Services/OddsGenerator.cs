@@ -294,6 +294,21 @@ namespace BettingSystem.Services
             using var reader = cmd.ExecuteReader();
             while (reader.Read())
             {
+                var rawPosition = Convert.ToString(reader["player_position"]);
+                var normalizedPosition = string.IsNullOrWhiteSpace(rawPosition)
+                    ? "ATT"
+                    : rawPosition.Trim().ToUpperInvariant() switch
+                    {
+                        "ATT" => "ATT",
+                        "MID" => "MID",
+                        "DEF" => "DEF",
+                        "GK" => "GK",
+                        "FW" => "ATT",
+                        "MF" => "MID",
+                        "DF" => "DEF",
+                        _ => "ATT"
+                    };
+
                 players.Add(new PlayerInfo(
                     Convert.ToInt32(reader["player_id"]),
                     Convert.ToString(reader["player_name"]) ?? string.Empty,
