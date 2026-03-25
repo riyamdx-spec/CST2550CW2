@@ -26,8 +26,11 @@ namespace BettingSystem.Services
         }
 
         //filter matches by teams
-        public SortedSet<FootballMatch> FilterMatchByTeams(string searchedTeamName)
+        public SortedSet<FootballMatch> FilterMatchByTeams(string searchedTeamName, SortedSet<FootballMatch>? matches=null)
         {
+            if (matches == null)
+                matches = MatchCollections.AllMatches;
+
             //get ids of teams with name containing the searched term
             HashSet<int> teamIds = TeamsById
                 .Where(t => t.Value.TeamName.Contains(searchedTeamName, StringComparison.InvariantCultureIgnoreCase))
@@ -40,7 +43,7 @@ namespace BettingSystem.Services
 
             //find matches with the teams
             SortedSet<FootballMatch> correspondingMatches = new SortedSet<FootballMatch>(
-                MatchCollections.AllMatches
+                matches
                 .Where(m => teamIds.Contains(m.HomeTeamID) || teamIds.Contains(m.AwayTeamID)),
                 new FootballMatchKeyComparer());
     
