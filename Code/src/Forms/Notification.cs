@@ -1,8 +1,4 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
-
-namespace BettingSystem.Forms
+﻿namespace BettingSystem.Forms
 {
     public enum NotificationType { Success, Error, Warning, Info }
     public partial class Notification : Form
@@ -39,8 +35,8 @@ namespace BettingSystem.Forms
             // measure text size
             SizeF textSize = TextRenderer.MeasureText(message, lblMessage.Font);
             int padding = 40;
-            int minWidth = 300;
-            int height = 70;
+            int minWidth = 250;
+            int height = 50;
             int width = Math.Max(minWidth, (int)textSize.Width + padding * 2);
 
             // resize form and panel to fit text
@@ -69,9 +65,10 @@ namespace BettingSystem.Forms
             this.StartPosition = FormStartPosition.Manual;
 
             Point ownerScreenPosition = owner.PointToScreen(Point.Empty);
-            int y = ownerScreenPosition.Y + owner.ClientSize.Height - this.Height - 20;
+            int y = ownerScreenPosition.Y + 20;
+
             targetX = ownerScreenPosition.X + owner.ClientSize.Width - this.Width - 20;
-            hiddenX = ownerScreenPosition.X + owner.ClientSize.Width;
+            hiddenX = ownerScreenPosition.X + owner.ClientSize.Width - this.Width;
             this.Location = new Point(hiddenX, y);
 
             this.Show(owner);
@@ -102,7 +99,7 @@ namespace BettingSystem.Forms
             {
                 if (this.Left > targetX)
                 {
-                    this.Left -= 20;
+                    this.Left -= 10;
                 }
                 else
                 {
@@ -117,7 +114,7 @@ namespace BettingSystem.Forms
                 {
                     if (this.Left < hiddenX)
                     {
-                        this.Left += 20;
+                        this.Left += 10;
                     }
                     else
                     {
