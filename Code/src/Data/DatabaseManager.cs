@@ -1332,5 +1332,37 @@ namespace BettingSystem.Data
                 }
             }
         }
+
+        // change status of current user in database
+        public async Task<bool> UpdateUserStatusAsync(int userId, string newStatus)
+        {
+            string query = @"UPDATE AppUser
+                            SET user_status = @newStatus
+                            WHERE app_user_id = @userId";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@newStatus", newStatus);
+                command.Parameters.AddWithValue("@userId", userId);
+
+                try
+                {
+                    await connection.OpenAsync();
+                    int updatedRow = await command.ExecuteNonQueryAsync();
+                    return updatedRow > 0;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return false;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return false;
+                }
+            }
+        }
     }
 }
