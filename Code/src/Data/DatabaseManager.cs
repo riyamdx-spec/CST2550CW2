@@ -1031,5 +1031,124 @@ namespace BettingSystem.Data
                 return (startedGames, completedGames);
             }
         }
+
+
+        //update bets in Bet Table for completed games
+        private async Task<Dictionary<int, string>> UpdateBetResultAsync(List<int> updatedGameIds, SqlConnection sqlConnection, SqlTransaction sqlTransaction)
+        {
+            Dictionary<int, string> updatedBets = new Dictionary<int, string>();
+
+            if (updatedGameIds is null || updatedGameIds.Count == 0)
+                return updatedBets;
+
+            List<int> modifiedGameIds = updatedGameIds;
+
+            using (SqlCommand command = new SqlCommand())
+            {
+                command.Connection = sqlConnection;
+                command.Transaction = sqlTransaction;
+
+                List<string> idParams = new List<string>();
+
+                for (int i = 0; i < modifiedGameIds.Count; i++)
+                {
+                    command.Parameters.AddWithValue($"@game_id{i}", modifiedGameIds[i]);
+                    idParams.Add($"@game_id{i}");
+                }
+                //compare user selection to match results to set bet result as Won or Lost
+                command.CommandText = $@"
+                        UPDATE Bet B
+                        SET B.result = CASE 
+                            WHEN B.result = 'Pending' AND
+                                ( 
+                                    (O.bet_type_id = 1 AND 
+                                        (
+                                            (GR.home_team_score > GR.away_team_score AND O.Selection='Home Win') OR 
+                                            (GR.home_team_score < GR.away_team_score AND O.Selection='Away Win') OR 
+                                            (GR.home_team_score = GR.away_team_score AND O.Selection='Draw')
+                                        )
+                                    )
+
+                                    OR
+                                    (O.bet_type_id = 2 AND 
+                                        (
+                                            (GR.home_team_score >= GR.away_team_score AND O.Selection='1X') OR 
+                                            (GR.home_team_score != GR.away_team_score AND O.Selection='12') OR 
+                                            (GR.home_team_score <= GR.away_team_score AND O.Selection='X2')
+                                        )
+                                    )
+
+                                    OR
+                                    (O.bet_type_id = 3 AND CONCAT(GR.home_team_score, ' - ', GR.away_team_score) = O.Selection)
+
+                                    OR
+                                    (O.bet_type_id = 4 AND 
+                                        (
+                                            ((GR.home_team_score + GR.away_team_score) > 2.5 AND O.Selection='Over 2.5') OR 
+                                            ((GR.home_team_score + GR.away_team_score) < 2.5 AND O.Selection='Under 2.5')
+                                        )
+                                    )
+
+                                    OR
+                                    (O.bet_type_id = 5 AND 
+                                        (
+                                            ((GR.home_team_score > 0 AND GR.away_team_score > 0) AND O.Selection='Yes') OR 
+                                            ((GR.home_team_score = 0 OR GR.away_team_score = 0) AND O.Selection='No')
+                                        )
+                                    )
+
+                                    OR
+                                    (O.bet_type_id = 6 AND (GR.first_scorer_id IS NOT NULL AND CAST(GR.first_scorer_id AS VARCHAR) = O.Selection))
+
+                                    OR
+                                    (O.bet_type_id = 7 AND 
+                                        (
+                                            (LEFT(O.Selection, 4) = 'Over' AND GR.total_corners > CAST(SUBSTRING(O.Selection, 6, LEN(O.Selection)) AS DECIMAL(3, 1))) OR 
+                                            (LEFT(O.Selection, 5) = 'Under' AND GR.total_corners < CAST(SUBSTRING(O.Selection, 7, LEN(O.Selection)) AS DECIMAL(3, 1)))
+                                        )
+                                    )
+                                    OR
+                                    (O.bet_type_id = 8 AND 
+                                        (
+                                            (LEFT(O.Selection, 4) = 'Over' AND GR.yellow_cards > CAST(SUBSTRING(O.Selection, 6, LEN(O.Selection)) AS DECIMAL(2, 1))) OR 
+                                            (LEFT(O.Selection, 5) = 'Under' AND GR.yellow_cards < CAST(SUBSTRING(O.Selection, 7, LEN(O.Selection)) AS DECIMAL(2, 1)))
+                                        )
+                                    )
+
+                                    OR
+                                    (O.bet_type_id = 9 AND 
+                                        (
+                                            (LEFT(O.Selection, 4) = 'Over' AND GR.red_cards > CAST(SUBSTRING(O.Selection, 6, LEN(O.Selection)) AS DECIMAL(2, 1))) 
+                                            OR (LEFT(O.Selection, 5) = 'Under' AND GR.red_cards < CAST(SUBSTRING(O.Selection, 7, LEN(O.Selection)) AS DECIMAL(2, 1)))
+                                        )
+                                    )
+                                ) 
+
+                            THEN 'Won'
+                            ELSE 'Lost'
+                        END
+                        OUTPUT inserted.bet_id, inserted.result
+                        FROM Bet B
+                        INNER JOIN Odd O ON B.odd_id = O.odd_id
+                        INNER JOIN GameResult GR ON GR.game_id = O.game_id
+                        WHERE B.result = 'Pending' 
+                        AND O.game_id IN ({String.Join(',', idParams)})
+                ";
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        string betStatus = reader["result"].ToString()!;
+                        if (betStatus != "Pending")
+                        {
+                            int betId = Convert.ToInt32(reader["game_id"]);
+                            updatedBets[betId] = betStatus;
+                        }
+                    }
+                }
+                //return bets that were updated
+                return updatedBets;
+            }
+        }
     }
 }
