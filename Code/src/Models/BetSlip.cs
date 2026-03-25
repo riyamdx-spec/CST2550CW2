@@ -22,6 +22,7 @@
                 if (existingBet.GameID == bet.GameID && existingBet.BetTypeID == bet.BetTypeID)
                 {
                     // update bet if exists
+                    existingBet.OddID = bet.OddID;
                     existingBet.Selection = bet.Selection;
                     existingBet.OddValue = bet.OddValue;
                     CalculateTotalOdds();
