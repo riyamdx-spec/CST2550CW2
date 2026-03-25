@@ -13,18 +13,15 @@ namespace BettingSystem.Forms
 
             StyleButtons();
             hoverEffects();
-
         }
 
         private void formLoad(object? sender, EventArgs e)
         {
-
             // Set Parent of Controls to picBackground
             picLogo.Parent = picBackground;
             lblSlogan.Parent = picBackground;
             btnCreateAccount.Parent = picBackground;
             btnLogin.Parent = picBackground;
-
         }
 
         protected override void AfterScaling()
@@ -123,36 +120,39 @@ namespace BettingSystem.Forms
 
         private void btnCreateAccount_Click(object sender, EventArgs e)
         {
-            var form = new RegisterLoginForm(ViewPanel.SignUp);
+            RegisterLoginForm? form = Application.OpenForms.OfType<RegisterLoginForm>().FirstOrDefault();
+            if (form is null)
+            {
+                form = new RegisterLoginForm(ViewPanel.SignUp);
+            }
+            else
+            {
+                form.SetupForm(ViewPanel.SignUp);
+            }
+
             form.Size = this.Size;
             form.WindowState = this.WindowState;
             form.Location = this.Location;
-            form.FormClosed += (s, args) =>
-            {
-                if (form.NavigatingBack)
-                {
-                    this.Size = form.Size;
-                    this.Show();
-                }
-            };
+
             form.Show();
             this.Hide();
         }
 
         private void btnLogin_Click(object sender, EventArgs e)
         {
-            var form = new RegisterLoginForm(ViewPanel.Login);
+            RegisterLoginForm? form = Application.OpenForms.OfType<RegisterLoginForm>().FirstOrDefault();
+            if (form is null)
+            {
+                form = new RegisterLoginForm(ViewPanel.Login);
+            }
+            else
+            {
+                form.SetupForm(ViewPanel.Login);
+            }
+
             form.Size = this.Size;
             form.WindowState = this.WindowState;
             form.Location = this.Location;
-            form.FormClosed += (s, args) =>
-            {
-                if (form.NavigatingBack)
-                {
-                    this.Size = form.Size;
-                    this.Show();
-                }
-            };
             form.Show();
             this.Hide();
         }
