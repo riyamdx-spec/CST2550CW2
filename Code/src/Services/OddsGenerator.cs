@@ -312,7 +312,7 @@ namespace BettingSystem.Services
                 players.Add(new PlayerInfo(
                     Convert.ToInt32(reader["player_id"]),
                     Convert.ToString(reader["player_name"]) ?? string.Empty,
-                    Convert.ToString(reader["player_position"]) ?? "FW",
+                    normalizedPosition,
                     Convert.ToInt32(reader["scoring_rating"]),
                     Convert.ToInt32(reader["team_id"])));
             }
@@ -420,9 +420,10 @@ namespace BettingSystem.Services
                 // Adjusts by positions
                 baseProbability *= player.Position switch
                 {
-                    "FW" => 2.5,
-                    "MF" => 1.2,
-                    "DF" => 0.3,
+                    "ATT" => 2.5,
+                    "MID" => 1.2,
+                    "DEF" => 0.3,
+                    "GK" => 0.05,
                     // Goalkeepers
                     _ => 0.05
                 };
