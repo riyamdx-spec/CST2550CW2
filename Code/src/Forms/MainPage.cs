@@ -296,6 +296,14 @@ namespace BettingSystem.Forms
         //display panel with the bets that can be placed
         private async Task DisplayBetSelections(MatchDisplayInfo MatchDetails)
         {
+            if (!await EnsureOddsLoadedForMatch(CurrentMatchId))
+            {
+                new Notification("Odds are not available for this match yet. Please refresh shortly.", NotificationType.Warning, this);
+                MatchSelectedBetsPanel.Visible = false;
+                noMatchSelectedPanel.Show();
+                return;
+            }
+
             scoreOddLbl.Visible = false;
             DisplayButtonText();
             DisplayPlayersName(MatchDetails.HomeTeam.TeamId, MatchDetails.AwayTeam.TeamId);
@@ -397,10 +405,18 @@ namespace BettingSystem.Forms
                 int betTypeId = btnTagInfo.BetTypeId;
                 string selection = btnTagInfo.Selection;
 
-                //find odd object
-                Odd btnOdd = FindOddInstance(betTypeId, selection);
+                Odd? btnOdd = FindOddInstanceOrNull(betTypeId, selection);
 
-                btn.Text = $"{selection} ({Math.Round(btnOdd.OddValue, 2)})";
+                if ( btnOdd is null)
+                {
+                    btn.Text = $"{selection} (N/A)";
+                    btn.Enabled = false;
+                }
+                else
+                {
+                    btn.Text = $"{selection} ({Math.Round(btnOdd.OddValue, 2)})";
+                    btn.Enabled = true;
+                }
             }
         }
 
@@ -410,14 +426,25 @@ namespace BettingSystem.Forms
             playersComboBox.Items.Clear();
 
             List<Player> currentPlayers = new List<Player>();
-            
-            currentPlayers.AddRange(Players[homeTeamID]); //add home team players
 
-            currentPlayers.AddRange(Players[awayTeamID]);  //add away team players
+            if (Players.TryGetValue(homeTeamID, out var homePlayers))
+            {
+                currentPlayers.AddRange(homePlayers);
+            }
+
+            if (Players.TryGetValue(awayTeamID, out var awayPlayers))
+            {
+                currentPlayers.AddRange(awayPlayers);
+            }
 
             foreach (Player player in currentPlayers)
             {
-                Odd playerOdd = FindOddInstance(6, player.Name);
+                var playerOdd = FindOddInstanceOrNull(6, player.Name);
+                if (playerOdd is null)
+                {
+                    continue;
+                }
+
                 PlayerComboItem playerComboItem = new PlayerComboItem(player.Name, player.Position, playerOdd);
                 playersComboBox.Items.Add(playerComboItem); 
             }
@@ -467,9 +494,29 @@ namespace BettingSystem.Forms
         //find odd
         private Odd FindOddInstance(int betTypeId, string selection)
         {
-            Odd btnOdd = Odds[CurrentMatchId]
-                            .First(o => o.BetTypeID == betTypeId && o.Selection == selection);
-            return btnOdd;
+            return FindOddInstanceOrNull(betTypeId, selection)
+                   ?? throw new InvalidOperationException($"No odd found for match {CurrentMatchId}, bet type {betTypeId}, selection '{selection}'.");
+        }
+
+        private Odd? FindOddInstanceOrNull(int betTypeId, string selection)
+        {
+            if (!Odds.TryGetValue(CurrentMatchId, out var matchOdds))
+            {
+                return null;
+            }
+
+            return matchOdds.FirstOrDefault(o => o.BetTypeID == betTypeId && o.Selection == selection);
+        }
+
+        private async Task<bool> EnsureOddsLoadedForMatch(int gameId)
+        {
+            if (Odds.ContainsKey(gameId))
+            {
+                return true;
+            }
+
+            Odds = await DBManager.FetchOddsAsync();
+            return Odds.ContainsKey(gameId);
         }
 
         //open profile page
@@ -507,6 +554,7 @@ namespace BettingSystem.Forms
         private async void refreshIcon_Click(object sender, EventArgs e)
         {
             await FetchData();
+            Odds = await DBManager.FetchOddsAsync();
             ReInitialise();
         }
 
@@ -520,7 +568,7 @@ namespace BettingSystem.Forms
             AllMatchesClicked(null, null);
         }
 
-        private void confirmScoreBet_Click(object sender, EventArgs e)
+        private async void confirmScoreBet_Click(object sender, EventArgs e)
         {
             string homeScore = homeScoreTxt.Text;
             string awayScore = awayScoreTxt.Text;
@@ -538,9 +586,54 @@ namespace BettingSystem.Forms
             (bool valid, string? message) = validator.CheckScores(homeScore, awayScore);
             if (valid) 
             {
-                //get odds
+                if (CurrentMatchId <= 0)
+                {
+                    scoreOddLbl.Text = "Please select a match before adding a score bet";
+                    scoreOddLbl.ForeColor = Color.Firebrick;
+                    scoreOddLbl.Visible = true;
+                    return;
+                }
 
-                //add to bet slip
+                FootballMatch? selectedMatch = MatchesCollection.AllMatches
+                    .FirstOrDefault(match => match.GameID == CurrentMatchId);
+
+                if (selectedMatch is null)
+                {
+                    scoreOddLbl.Text = "Selected match details could not be found";
+                    scoreOddLbl.ForeColor = Color.Firebrick;
+                    scoreOddLbl.Visible = true;
+                    return;
+                }
+
+                int homeGoals = int.Parse(homeScore);
+                int awayGoals = int.Parse(awayScore);
+
+                Odd? scoreOdd = await DBManager.GetOrCreateCorrectScoreOddAsync(
+                    CurrentMatchId,
+                    homeGoals,
+                    awayGoals,
+                    selectedMatch.HomeTeamID,
+                    selectedMatch.AwayTeamID,
+                    selectedMatch.LeagueID);
+
+                if (scoreOdd is null)
+                {
+                    scoreOddLbl.Text = "Could not load odds for this score. Please try again.";
+                    scoreOddLbl.ForeColor = Color.Firebrick;
+                    scoreOddLbl.Visible = true;
+                    return;
+                }
+
+                if (!Odds.TryGetValue(CurrentMatchId, out var matchOdds))
+                {
+                    matchOdds = new List<Odd>();
+                    Odds[CurrentMatchId] = matchOdds;
+                }
+
+                matchOdds.RemoveAll(odd => odd.BetTypeID == scoreOdd.BetTypeID && odd.Selection == scoreOdd.Selection);
+                matchOdds.Add(scoreOdd);
+
+                AddToBetSlip(scoreOdd);
             }
             else
             {
