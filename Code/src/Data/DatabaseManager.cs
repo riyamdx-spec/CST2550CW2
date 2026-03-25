@@ -1150,5 +1150,54 @@ namespace BettingSystem.Data
                 return updatedBets;
             }
         }
+
+
+        // update bet slip status
+        private async Task<Dictionary<int, string>> UpdateBetSlipStatusAsync(SqlConnection sqlConnection, SqlTransaction sqlTransaction)
+        {
+            Dictionary<int, string> updatedSlips = new Dictionary<int, string>();
+
+            // set status of bets slip as 'Won' if all the bets in it have result 'Won'
+            string query = @"
+                UPDATE BetSlip BS
+                SET bet_status = CASE 
+                    WHEN NOT EXISTS(
+                        SELECT 1
+                        FROM BET B
+                        WHERE B.slip_id = BS.slip_id AND B.result != 'Won'
+                    ) 
+                    THEN 'Won'
+
+                    WHEN NOT EXISTS(
+                        SELECT 1
+                        FROM BET B
+                        WHERE B.slip_id = BS.slip_id AND B.result = 'Pending'
+                    ) 
+                    THEN 'Lost'
+
+                    ELSE bet_status
+                END
+                OUTPUT inserted.B.slip_id, inserted.B.result
+                WHERE bet_status = 'Pending'
+            ";
+
+            using (SqlCommand command = new SqlCommand(query, sqlConnection, sqlTransaction))
+            {
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        string slipStatus = reader["result"].ToString()!;
+                        if (slipStatus != "Pending")
+                        {
+                            int slipId = Convert.ToInt32(reader["slip_id"]);
+                            updatedSlips[slipId] = slipStatus;
+                        }
+                    }
+                }
+            }
+            //return updated bet slips
+            return updatedSlips;
+        }
     }
 }
