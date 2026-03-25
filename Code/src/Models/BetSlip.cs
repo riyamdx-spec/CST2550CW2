@@ -63,5 +63,28 @@
         {
             return Math.Round(Stake * TotalOdds, 2);
         }
+
+        // remove bets using game id
+        public bool RemoveBetsByGameIds(List<int> gameIds)
+        {
+            var currentNode = Bets.First;
+            int removedBets = 0;
+            int initialBetsNum = Bets.Count;
+
+            while (currentNode != null)
+            {
+                if (gameIds.Contains(currentNode.Value.GameID))
+                {
+                    Bets.Remove(currentNode);
+                    currentNode.Value.Node = null;
+                    removedBets++;
+                }
+                currentNode = currentNode.Next;
+            }
+            if (removedBets > 0)
+                CalculateTotalOdds();
+
+            return initialBetsNum != Bets.Count;
+        }
     }
 }
