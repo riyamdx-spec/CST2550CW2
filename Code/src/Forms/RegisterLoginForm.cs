@@ -9,7 +9,6 @@ namespace BettingSystem.Forms
     {
         private Validation validator = new Validation();
         private DatabaseManager db = new DatabaseManager();
-
         public bool NavigatingBack = false;
 
         public RegisterLoginForm(ViewPanel view = ViewPanel.SignUp)
@@ -20,7 +19,7 @@ namespace BettingSystem.Forms
             CaptureBaseLayout();
         }
 
-        private void SetupForm(ViewPanel view)
+        public void SetupForm(ViewPanel view)
         {
             pnlContainer.Location = new Point(
                 (ClientSize.Width - pnlContainer.Width) / 2,
@@ -35,6 +34,8 @@ namespace BettingSystem.Forms
                 pnlSignupLeft.BringToFront();
                 pnlSignUpRight.BringToFront();
                 backButton.BackColor = Color.FromArgb(84, 139, 66);
+                pnlSignupLeft.BackColor = Color.FromArgb(84, 139, 66);
+                pnlSignUpRight.BackColor = Color.FromArgb(48, 48, 48);
             }
             else
             {
@@ -45,8 +46,11 @@ namespace BettingSystem.Forms
                 pnlLoginLeft.BringToFront();
                 pnlLoginRight.BringToFront();
                 backButton.BackColor = Color.FromArgb(48, 48, 48);
+                pnlLoginLeft.BackColor = Color.FromArgb(48, 48, 48);
+                pnlLoginRight.BackColor = Color.FromArgb(84, 139, 66);
             }
 
+            backButton.BringToFront();
             txtSignUpPassword.TextChanged += txtPassword_TextChanged;
         }
 
@@ -110,6 +114,8 @@ namespace BettingSystem.Forms
             pnlLoginRight.BackColor = Color.FromArgb(84, 139, 66);
 
             lnkToLogin.Enabled = true;
+            backButton.BringToFront();
+
         }
 
         private async void lnkGoToSignUp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -139,6 +145,7 @@ namespace BettingSystem.Forms
 
             pnlSignupLeft.BringToFront();
             pnlSignUpRight.BringToFront();
+            backButton.BringToFront();
             pnlContainer.ResumeLayout();
 
             // Fade in signup
@@ -170,12 +177,17 @@ namespace BettingSystem.Forms
         }
         private void backButton_Click(object sender, EventArgs e)
         {
-            var landing = new landingPage();
-            landing.Size = this.Size;
-            landing.WindowState = this.WindowState;
-            landing.Location = this.Location;
-            NavigatingBack = true;
+            landingPage? appLandingPage = Application.OpenForms.OfType<landingPage>().FirstOrDefault();
+            if (appLandingPage is null)
+            {
+                appLandingPage = new landingPage();
+            }
+            appLandingPage.Size = this.Size;
+            appLandingPage.Location = this.Location;
+            appLandingPage.WindowState = this.WindowState;
+            appLandingPage.Show();
             this.Hide();
+            NavigatingBack = true;
         }
 
         // Button login 
@@ -205,7 +217,6 @@ namespace BettingSystem.Forms
 
             //Main page
             await OpenMainPage(user);
-
         }
 
         // Sign up button
@@ -273,7 +284,6 @@ namespace BettingSystem.Forms
 
             new Notification(message, NotificationType.Success, this);
 
-
             // main form
             await OpenMainPage(user);
         }
@@ -285,7 +295,7 @@ namespace BettingSystem.Forms
             if (user.Role == "admin")
             {
                 await currentSession.FetchAdminData();
-                currentSession.OpenAdminMatchPage(this);
+                await currentSession.OpenAdminMatchPage(this);
             }
             else
             {
