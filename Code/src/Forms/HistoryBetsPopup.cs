@@ -1,5 +1,6 @@
 ﻿using BettingSystem.Forms.CustomControls;
 using BettingSystem.Models;
+using BettingSystem.Services;
 
 namespace BettingSystem.Forms
 {
@@ -7,15 +8,16 @@ namespace BettingSystem.Forms
     {
         private List<HistoryBet> Bets;
         private Dictionary<int, GameResult> GameResults;
-        public HistoryBetsPopup(List<HistoryBet> bets, Dictionary<int, GameResult> gameResults)
+        public HistoryBetsPopup(List<HistoryBet> bets, Dictionary<int, GameResult> gameResults, Dictionary<int, List<Player>> players)
         {
             Bets = bets;
             GameResults = gameResults;
+
             InitializeComponent();
-            DisplayBets();
+            DisplayBets(players);
         }
 
-        private void DisplayBets()
+        private void DisplayBets(Dictionary<int, List<Player>> players)
         {
             betsFlowLayoutPanel.Hide();
             betsFlowLayoutPanel.Controls.Clear();
@@ -23,7 +25,7 @@ namespace BettingSystem.Forms
             foreach (HistoryBet bet in Bets)
             {
                 actualResult = FindActualResult(bet.GameId, bet.BetTypeId);
-                HistoryBetPanel betPanel = new HistoryBetPanel(bet, actualResult);
+                HistoryBetPanel betPanel = new HistoryBetPanel(bet, actualResult, players);
                 betPanel.Margin = new Padding(0, 10, 0, 0);
                 betsFlowLayoutPanel.Controls.Add(betPanel);
             }
