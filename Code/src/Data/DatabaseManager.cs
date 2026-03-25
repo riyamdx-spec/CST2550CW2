@@ -1199,5 +1199,38 @@ namespace BettingSystem.Data
             //return updated bet slips
             return updatedSlips;
         }
+
+        // execute updates for the match status, bet results and bet slip status
+        public async Task<(List<int>? startedGames, List<int>? completedGames, Dictionary<int, string> updatedBets, Dictionary<int, string> updatedSlips)> WrapTableUpdatesAsync()
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        (List<int> startedMatchIds, List<int> completedMatchIds) = await UpdateMatchStatusAsync(connection, transaction);
+                        Dictionary<int, string> updatedBets = new Dictionary<int, string>();
+                        Dictionary<int, string> updatedSlips = new Dictionary<int, string>();
+
+                        if (completedMatchIds is not null)
+                        {
+                            updatedBets = await UpdateBetResultAsync(completedMatchIds, connection, transaction);
+                            updatedSlips = await UpdateBetSlipStatusAsync(connection, transaction);
+                        }
+
+                        transaction.Commit();
+                        return (startedMatchIds, completedMatchIds, updatedBets, updatedSlips);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Error: {e.Message}");
+                        transaction.Rollback();
+                        return (new List<int>(), new List<int>(), new Dictionary<int, string>(), new Dictionary<int, string>());
+                    }
+                }
+            }
+        }
     }
 }
