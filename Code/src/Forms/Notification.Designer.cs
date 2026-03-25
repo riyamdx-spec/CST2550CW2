@@ -39,29 +39,33 @@
             mainPanel.Controls.Add(lblMessage);
             mainPanel.Dock = DockStyle.Fill;
             mainPanel.Location = new Point(0, 0);
+            mainPanel.Margin = new Padding(3, 2, 3, 2);
             mainPanel.Name = "mainPanel";
-            mainPanel.Size = new Size(350, 80);
+            mainPanel.Padding = new Padding(5);
+            mainPanel.Size = new Size(246, 46);
             mainPanel.TabIndex = 0;
             // 
             // lblMessage
             // 
             lblMessage.BackColor = Color.Transparent;
-            lblMessage.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
-            lblMessage.Location = new Point(132, 24);
+            lblMessage.Dock = DockStyle.Fill;
+            lblMessage.Font = new Font("Times New Roman", 12F, FontStyle.Bold | FontStyle.Italic, GraphicsUnit.Point, 0);
+            lblMessage.Location = new Point(5, 5);
             lblMessage.Name = "lblMessage";
-            lblMessage.Size = new Size(86, 32);
+            lblMessage.Size = new Size(236, 36);
             lblMessage.TabIndex = 0;
             lblMessage.Text = "label1";
             lblMessage.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // Notification
             // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.MediumAquamarine;
-            ClientSize = new Size(350, 80);
+            ClientSize = new Size(246, 46);
             Controls.Add(mainPanel);
             FormBorderStyle = FormBorderStyle.None;
+            Margin = new Padding(3, 2, 3, 2);
             Name = "Notification";
             StartPosition = FormStartPosition.CenterParent;
             Text = "NotificationPopup";
