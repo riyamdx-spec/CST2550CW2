@@ -10,7 +10,7 @@
                 throw new ArgumentNullException("Cannot compare null values");
 
             //compare dates
-            int dateComparison = teamA.GameDate.CompareTo(teamB.GameDate);
+            int dateComparison = teamB.GameDate.CompareTo(teamA.GameDate);
 
             //if the matches are on the same date
             if (dateComparison == 0)
