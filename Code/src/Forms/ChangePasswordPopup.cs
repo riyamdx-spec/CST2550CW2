@@ -1,0 +1,99 @@
+﻿using BettingSystem.Data;
+using BettingSystem.Models;
+using BettingSystem.Services;
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+
+namespace BettingSystem.Forms
+{
+    public partial class ChangePasswordPopup : Form
+    {
+
+        private DatabaseManager db = new DatabaseManager();
+        private Validation validator = new Validation();
+        private AppUser currentUser;
+
+        public ChangePasswordPopup(AppUser currentUser)
+        {
+            InitializeComponent();
+            confirmChangeBtn.Click += confirmChangeBtn_Click;
+            cancelBtn.Click += (s, e) => this.Close();
+            this.currentUser = currentUser;
+
+            currentPasswordTextbox.TextChanged += (s, e) => HideError();
+            newPasswordTextbox.TextChanged += (s, e) => HideError();
+        }
+
+        //public ChangePasswordPopup()
+        //{
+        //    InitializeComponent();
+        //    confirmChangeBtn.Click += confirmChangeBtn_Click;
+        //    cancelBtn.Click += (s, e) => this.Close();
+
+        //    currentPasswordTextbox.TextChanged += (s, e) => HideError();
+        //    newPasswordTextbox.TextChanged += (s, e) => HideError();
+        //}
+
+        private void txtPassword_TextChanged(object? sender, EventArgs e)
+        {
+            string password = newPasswordTextbox.Text;
+
+            characterNumLbl.ForeColor = password.Length >= 8 ? Color.LimeGreen : Color.Firebrick;
+            upperCaseLbl.ForeColor = password.Any(char.IsUpper) ? Color.LimeGreen : Color.Firebrick;
+            numberLbl.ForeColor = password.Any(char.IsDigit) ? Color.LimeGreen : Color.Firebrick;
+            specialCharLbl.ForeColor = password.Any(c => !char.IsLetterOrDigit(c)) ? Color.LimeGreen : Color.Firebrick;
+        }
+
+        private void ShowError(string message, Control targetControl)
+        {
+            errorLbl.Text = message;
+            errorLbl.Location = new Point(targetControl.Left, targetControl.Bottom + 5);
+            errorLbl.Visible = true;
+        }
+
+        private void HideError()
+        {
+            errorLbl.Visible = false;
+        }
+
+        private async void confirmChangeBtn_Click(object? sender, EventArgs e)
+        {
+            string currentPassword = currentPasswordTextbox.Text;
+            string newPassword = newPasswordTextbox.Text;
+
+            // check empty fields
+            if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
+            {
+                ShowError("Please fill in all fields.", newPasswordTextbox);
+                return;
+            }
+
+            // check new password validity
+            if (!validator.CheckPasswordValidity(newPassword))
+            {
+                ShowError("New password is in incorrect format.", newPasswordTextbox);
+                return;
+            }
+
+            confirmChangeBtn.Enabled = false;
+
+            var (success, message) = await db.ChangePasswordAsync(currentPassword, newPassword, currentUser.UserID);
+            confirmChangeBtn.Enabled = true;
+
+            if (success)
+            {
+
+            }
+            else
+            {
+                ShowError(message, currentPasswordTextbox);
+            }
+        }
+    }
+}
