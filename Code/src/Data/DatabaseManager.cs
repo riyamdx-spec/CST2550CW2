@@ -2,7 +2,10 @@
 using BettingSystem.Services;
 using Microsoft.Data.SqlClient;
 using System.Configuration;
+using System.Diagnostics;
+using System.Net;
 using System.Security.Cryptography;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace BettingSystem.Data
 {
@@ -1364,5 +1367,53 @@ namespace BettingSystem.Data
                 }
             }
         }
+
+        //fetch user activity
+        public async Task<List<UserActivity>> FetchActivityAsync(int userId)
+        {
+            //array to store leagues
+            List<UserActivity> activityList = new List<UserActivity>(); 
+
+            string query = @"SELECT activity_id, activity_type, activity_date, associated_risk_point, ip_address, reference_id FROM UserActivity
+                            WHERE app_user_id = @userId";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            UserActivity activityObj = new UserActivity(
+                                Convert.ToInt32(reader["activity_id"]),
+                                userId,
+                                reader["activity_type"].ToString()!,
+                                Convert.ToDateTime(reader["activity_date"]),
+                                Convert.ToInt32(reader["associated_risk_point"]),
+                                reader["ip_address"].ToString() ?? "",
+                                reader["reference_id"] as int?
+                            );
+                            activityList.Add(activityObj);
+                        }
+
+                    }
+                    return activityList;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new List<UserActivity>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new List<UserActivity>();
+                }
+            }
+        }
+
     }
 }
