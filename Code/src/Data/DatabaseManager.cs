@@ -1415,5 +1415,35 @@ namespace BettingSystem.Data
             }
         }
 
+        // insert into user activity table
+        private async Task<UserActivity> RecordActivityAsync(int userId, string activityType, string ip, int refId, SqlConnection sqlConnection, SqlTransaction sqlTransaction)
+        {
+            string query = @"INSERT INTO UserActivity (app_user_id, activity_type, ip_address, reference_id) 
+                            OUTPUT INSERTED.app_user_id, INSERTED.activityDate
+                            VALUES (@userId, @activityType, @ip, @refId)";
+
+            using (SqlCommand command = new SqlCommand(query, sqlConnection, sqlTransaction))
+            {
+                command.Parameters.AddWithValue("@userId", userId);
+                command.Parameters.AddWithValue("@activityType", activityType);
+                command.Parameters.AddWithValue("@ip", ip);
+                command.Parameters.AddWithValue("@refId", refId);
+
+                using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    if (await reader.ReadAsync())
+                    {
+                        int activity_id = Convert.ToInt32(reader["activity_id"]);
+                        DateTime activityDate = Convert.ToDateTime(reader["activity_date"]);
+                        return new UserActivity(activity_id, userId, activityType, activityDate, 0, ip, refId);
+                    }
+                    else
+                    {
+                        throw new Exception("Failed to insert user activity");
+                    }
+                }
+            }
+        }
+
     }
 }
