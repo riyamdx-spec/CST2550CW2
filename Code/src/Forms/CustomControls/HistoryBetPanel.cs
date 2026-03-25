@@ -5,22 +5,22 @@ namespace BettingSystem.Forms.CustomControls
     public partial class HistoryBetPanel : UserControl
     {
         private HistoryBet Bet;
-        public HistoryBetPanel(HistoryBet bet, string actualResult)
+        public HistoryBetPanel(HistoryBet bet, string actualResult, Dictionary<int, List<Player>> players)
         {
             Bet = bet;
             InitializeComponent();
-            DisplayDetails(actualResult);
+            DisplayDetails(actualResult, players);
             betTableLayoutBgPanel.CellPaint += TableLayoutAddBorders;
         }
             
-        private void DisplayDetails(string actualResult)
+        private void DisplayDetails(string actualResult, Dictionary<int, List<Player>> players)
         {
             betMatchDateLbl.Text = Bet.MatchDate.ToString("dd/MM/yyyy") + "-" + Bet.MatchDate.ToString("HH:mm");
             betMatchLeagueLbl.Text = Bet.LeagueName;
             betHomeTeamLbl.Text = Bet.HomeTeam;
             betAwayTeamLbl.Text = Bet.AwayTeam;
             betTypeLbl.Text = $"Bet Type: {Bet.BetTypeName}";
-            betSelectionLbl.Text = $"Selection: {Bet.Selection}";
+            betSelectionLbl.Text = $"Selection: {(Bet.BetTypeId == 6 ? players[int.Parse(Bet.Selection)] :  Bet.Selection)}";
             betOddLbl.Text = $"Odd: {Math.Round(Bet.OddValue, 2)}";
             betResultLbl.Text = "Actual Result: " + actualResult;
             DisplayBetResult();
