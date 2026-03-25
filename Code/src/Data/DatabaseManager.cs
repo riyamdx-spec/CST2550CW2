@@ -950,11 +950,26 @@ namespace BettingSystem.Data
                         while (await reader.ReadAsync())
                         {
                             int teamID = Convert.ToInt32(reader["team_id"]);
+                            string? rawPosition = reader["player_position"].ToString();
+                            string normalizedPosition = string.IsNullOrWhiteSpace(rawPosition)
+                                ? "ATT"
+                                : rawPosition.Trim().ToUpperInvariant() switch
+                                {
+                                    "ATT" => "ATT",
+                                    "MID" => "MID",
+                                    "DEF" => "DEF",
+                                    "GK" => "GK",
+                                    "FW" => "ATT",
+                                    "MF" => "MID",
+                                    "DF" => "DEF",
+                                    _ => "ATT"
+                                };
+
                             Player playerObj = new Player(
                                 Convert.ToInt32(reader["player_id"]),
                                 reader["player_name"].ToString()!,
                                 teamID,
-                                reader["player_position"].ToString()!
+                                normalizedPosition
                             );
 
                             //check if a list of players exist for the game
