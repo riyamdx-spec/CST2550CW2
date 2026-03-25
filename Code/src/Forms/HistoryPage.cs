@@ -10,6 +10,7 @@ namespace BettingSystem.Forms
         private AppUser CurrentUser;
         private readonly DatabaseManager DbManager = new DatabaseManager();
         private SessionManager CurrentSession;
+        private Simulator AppSimulator;
 
         private List<BetHistorySlip> BetSlips;
         private BetSlipFilter SlipFilter;
@@ -24,6 +25,7 @@ namespace BettingSystem.Forms
             CurrentSession = sessionManager;
             BetSlips = CurrentSession.HistoryBetSlips;
             SlipFilter = new BetSlipFilter(BetSlips);
+            AppSimulator = CurrentSession.AppSimulator;
 
             //GameResults = sessionManager.GameResults;
 
@@ -40,10 +42,25 @@ namespace BettingSystem.Forms
             navBar1.AccountClicked += NavBar1_AccountClicked;
             navBar1.LogoutClicked += NavBar1_LogoutClicked;
 
+            //memory updated event
+            AppSimulator.HistoryUpdated += AppSimulator_HistoryUpdated;
+
             //resize bet slips panels
             slipsFlowLayoutPanel.SizeChanged += UpdateSlipPanel;
 
             this.FormClosing += HistoryPage_FormClosing;
+        }
+
+        private void AppSimulator_HistoryUpdated()
+        {
+            //checks if it is on UI thread
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(AppSimulator_HistoryUpdated));
+                return;
+            }
+            FilterSlips(SortingDateAsc, CurrentStatusFilter);
+            DisplaySlips();
         }
 
         private void HistoryPage_FormClosing(object? sender, FormClosingEventArgs e)
@@ -142,7 +159,7 @@ namespace BettingSystem.Forms
         private void SlipPanel_Click(object sender, EventArgs e)
         {
             BetHistorySlip slip = (BetHistorySlip)((Control)sender).Tag!;
-            HistoryBetsPopup editPopup = new HistoryBetsPopup(slip.Bets, GameResults);
+            HistoryBetsPopup editPopup = new HistoryBetsPopup(slip.Bets, GameResults, CurrentSession.Players);
             editPopup.ShowDialog();
         }
 
@@ -184,12 +201,16 @@ namespace BettingSystem.Forms
             //filter and sort only if there is a change
             if (selectedSortingDateAsc != SortingDateAsc || selectedStatus != CurrentStatusFilter)
             {
-                SortingDateAsc = selectedSortingDateAsc;
-                CurrentStatusFilter = selectedStatus;
-
-                BetSlips = SlipFilter.FilterBetSlips(selectedStatus, selectedSortingDateAsc);
+                FilterSlips(selectedSortingDateAsc, selectedStatus);
                 DisplaySlips();
             }
+        }
+
+        private void FilterSlips(bool selectedSortingDateAsc, string selectedStatus)
+        {
+            SortingDateAsc = selectedSortingDateAsc;
+            CurrentStatusFilter = selectedStatus;
+            BetSlips = SlipFilter.FilterBetSlips(selectedStatus, selectedSortingDateAsc);
         }
 
         public async Task ReInitialisePage()
