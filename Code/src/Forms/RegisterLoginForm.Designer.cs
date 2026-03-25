@@ -83,13 +83,15 @@ namespace BettingSystem.Forms
             // pnlContainer
             // 
             pnlContainer.BackColor = Color.Transparent;
+            pnlContainer.Controls.Add(backButton);
             pnlContainer.Controls.Add(pnlSignUpRight);
             pnlContainer.Controls.Add(pnlLoginRight);
             pnlContainer.Controls.Add(pnlSignupLeft);
             pnlContainer.Controls.Add(pnlLoginLeft);
-            pnlContainer.Location = new Point(41, 41);
+            pnlContainer.Location = new Point(36, 31);
+            pnlContainer.Margin = new Padding(3, 2, 3, 2);
             pnlContainer.Name = "pnlContainer";
-            pnlContainer.Size = new Size(1100, 620);
+            pnlContainer.Size = new Size(962, 465);
             pnlContainer.TabIndex = 0;
             // 
             // pnlSignUpRight
@@ -113,9 +115,10 @@ namespace BettingSystem.Forms
             pnlSignUpRight.Controls.Add(lblLastName);
             pnlSignUpRight.Controls.Add(lblFirstName);
             pnlSignUpRight.Controls.Add(lblCreate);
-            pnlSignUpRight.Location = new Point(550, 0);
+            pnlSignUpRight.Location = new Point(481, 0);
+            pnlSignUpRight.Margin = new Padding(3, 2, 3, 2);
             pnlSignUpRight.Name = "pnlSignUpRight";
-            pnlSignUpRight.Size = new Size(550, 620);
+            pnlSignUpRight.Size = new Size(481, 465);
             pnlSignUpRight.TabIndex = 0;
             // 
             // dtpDOB
@@ -123,9 +126,10 @@ namespace BettingSystem.Forms
             dtpDOB.CalendarFont = new Font("Times New Roman", 12F, FontStyle.Bold | FontStyle.Italic, GraphicsUnit.Point, 0);
             dtpDOB.CalendarMonthBackground = Color.Transparent;
             dtpDOB.Font = new Font("Times New Roman", 10.8F);
-            dtpDOB.Location = new Point(115, 221);
+            dtpDOB.Location = new Point(101, 166);
+            dtpDOB.Margin = new Padding(3, 2, 3, 2);
             dtpDOB.Name = "dtpDOB";
-            dtpDOB.Size = new Size(320, 28);
+            dtpDOB.Size = new Size(280, 24);
             dtpDOB.TabIndex = 17;
             // 
             // btnSignUp
@@ -134,9 +138,10 @@ namespace BettingSystem.Forms
             btnSignUp.Cursor = Cursors.Hand;
             btnSignUp.Font = new Font("Times New Roman", 13.2000008F, FontStyle.Regular, GraphicsUnit.Point, 0);
             btnSignUp.ForeColor = Color.FromArgb(241, 241, 241);
-            btnSignUp.Location = new Point(173, 563);
+            btnSignUp.Location = new Point(151, 422);
+            btnSignUp.Margin = new Padding(3, 2, 3, 2);
             btnSignUp.Name = "btnSignUp";
-            btnSignUp.Size = new Size(180, 45);
+            btnSignUp.Size = new Size(158, 34);
             btnSignUp.TabIndex = 16;
             btnSignUp.Text = "Sign Up";
             btnSignUp.UseVisualStyleBackColor = false;
@@ -148,9 +153,10 @@ namespace BettingSystem.Forms
             chk18.BackColor = Color.Transparent;
             chk18.Font = new Font("Times New Roman", 11F, FontStyle.Bold);
             chk18.ForeColor = Color.FromArgb(241, 241, 241);
-            chk18.Location = new Point(115, 521);
+            chk18.Location = new Point(101, 391);
+            chk18.Margin = new Padding(3, 2, 3, 2);
             chk18.Name = "chk18";
-            chk18.Size = new Size(330, 26);
+            chk18.Size = new Size(263, 21);
             chk18.TabIndex = 15;
             chk18.Text = "I confirm that I am 18 years or older";
             chk18.UseVisualStyleBackColor = false;
@@ -161,9 +167,9 @@ namespace BettingSystem.Forms
             lblCritSpec.BackColor = Color.Transparent;
             lblCritSpec.Font = new Font("Times New Roman", 9F, FontStyle.Bold);
             lblCritSpec.ForeColor = Color.FromArgb(241, 241, 241);
-            lblCritSpec.Location = new Point(114, 482);
+            lblCritSpec.Location = new Point(100, 362);
             lblCritSpec.Name = "lblCritSpec";
-            lblCritSpec.Size = new Size(196, 17);
+            lblCritSpec.Size = new Size(155, 15);
             lblCritSpec.TabIndex = 14;
             lblCritSpec.Text = "* At least 1 special character";
             // 
@@ -173,9 +179,9 @@ namespace BettingSystem.Forms
             lblCritUpper.BackColor = Color.Transparent;
             lblCritUpper.Font = new Font("Times New Roman", 9F, FontStyle.Bold);
             lblCritUpper.ForeColor = Color.FromArgb(241, 241, 241);
-            lblCritUpper.Location = new Point(115, 459);
+            lblCritUpper.Location = new Point(101, 344);
             lblCritUpper.Name = "lblCritUpper";
-            lblCritUpper.Size = new Size(197, 17);
+            lblCritUpper.Size = new Size(154, 15);
             lblCritUpper.TabIndex = 13;
             lblCritUpper.Text = "* At least 1 upper case letter";
             // 
@@ -185,9 +191,9 @@ namespace BettingSystem.Forms
             lblCritNum.BackColor = Color.Transparent;
             lblCritNum.Font = new Font("Times New Roman", 9F, FontStyle.Bold);
             lblCritNum.ForeColor = Color.FromArgb(241, 241, 241);
-            lblCritNum.Location = new Point(115, 436);
+            lblCritNum.Location = new Point(101, 327);
             lblCritNum.Name = "lblCritNum";
-            lblCritNum.Size = new Size(136, 17);
+            lblCritNum.Size = new Size(108, 15);
             lblCritNum.TabIndex = 12;
             lblCritNum.Text = "* At least 1 number";
             // 
@@ -197,9 +203,9 @@ namespace BettingSystem.Forms
             lblCritLen.BackColor = Color.Transparent;
             lblCritLen.Font = new Font("Times New Roman", 9F, FontStyle.Bold);
             lblCritLen.ForeColor = Color.FromArgb(241, 241, 241);
-            lblCritLen.Location = new Point(115, 413);
+            lblCritLen.Location = new Point(101, 310);
             lblCritLen.Name = "lblCritLen";
-            lblCritLen.Size = new Size(154, 17);
+            lblCritLen.Size = new Size(121, 15);
             lblCritLen.TabIndex = 11;
             lblCritLen.Text = "* At least 8 characters";
             // 
@@ -209,9 +215,9 @@ namespace BettingSystem.Forms
             lblPasswordInfo.BackColor = Color.Transparent;
             lblPasswordInfo.Font = new Font("Times New Roman", 11F, FontStyle.Bold);
             lblPasswordInfo.ForeColor = Color.FromArgb(241, 241, 241);
-            lblPasswordInfo.Location = new Point(115, 390);
+            lblPasswordInfo.Location = new Point(101, 292);
             lblPasswordInfo.Name = "lblPasswordInfo";
-            lblPasswordInfo.Size = new Size(204, 22);
+            lblPasswordInfo.Size = new Size(162, 17);
             lblPasswordInfo.TabIndex = 10;
             lblPasswordInfo.Text = "Password must contain:";
             // 
@@ -221,10 +227,11 @@ namespace BettingSystem.Forms
             txtSignUpPassword.BorderStyle = BorderStyle.None;
             txtSignUpPassword.Font = new Font("Times New Roman", 10.8F);
             txtSignUpPassword.ForeColor = Color.White;
-            txtSignUpPassword.Location = new Point(115, 356);
+            txtSignUpPassword.Location = new Point(101, 267);
+            txtSignUpPassword.Margin = new Padding(3, 2, 3, 2);
             txtSignUpPassword.Name = "txtSignUpPassword";
             txtSignUpPassword.PasswordChar = '*';
-            txtSignUpPassword.Size = new Size(320, 21);
+            txtSignUpPassword.Size = new Size(280, 17);
             txtSignUpPassword.TabIndex = 9;
             // 
             // txtSignUpEmail
@@ -233,9 +240,10 @@ namespace BettingSystem.Forms
             txtSignUpEmail.BorderStyle = BorderStyle.None;
             txtSignUpEmail.Font = new Font("Times New Roman", 10.8F);
             txtSignUpEmail.ForeColor = Color.White;
-            txtSignUpEmail.Location = new Point(115, 292);
+            txtSignUpEmail.Location = new Point(101, 219);
+            txtSignUpEmail.Margin = new Padding(3, 2, 3, 2);
             txtSignUpEmail.Name = "txtSignUpEmail";
-            txtSignUpEmail.Size = new Size(320, 21);
+            txtSignUpEmail.Size = new Size(280, 17);
             txtSignUpEmail.TabIndex = 8;
             // 
             // txtLastName
@@ -244,9 +252,10 @@ namespace BettingSystem.Forms
             txtLastName.BorderStyle = BorderStyle.None;
             txtLastName.Font = new Font("Times New Roman", 10.8F);
             txtLastName.ForeColor = Color.White;
-            txtLastName.Location = new Point(115, 159);
+            txtLastName.Location = new Point(101, 119);
+            txtLastName.Margin = new Padding(3, 2, 3, 2);
             txtLastName.Name = "txtLastName";
-            txtLastName.Size = new Size(320, 21);
+            txtLastName.Size = new Size(280, 17);
             txtLastName.TabIndex = 7;
             // 
             // txtFirstName
@@ -255,9 +264,10 @@ namespace BettingSystem.Forms
             txtFirstName.BorderStyle = BorderStyle.None;
             txtFirstName.Font = new Font("Times New Roman", 10.8F);
             txtFirstName.ForeColor = Color.White;
-            txtFirstName.Location = new Point(115, 100);
+            txtFirstName.Location = new Point(101, 75);
+            txtFirstName.Margin = new Padding(3, 2, 3, 2);
             txtFirstName.Name = "txtFirstName";
-            txtFirstName.Size = new Size(320, 21);
+            txtFirstName.Size = new Size(280, 17);
             txtFirstName.TabIndex = 6;
             // 
             // lblPassword
@@ -266,9 +276,9 @@ namespace BettingSystem.Forms
             lblPassword.BackColor = Color.Transparent;
             lblPassword.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
             lblPassword.ForeColor = Color.FromArgb(241, 241, 241);
-            lblPassword.Location = new Point(115, 330);
+            lblPassword.Location = new Point(101, 248);
             lblPassword.Name = "lblPassword";
-            lblPassword.Size = new Size(90, 23);
+            lblPassword.Size = new Size(72, 19);
             lblPassword.TabIndex = 5;
             lblPassword.Text = "Password";
             // 
@@ -278,9 +288,9 @@ namespace BettingSystem.Forms
             lblSignUpEmail.BackColor = Color.Transparent;
             lblSignUpEmail.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
             lblSignUpEmail.ForeColor = Color.FromArgb(241, 241, 241);
-            lblSignUpEmail.Location = new Point(115, 266);
+            lblSignUpEmail.Location = new Point(101, 200);
             lblSignUpEmail.Name = "lblSignUpEmail";
-            lblSignUpEmail.Size = new Size(58, 23);
+            lblSignUpEmail.Size = new Size(47, 19);
             lblSignUpEmail.TabIndex = 4;
             lblSignUpEmail.Text = "Email";
             // 
@@ -290,9 +300,9 @@ namespace BettingSystem.Forms
             lblDOB.BackColor = Color.Transparent;
             lblDOB.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
             lblDOB.ForeColor = Color.FromArgb(241, 241, 241);
-            lblDOB.Location = new Point(115, 195);
+            lblDOB.Location = new Point(101, 146);
             lblDOB.Name = "lblDOB";
-            lblDOB.Size = new Size(121, 23);
+            lblDOB.Size = new Size(97, 19);
             lblDOB.TabIndex = 3;
             lblDOB.Text = "Date of Birth";
             // 
@@ -302,9 +312,9 @@ namespace BettingSystem.Forms
             lblLastName.BackColor = Color.Transparent;
             lblLastName.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
             lblLastName.ForeColor = Color.FromArgb(241, 241, 241);
-            lblLastName.Location = new Point(115, 133);
+            lblLastName.Location = new Point(101, 100);
             lblLastName.Name = "lblLastName";
-            lblLastName.Size = new Size(102, 23);
+            lblLastName.Size = new Size(83, 19);
             lblLastName.TabIndex = 2;
             lblLastName.Text = "Last Name";
             // 
@@ -314,9 +324,9 @@ namespace BettingSystem.Forms
             lblFirstName.BackColor = Color.Transparent;
             lblFirstName.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
             lblFirstName.ForeColor = Color.FromArgb(241, 241, 241);
-            lblFirstName.Location = new Point(114, 74);
+            lblFirstName.Location = new Point(100, 56);
             lblFirstName.Name = "lblFirstName";
-            lblFirstName.Size = new Size(103, 23);
+            lblFirstName.Size = new Size(84, 19);
             lblFirstName.TabIndex = 1;
             lblFirstName.Text = "First Name";
             // 
@@ -326,9 +336,9 @@ namespace BettingSystem.Forms
             lblCreate.BackColor = Color.Transparent;
             lblCreate.Font = new Font("Times New Roman", 19.8000011F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lblCreate.ForeColor = Color.FromArgb(93, 185, 64);
-            lblCreate.Location = new Point(163, 12);
+            lblCreate.Location = new Point(143, 9);
             lblCreate.Name = "lblCreate";
-            lblCreate.Size = new Size(225, 39);
+            lblCreate.Size = new Size(184, 31);
             lblCreate.TabIndex = 0;
             lblCreate.Text = "Create Account";
             // 
@@ -340,9 +350,10 @@ namespace BettingSystem.Forms
             pnlLoginRight.Controls.Add(lblReady);
             pnlLoginRight.Controls.Add(piclogoLogin);
             pnlLoginRight.Controls.Add(lblWelcomeBack);
-            pnlLoginRight.Location = new Point(550, 0);
+            pnlLoginRight.Location = new Point(481, 0);
+            pnlLoginRight.Margin = new Padding(3, 2, 3, 2);
             pnlLoginRight.Name = "pnlLoginRight";
-            pnlLoginRight.Size = new Size(550, 620);
+            pnlLoginRight.Size = new Size(481, 465);
             pnlLoginRight.TabIndex = 1;
             // 
             // lnkToSignUp
@@ -353,9 +364,9 @@ namespace BettingSystem.Forms
             lnkToSignUp.Font = new Font("Times New Roman", 15F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lnkToSignUp.ForeColor = Color.FromArgb(241, 241, 241);
             lnkToSignUp.LinkColor = Color.FromArgb(27, 42, 58);
-            lnkToSignUp.Location = new Point(361, 570);
+            lnkToSignUp.Location = new Point(316, 428);
             lnkToSignUp.Name = "lnkToSignUp";
-            lnkToSignUp.Size = new Size(94, 29);
+            lnkToSignUp.Size = new Size(73, 22);
             lnkToSignUp.TabIndex = 5;
             lnkToSignUp.TabStop = true;
             lnkToSignUp.Text = "Sign Up";
@@ -367,9 +378,9 @@ namespace BettingSystem.Forms
             lblPrompt.BackColor = Color.Transparent;
             lblPrompt.Font = new Font("Times New Roman", 15F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lblPrompt.ForeColor = Color.FromArgb(241, 241, 241);
-            lblPrompt.Location = new Point(96, 570);
+            lblPrompt.Location = new Point(84, 428);
             lblPrompt.Name = "lblPrompt";
-            lblPrompt.Size = new Size(247, 29);
+            lblPrompt.Size = new Size(191, 22);
             lblPrompt.TabIndex = 4;
             lblPrompt.Text = "Don't have an account?";
             // 
@@ -379,9 +390,9 @@ namespace BettingSystem.Forms
             lblReady.BackColor = Color.Transparent;
             lblReady.Font = new Font("Times New Roman", 15F);
             lblReady.ForeColor = Color.FromArgb(241, 241, 241);
-            lblReady.Location = new Point(94, 401);
+            lblReady.Location = new Point(82, 301);
             lblReady.Name = "lblReady";
-            lblReady.Size = new Size(400, 29);
+            lblReady.Size = new Size(311, 22);
             lblReady.TabIndex = 3;
             lblReady.Text = "Ready to place your next winning bet?";
             // 
@@ -389,9 +400,10 @@ namespace BettingSystem.Forms
             // 
             piclogoLogin.BackColor = Color.Transparent;
             piclogoLogin.Image = Resources.logo;
-            piclogoLogin.Location = new Point(166, 121);
+            piclogoLogin.Location = new Point(145, 91);
+            piclogoLogin.Margin = new Padding(3, 2, 3, 2);
             piclogoLogin.Name = "piclogoLogin";
-            piclogoLogin.Size = new Size(245, 245);
+            piclogoLogin.Size = new Size(214, 184);
             piclogoLogin.SizeMode = PictureBoxSizeMode.Zoom;
             piclogoLogin.TabIndex = 2;
             piclogoLogin.TabStop = false;
@@ -402,9 +414,9 @@ namespace BettingSystem.Forms
             lblWelcomeBack.BackColor = Color.Transparent;
             lblWelcomeBack.Font = new Font("Times New Roman", 30F);
             lblWelcomeBack.ForeColor = Color.FromArgb(241, 241, 241);
-            lblWelcomeBack.Location = new Point(105, 27);
+            lblWelcomeBack.Location = new Point(92, 20);
             lblWelcomeBack.Name = "lblWelcomeBack";
-            lblWelcomeBack.Size = new Size(389, 57);
+            lblWelcomeBack.Size = new Size(306, 46);
             lblWelcomeBack.TabIndex = 1;
             lblWelcomeBack.Text = "Welcome Back To";
             // 
@@ -417,8 +429,9 @@ namespace BettingSystem.Forms
             pnlSignupLeft.Controls.Add(picLogoSignup);
             pnlSignupLeft.Controls.Add(lblSignupWelcome);
             pnlSignupLeft.Location = new Point(0, 0);
+            pnlSignupLeft.Margin = new Padding(3, 2, 3, 2);
             pnlSignupLeft.Name = "pnlSignupLeft";
-            pnlSignupLeft.Size = new Size(550, 620);
+            pnlSignupLeft.Size = new Size(481, 465);
             pnlSignupLeft.TabIndex = 0;
             // 
             // lnkToLogin
@@ -429,9 +442,9 @@ namespace BettingSystem.Forms
             lnkToLogin.Font = new Font("Times New Roman", 15F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lnkToLogin.ForeColor = Color.FromArgb(241, 241, 241);
             lnkToLogin.LinkColor = Color.FromArgb(27, 42, 58);
-            lnkToLogin.Location = new Point(374, 570);
+            lnkToLogin.Location = new Point(327, 428);
             lnkToLogin.Name = "lnkToLogin";
-            lnkToLogin.Size = new Size(80, 29);
+            lnkToLogin.Size = new Size(60, 22);
             lnkToLogin.TabIndex = 4;
             lnkToLogin.TabStop = true;
             lnkToLogin.Text = "Log In";
@@ -443,9 +456,9 @@ namespace BettingSystem.Forms
             lblAccount.BackColor = Color.Transparent;
             lblAccount.Font = new Font("Times New Roman", 15F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lblAccount.ForeColor = Color.FromArgb(241, 241, 241);
-            lblAccount.Location = new Point(96, 570);
+            lblAccount.Location = new Point(84, 428);
             lblAccount.Name = "lblAccount";
-            lblAccount.Size = new Size(272, 29);
+            lblAccount.Size = new Size(213, 22);
             lblAccount.TabIndex = 3;
             lblAccount.Text = "Already have an account?";
             // 
@@ -456,9 +469,9 @@ namespace BettingSystem.Forms
             lblSignupJoin.BackColor = Color.Transparent;
             lblSignupJoin.Font = new Font("Times New Roman", 15F);
             lblSignupJoin.ForeColor = Color.FromArgb(241, 241, 241);
-            lblSignupJoin.Location = new Point(114, 401);
+            lblSignupJoin.Location = new Point(100, 301);
             lblSignupJoin.Name = "lblSignupJoin";
-            lblSignupJoin.Size = new Size(322, 29);
+            lblSignupJoin.Size = new Size(254, 22);
             lblSignupJoin.TabIndex = 2;
             lblSignupJoin.Text = "Join and start placing bets now";
             // 
@@ -466,9 +479,10 @@ namespace BettingSystem.Forms
             // 
             picLogoSignup.BackColor = Color.Transparent;
             picLogoSignup.Image = Resources.logo;
-            picLogoSignup.Location = new Point(153, 121);
+            picLogoSignup.Location = new Point(134, 91);
+            picLogoSignup.Margin = new Padding(3, 2, 3, 2);
             picLogoSignup.Name = "picLogoSignup";
-            picLogoSignup.Size = new Size(245, 245);
+            picLogoSignup.Size = new Size(214, 184);
             picLogoSignup.SizeMode = PictureBoxSizeMode.Zoom;
             picLogoSignup.TabIndex = 1;
             picLogoSignup.TabStop = false;
@@ -479,9 +493,9 @@ namespace BettingSystem.Forms
             lblSignupWelcome.BackColor = Color.Transparent;
             lblSignupWelcome.Font = new Font("Times New Roman", 30F);
             lblSignupWelcome.ForeColor = Color.FromArgb(241, 241, 241);
-            lblSignupWelcome.Location = new Point(138, 27);
+            lblSignupWelcome.Location = new Point(121, 20);
             lblSignupWelcome.Name = "lblSignupWelcome";
-            lblSignupWelcome.Size = new Size(274, 57);
+            lblSignupWelcome.Size = new Size(215, 46);
             lblSignupWelcome.TabIndex = 0;
             lblSignupWelcome.Text = "Welcome To";
             // 
@@ -495,8 +509,9 @@ namespace BettingSystem.Forms
             pnlLoginLeft.Controls.Add(lblLoginEmail);
             pnlLoginLeft.Controls.Add(lblLogin);
             pnlLoginLeft.Location = new Point(0, 0);
+            pnlLoginLeft.Margin = new Padding(3, 2, 3, 2);
             pnlLoginLeft.Name = "pnlLoginLeft";
-            pnlLoginLeft.Size = new Size(550, 620);
+            pnlLoginLeft.Size = new Size(481, 465);
             pnlLoginLeft.TabIndex = 0;
             // 
             // btnLogin
@@ -505,9 +520,10 @@ namespace BettingSystem.Forms
             btnLogin.Cursor = Cursors.Hand;
             btnLogin.Font = new Font("Times New Roman", 13.2000008F, FontStyle.Regular, GraphicsUnit.Point, 0);
             btnLogin.ForeColor = Color.FromArgb(241, 241, 241);
-            btnLogin.Location = new Point(185, 470);
+            btnLogin.Location = new Point(162, 352);
+            btnLogin.Margin = new Padding(3, 2, 3, 2);
             btnLogin.Name = "btnLogin";
-            btnLogin.Size = new Size(180, 45);
+            btnLogin.Size = new Size(158, 34);
             btnLogin.TabIndex = 17;
             btnLogin.Text = "Log In";
             btnLogin.UseVisualStyleBackColor = false;
@@ -519,10 +535,11 @@ namespace BettingSystem.Forms
             txtLoginPassword.BorderStyle = BorderStyle.None;
             txtLoginPassword.Font = new Font("Times New Roman", 11F);
             txtLoginPassword.ForeColor = Color.White;
-            txtLoginPassword.Location = new Point(116, 332);
+            txtLoginPassword.Location = new Point(102, 249);
+            txtLoginPassword.Margin = new Padding(3, 2, 3, 2);
             txtLoginPassword.Name = "txtLoginPassword";
             txtLoginPassword.PasswordChar = '*';
-            txtLoginPassword.Size = new Size(320, 22);
+            txtLoginPassword.Size = new Size(280, 17);
             txtLoginPassword.TabIndex = 11;
             // 
             // lblLoginPassword
@@ -531,9 +548,9 @@ namespace BettingSystem.Forms
             lblLoginPassword.BackColor = Color.Transparent;
             lblLoginPassword.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
             lblLoginPassword.ForeColor = Color.FromArgb(241, 241, 241);
-            lblLoginPassword.Location = new Point(114, 306);
+            lblLoginPassword.Location = new Point(100, 230);
             lblLoginPassword.Name = "lblLoginPassword";
-            lblLoginPassword.Size = new Size(90, 23);
+            lblLoginPassword.Size = new Size(72, 19);
             lblLoginPassword.TabIndex = 10;
             lblLoginPassword.Text = "Password";
             // 
@@ -543,9 +560,10 @@ namespace BettingSystem.Forms
             txtLoginEmail.BorderStyle = BorderStyle.None;
             txtLoginEmail.Font = new Font("Times New Roman", 11F);
             txtLoginEmail.ForeColor = Color.White;
-            txtLoginEmail.Location = new Point(116, 221);
+            txtLoginEmail.Location = new Point(102, 166);
+            txtLoginEmail.Margin = new Padding(3, 2, 3, 2);
             txtLoginEmail.Name = "txtLoginEmail";
-            txtLoginEmail.Size = new Size(320, 22);
+            txtLoginEmail.Size = new Size(280, 17);
             txtLoginEmail.TabIndex = 9;
             // 
             // lblLoginEmail
@@ -554,9 +572,9 @@ namespace BettingSystem.Forms
             lblLoginEmail.BackColor = Color.Transparent;
             lblLoginEmail.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
             lblLoginEmail.ForeColor = Color.FromArgb(241, 241, 241);
-            lblLoginEmail.Location = new Point(114, 195);
+            lblLoginEmail.Location = new Point(100, 146);
             lblLoginEmail.Name = "lblLoginEmail";
-            lblLoginEmail.Size = new Size(58, 23);
+            lblLoginEmail.Size = new Size(47, 19);
             lblLoginEmail.TabIndex = 5;
             lblLoginEmail.Text = "Email";
             // 
@@ -566,9 +584,9 @@ namespace BettingSystem.Forms
             lblLogin.BackColor = Color.Transparent;
             lblLogin.Font = new Font("Times New Roman", 19.8000011F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lblLogin.ForeColor = Color.FromArgb(93, 185, 64);
-            lblLogin.Location = new Point(221, 27);
+            lblLogin.Location = new Point(193, 20);
             lblLogin.Name = "lblLogin";
-            lblLogin.Size = new Size(108, 39);
+            lblLogin.Size = new Size(85, 31);
             lblLogin.TabIndex = 1;
             lblLogin.Text = "Log In";
             // 
@@ -577,9 +595,10 @@ namespace BettingSystem.Forms
             backButton.BackColor = Color.Transparent;
             backButton.Cursor = Cursors.Hand;
             backButton.Image = Resources.backBtn;
-            backButton.Location = new Point(47, 48);
+            backButton.Location = new Point(14, 9);
+            backButton.Margin = new Padding(3, 2, 3, 2);
             backButton.Name = "backButton";
-            backButton.Size = new Size(48, 48);
+            backButton.Size = new Size(42, 36);
             backButton.SizeMode = PictureBoxSizeMode.Zoom;
             backButton.TabIndex = 5;
             backButton.TabStop = false;
@@ -587,13 +606,13 @@ namespace BettingSystem.Forms
             // 
             // RegisterLoginForm
             // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(26, 26, 26);
-            ClientSize = new Size(1182, 703);
-            Controls.Add(backButton);
+            ClientSize = new Size(1036, 533);
             Controls.Add(pnlContainer);
-            MinimumSize = new Size(1200, 750);
+            Margin = new Padding(3, 2, 3, 2);
+            MinimumSize = new Size(1052, 572);
             Name = "RegisterLoginForm";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "RegisterLoginForm";
