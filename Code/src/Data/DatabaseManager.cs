@@ -656,6 +656,91 @@ namespace BettingSystem.Data
             }
         }
 
+        // fetch an existing correct score odd; generate and persist one if missing
+        public async Task<Odd?> GetOrCreateCorrectScoreOddAsync(
+            int gameId,
+            int homeGoals,
+            int awayGoals,
+            int homeTeamId,
+            int awayTeamId,
+            int leagueId)
+        {
+            string selection = $"{homeGoals}-{awayGoals}";
+            const string betTypeName = "Correct Score";
+
+            Odd? existingOdd = await FetchOddByBetTypeNameAsync(gameId, betTypeName, selection);
+            if (existingOdd is not null)
+            {
+                return existingOdd;
+            }
+
+            try
+            {
+                await Task.Run(() =>
+                    oddsGenerator.GenerateCorrectScoreOdds(
+                        gameId,
+                        homeGoals,
+                        awayGoals,
+                        homeTeamId,
+                        awayTeamId,
+                        leagueId,
+                        persist: true));
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Correct score odds generation failed for game {gameId}: {e.Message}");
+                return null;
+            }
+
+            return await FetchOddByBetTypeNameAsync(gameId, betTypeName, selection);
+        }
+
+        private async Task<Odd?> FetchOddByBetTypeNameAsync(int gameId, string betTypeName, string selection)
+        {
+            const string query = @"SELECT TOP 1 o.odd_id, o.game_id, o.bet_type_id, o.selection, o.odd_value
+                                   FROM Odd o
+                                   INNER JOIN BetType bt ON bt.bet_type_id = o.bet_type_id
+                                   WHERE o.game_id = @gameId
+                                     AND bt.bet_type_name = @betTypeName
+                                     AND o.selection = @selection";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@gameId", gameId);
+                command.Parameters.AddWithValue("@betTypeName", betTypeName);
+                command.Parameters.AddWithValue("@selection", selection);
+
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new Odd(
+                                Convert.ToInt32(reader["odd_id"]),
+                                Convert.ToInt32(reader["game_id"]),
+                                Convert.ToInt32(reader["bet_type_id"]),
+                                reader["selection"].ToString()!,
+                                Convert.ToDecimal(reader["odd_value"])
+                            );
+                        }
+                    }
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                }
+            }
+
+            return null;
+        }
+
         public async Task<List<BetHistorySlip>> FetchBetHistoryAsync(int userID)
         {
             List<BetHistorySlip> history = new List<BetHistorySlip>();
