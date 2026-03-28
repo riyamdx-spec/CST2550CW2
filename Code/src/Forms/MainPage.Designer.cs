@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainPage));
             bgPanel = new Panel();
             panelLeft = new Panel();
             matchesFlowLayoutPanel = new FlowLayoutPanel();
@@ -269,7 +268,7 @@
             bannerImg.Controls.Add(leagueLbl);
             bannerImg.Controls.Add(leaguesPanel);
             bannerImg.Dock = DockStyle.Fill;
-            bannerImg.Image = (Image)resources.GetObject("bannerImg.Image");
+            bannerImg.Image = Properties.Resources.allMatchBaner;
             bannerImg.Location = new Point(0, 0);
             bannerImg.Name = "bannerImg";
             bannerImg.Size = new Size(709, 333);
