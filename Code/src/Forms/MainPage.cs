@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Forms.CustomControls;
 using BettingSystem.Models;
 using BettingSystem.Services;
@@ -17,9 +18,9 @@ namespace BettingSystem.Forms
         private Simulator AppSimulator;
 
         private League[] Leagues;
-        private Dictionary<int, Team> TeamsDict;
-        private Dictionary<int, List<Odd>> Odds;
-        private Dictionary<int, List<Player>> Players;
+        private MyDictionary<int, Team> TeamsDict;
+        private MyDictionary<int, MyList<Odd>> Odds;
+        private MyDictionary<int, MyList<Player>> Players;
         private FootballMatchCollection MatchesCollection;
 
         private MatchManager MatchFilter;
@@ -30,8 +31,8 @@ namespace BettingSystem.Forms
         private int CurrentLeague;
         private string CurrentSearchTerm="";
 
-        private readonly List<TableLayoutPanel> BtnParentPanel;
-        private List<RoundedButton> BetButtons;
+        private readonly MyList<TableLayoutPanel> BtnParentPanel = new MyList<TableLayoutPanel>();
+        private MyList<RoundedButton> BetButtons = new MyList<RoundedButton>();
 
         public MainPage(AppUser loggedInUser, SessionManager sessionManager)
         {
@@ -45,7 +46,7 @@ namespace BettingSystem.Forms
             MatchesCollection = CurrentSession.MatchesCollection;
 
             // list of panels that contain bet buttons
-            BtnParentPanel = new List<TableLayoutPanel> 
+            BtnParentPanel = new MyList<TableLayoutPanel> 
             {   
                 OutcomeTableLayout, 
                 chanceTableLayout, 
@@ -103,7 +104,7 @@ namespace BettingSystem.Forms
                 FilterByTeams(CurrentSearchTerm);
                 return;
             }
-            if(CurrentLeague > 0)
+            if (CurrentLeague > 0)
             {
                 FilterByLeagues(CurrentLeague);
                 return;
@@ -205,7 +206,7 @@ namespace BettingSystem.Forms
         }
 
         // display matches on the main page
-        private void LoadMatches(SortedSet<FootballMatch> footballMatches)
+        private void LoadMatches(MyList<FootballMatch> footballMatches)
         {
             ClearMatches();
 
@@ -247,14 +248,14 @@ namespace BettingSystem.Forms
         //display matches filtered by leagues
         private void FilterByLeagues(int leagueId)
         {
-            SortedSet<FootballMatch> matchLeagueFiltered = MatchFilter.FilterMatchByLeague(leagueId);
+            MyList<FootballMatch> matchLeagueFiltered = MatchFilter.FilterMatchByLeague(leagueId);
             LoadMatches(matchLeagueFiltered);
         }
 
         //display matches filtered by teams 
         private void FilterByTeams(string searchedTeam)
         {
-            SortedSet<FootballMatch> matchTeamFiltered = MatchFilter.FilterMatchByTeams(searchedTeam);
+            MyList<FootballMatch> matchTeamFiltered = MatchFilter.FilterMatchByTeams(searchedTeam);
             bannerPanel.Hide();
             CurrentLeague = -1;
             LoadMatches(matchTeamFiltered);
@@ -421,15 +422,17 @@ namespace BettingSystem.Forms
             redBtn3.Tag = new BetButtonTag(9, "Over 1.5");
             redBtn4.Tag = new BetButtonTag(9, "Under 1.5");
 
-            BetButtons = BtnParentPanel
-               .SelectMany(panel => panel.Controls.OfType<RoundedButton>()
-               .Where(ctrl => ctrl.Tag is BetButtonTag))
-               .ToList();
-
-            //add click event
-            foreach (RoundedButton btn in BetButtons)
+            foreach (var panel in BtnParentPanel)
             {
-                btn.Click += BetBtnClicked;
+                foreach (var button in panel.Controls.OfType<RoundedButton>())
+                {
+                    if (button.Tag is BetButtonTag)
+                    {
+                        BetButtons.Add(button);
+                        button.Click += BetBtnClicked;
+
+                    }
+                }
             }
         }
 
@@ -462,7 +465,7 @@ namespace BettingSystem.Forms
         {
             playersComboBox.Items.Clear();
 
-            List<Player> currentPlayers = new List<Player>();
+            MyList<Player> currentPlayers = new MyList<Player>();
 
             if (Players.TryGetValue(homeTeamID, out var homePlayers))
             {
@@ -600,9 +603,9 @@ namespace BettingSystem.Forms
         {
             searchbarTextBox.Text = "";
             CurrentSearchTerm = "";
-            CurrentLeague = 0;
             bannerPanel.Show();
             AllMatchesClicked(null, null);
+            CurrentLeague = 0;
         }
 
         private async void confirmScoreBet_Click(object sender, EventArgs e)
@@ -663,7 +666,7 @@ namespace BettingSystem.Forms
 
                 if (!Odds.TryGetValue(CurrentMatchId, out var matchOdds))
                 {
-                    matchOdds = new List<Odd>();
+                    matchOdds = new MyList<Odd>();
                     Odds[CurrentMatchId] = matchOdds;
                 }
 
