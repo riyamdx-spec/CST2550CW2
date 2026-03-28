@@ -28,9 +28,22 @@ namespace BettingSystem.Services
             bool valid = await DbManager.AddNewMatchAsync(NewMatch, generatedResult);
             if (valid)
             {
+                AddNewMatchInMemory(NewMatch, generatedResult);
                 return (true, "Match Successfully Added", generatedResult);
             }
             return (false, "Failed to Add Match", generatedResult);
+        }
+
+        //update games in memory
+        public void AddNewMatchInMemory(FootballMatch newMatch, GameResult generatedResult)
+        {
+            _currentSession.GameResults[newMatch.GameID] = generatedResult;
+            _currentSession.MatchesCollection.AllMatches.Add(newMatch);
+            _currentSession.MatchesCollection.MatchesByLeague[newMatch.LeagueID].Add(newMatch);
+
+            //sort matches
+            _currentSession.MatchesCollection.AllMatches.InsertionSort(m => m.GameDate);
+            _currentSession.MatchesCollection.MatchesByLeague[newMatch.LeagueID].InsertionSort(m => m.GameDate);
         }
 
         // generate random results for match
