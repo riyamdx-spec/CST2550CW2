@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Models;
 using BettingSystem.Services;
 
@@ -12,8 +13,8 @@ namespace BettingSystem.Forms
         private SessionManager CurrentSession;
         public League[] Leagues;
         public FootballMatchCollection MatchesCollection;
-        public Dictionary<int, Team> TeamsDict;
-        public Dictionary<int, GameResult> GameResults;
+        public MyDictionary<int, Team> TeamsDict;
+        public MyDictionary<int, GameResult> GameResults;
 
         private int CurrentLeague = 0;
         private string CurrentSearchTerm = "";
@@ -137,7 +138,7 @@ namespace BettingSystem.Forms
         }
 
         //display matches on the DataGridView
-        private async Task DisplayMatches(SortedSet<FootballMatch> footballMatches)
+        private async Task DisplayMatches(MyList<FootballMatch> footballMatches)
         {
             matchDataGridView.Hide();
             matchDataGridView.Rows.Clear();
@@ -278,8 +279,8 @@ namespace BettingSystem.Forms
 
             CurrentLeague = selectedLeagueId;
             CurrentSearchTerm = searchedTerm;
-            SortedSet<FootballMatch> matchDisplayed = new SortedSet<FootballMatch>();
-            SortedSet<FootballMatch> leageMatches = CurrentLeague == 0 ? MatchesCollection.AllMatches : MatchFilter.FilterMatchByLeague(CurrentLeague);
+            MyList<FootballMatch> matchDisplayed = new MyList<FootballMatch>();
+            MyList<FootballMatch> leageMatches = CurrentLeague == 0 ? MatchesCollection.AllMatches : MatchFilter.FilterMatchByLeague(CurrentLeague);
 
             if (!String.IsNullOrEmpty(CurrentSearchTerm))
             {
