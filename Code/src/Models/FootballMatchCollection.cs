@@ -1,9 +1,11 @@
-﻿namespace BettingSystem.Models
+﻿using BettingSystem.Data_Structures;
+
+namespace BettingSystem.Models
 {
     // collection of football matches
     public record FootballMatchCollection
     (
-        SortedSet<FootballMatch> AllMatches, // store all matches
-        Dictionary<int, SortedSet<FootballMatch>> MatchesByLeague // matches keyed by league id
+        MyList<FootballMatch> AllMatches, // store all matches
+        MyDictionary<int, MyList<FootballMatch>> MatchesByLeague // matches keyed by league id
     );
 }
