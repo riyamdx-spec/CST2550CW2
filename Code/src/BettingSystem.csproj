@@ -3,10 +3,18 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Keep test sources owned by the dedicated test project only. -->
+    <Compile Remove="BettingSystemsTests.Tests/**/*.cs" />
+    <EmbeddedResource Remove="BettingSystemsTests.Tests/**/*.resx" />
+    <None Remove="BettingSystemsTests.Tests/**/*" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.4" />
