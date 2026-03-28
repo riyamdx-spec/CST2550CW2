@@ -1,4 +1,6 @@
-﻿namespace BettingSystem.Models
+﻿using BettingSystem.Data_Structures;
+
+namespace BettingSystem.Models
 {
     public class Bet
     {
@@ -9,7 +11,7 @@
         public int BetTypeID { get; set; }
 
         // store node reference 
-        public LinkedListNode<Bet>? Node { get; set; }
+        public MyLinkedList<Bet>.Node? Node { get; set; }
 
         public Bet(int oddID, string selection, decimal oddValue, int betTypeID, int gameID)
         {
