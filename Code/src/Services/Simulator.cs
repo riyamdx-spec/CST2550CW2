@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Models;
 
 namespace BettingSystem.Services
@@ -56,7 +57,7 @@ namespace BettingSystem.Services
             }
         }
 
-        private void UpdateMemory(List<int> startedMatchIds, List<int> completedMatchIds, Dictionary<int, string> updatedBets, Dictionary<int, string> updatedSlips)
+        private void UpdateMemory(MyList<int> startedMatchIds, MyList<int> completedMatchIds, MyDictionary<int, string> updatedBets, MyDictionary<int, string> updatedSlips)
         {
             var removedMatchesId = new List<int>();
             var memoryBetSlip = CurrentSession.UserSlip;
@@ -102,7 +103,7 @@ namespace BettingSystem.Services
         }
 
         // update slips and bets in history
-        private bool UpdateHistoryBets(Dictionary<int, string> updatedBets, Dictionary<int, string> updatedSlips)
+        private bool UpdateHistoryBets(MyDictionary<int, string> updatedBets, MyDictionary<int, string> updatedSlips)
         {
             var historyBetSlips = CurrentSession.HistoryBetSlips;
             bool changed = false;

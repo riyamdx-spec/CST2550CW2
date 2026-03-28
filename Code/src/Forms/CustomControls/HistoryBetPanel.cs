@@ -1,11 +1,12 @@
-﻿using BettingSystem.Models;
+﻿using BettingSystem.Data_Structures;
+using BettingSystem.Models;
 
 namespace BettingSystem.Forms.CustomControls
 {
     public partial class HistoryBetPanel : UserControl
     {
         private HistoryBet Bet;
-        public HistoryBetPanel(HistoryBet bet, string actualResult, Dictionary<int, List<Player>> players)
+        public HistoryBetPanel(HistoryBet bet, string actualResult, MyDictionary<int, MyList<Player>> players)
         {
             Bet = bet;
             InitializeComponent();
@@ -13,7 +14,7 @@ namespace BettingSystem.Forms.CustomControls
             betTableLayoutBgPanel.CellPaint += TableLayoutAddBorders;
         }
             
-        private void DisplayDetails(string actualResult, Dictionary<int, List<Player>> players)
+        private void DisplayDetails(string actualResult, MyDictionary<int, MyList<Player>> players)
         {
             betMatchDateLbl.Text = Bet.MatchDate.ToString("dd/MM/yyyy") + "-" + Bet.MatchDate.ToString("HH:mm");
             betMatchLeagueLbl.Text = Bet.LeagueName;

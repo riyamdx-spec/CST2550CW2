@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BettingSystem.Data_Structures;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -8,8 +9,8 @@ namespace BettingSystem
     public class BaseForm : Form
     {
         private SizeF _baseFormSize;
-        private Dictionary<Control, RectangleF> _baseRects = new();
-        private Dictionary<Control, float> _baseFontSizes = new();
+        private MyDictionary<Control, RectangleF> _baseRects = new();
+        private MyDictionary<Control, float> _baseFontSizes = new();
 
         protected void CaptureBaseLayout()
         {

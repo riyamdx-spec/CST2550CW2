@@ -1,4 +1,5 @@
-﻿using BettingSystem.Forms.CustomControls;
+﻿using BettingSystem.Data_Structures;
+using BettingSystem.Forms.CustomControls;
 using BettingSystem.Models;
 using BettingSystem.Services;
 
@@ -6,9 +7,9 @@ namespace BettingSystem.Forms
 {
     public partial class HistoryBetsPopup : Form
     {
-        private List<HistoryBet> Bets;
-        private Dictionary<int, GameResult> GameResults;
-        public HistoryBetsPopup(List<HistoryBet> bets, Dictionary<int, GameResult> gameResults, Dictionary<int, List<Player>> players)
+        private MyList<HistoryBet> Bets;
+        private MyDictionary<int, GameResult> GameResults;
+        public HistoryBetsPopup(MyList<HistoryBet> bets, MyDictionary<int, GameResult> gameResults, MyDictionary<int, MyList<Player>> players)
         {
             Bets = bets;
             GameResults = gameResults;
@@ -17,7 +18,7 @@ namespace BettingSystem.Forms
             DisplayBets(players);
         }
 
-        private void DisplayBets(Dictionary<int, List<Player>> players)
+        private void DisplayBets(MyDictionary<int, MyList<Player>> players)
         {
             betsFlowLayoutPanel.Hide();
             betsFlowLayoutPanel.Controls.Clear();
