@@ -83,4 +83,48 @@ public class WalletServiceTests
         Assert.AreEqual("Withdrawal Failed: Insufficient wallet balance", message);
         Assert.AreEqual(50m, user.WalletBalance);
     }
+
+    [TestMethod]
+    public async Task DepositOrPayoutAsync_PayoutWithoutSlipId_ReturnsFalseAndMessage()
+    {
+        var service = new WalletService();
+        var user = CreateUser(100m);
+
+        var (updated, message) = await service.DepositOrPayoutAsync(user, 50m, "payout", slipId: null);
+
+        Assert.IsFalse(updated);
+        Assert.AreEqual("Invalid payout request", message);
+        Assert.AreEqual(100m, user.WalletBalance);
+    }
+
+    [TestMethod]
+    public async Task WithdrawalOrPlaceBetAsync_ExactBalance_ReturnsFalseWhenExceeds()
+    {
+        // Withdrawing exactly the balance should NOT fail the balance check
+        // because the check is amount > balance, not amount >= balance.
+        // This verifies the boundary: equal amounts are allowed.
+        var service = new WalletService();
+        var user = CreateUser(100m);
+
+        // amount == balance should pass the balance check (100 > 100 is false)
+        // It will hit the DB call which returns false in test context,
+        // so we only verify the balance was not rejected for being too high.
+        var (updated, message) = await service.WithdrawalOrPlaceBetAsync(user, 100m, "withdrawal");
+
+        // The balance check passes; the only reason it could fail is the DB call
+        Assert.AreNotEqual("Withdrawal Failed: Insufficient wallet balance", message);
+    }
+
+    [TestMethod]
+    public async Task WithdrawalOrPlaceBetAsync_AmountExceedsBalance_ReturnsFalseAndMessage()
+    {
+        var service = new WalletService();
+        var user = CreateUser(30m);
+
+        var (updated, message) = await service.WithdrawalOrPlaceBetAsync(user, 30.01m, "withdrawal");
+
+        Assert.IsFalse(updated);
+        Assert.AreEqual("Withdrawal Failed: Insufficient wallet balance", message);
+        Assert.AreEqual(30m, user.WalletBalance);
+    }
 }
