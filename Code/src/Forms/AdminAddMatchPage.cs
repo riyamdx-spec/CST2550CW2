@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Models;
 using BettingSystem.Services;
 using System.Data;
@@ -9,11 +10,11 @@ namespace BettingSystem.Forms
     {
         private readonly Validation Validator = new Validation();
         private readonly DatabaseManager DbManager = new DatabaseManager();
-        private Dictionary<int, List<int>> LeagueTeams;
+        private MyDictionary<int, MyList<int>> LeagueTeams;
         private League[] Leagues;
-        private Dictionary<int, Team> TeamsDict;
-        private Dictionary<int, List<Player>> Players;
-        private Dictionary<int, GameResult> GameResults;
+        private MyDictionary<int, Team> TeamsDict;
+        private MyDictionary<int, MyList<Player>> Players;
+        private MyDictionary<int, GameResult> GameResults;
         private FootballMatchCollection MatchesCollection;
 
         private int CurrentLeagueID = -1;
@@ -192,7 +193,7 @@ namespace BettingSystem.Forms
             DateTime matchDate = selectedMatchDate.Value;
 
             FootballMatch newMatch = new FootballMatch(0, selectedLeague.ID, selectedHomeTeam.ID, selectedAwayTeam.ID, matchDate);
-            AddNewMatchService addNewMatch = new AddNewMatchService(newMatch, Players[selectedHomeTeam.ID], Players[selectedAwayTeam.ID]);
+            AddNewMatchService addNewMatch = new AddNewMatchService(newMatch, Players[selectedHomeTeam.ID], Players[selectedAwayTeam.ID], CurrentSession);
             (valid, message, GameResult generatedResult) = await addNewMatch.AddMatchToDatabase();
             if (!valid)
             {
@@ -201,13 +202,6 @@ namespace BettingSystem.Forms
             }
             Reset();
             new Notification(message, NotificationType.Success, this);
-        }
-
-        public void AddNewMatchInMemory(FootballMatch newMatch, GameResult generatedResult)
-        {
-            GameResults[newMatch.GameID] = generatedResult;
-            MatchesCollection.AllMatches.Add(newMatch);
-            MatchesCollection.MatchesByLeague[newMatch.LeagueID].Add(newMatch);
         }
 
         public void Reset()

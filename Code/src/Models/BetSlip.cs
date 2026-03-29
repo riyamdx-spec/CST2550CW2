@@ -1,15 +1,17 @@
-﻿namespace BettingSystem.Models
+﻿using BettingSystem.Data_Structures;
+
+namespace BettingSystem.Models
 {
     public class BetSlip
     {
         public int UserID { get; set; }
-        public LinkedList<Bet> Bets { get; set; }
+        public MyLinkedList<Bet> Bets { get; set; }
         public decimal Stake { get; set; }
         public decimal TotalOdds { get; protected set; }
         public BetSlip(int userID)
         {
             UserID = userID;
-            Bets = new LinkedList<Bet>();
+            Bets = new MyLinkedList<Bet>();
             TotalOdds = 1;
         }
 
@@ -22,6 +24,7 @@
                 if (existingBet.GameID == bet.GameID && existingBet.BetTypeID == bet.BetTypeID)
                 {
                     // update bet if exists
+                    existingBet.OddID = bet.OddID;
                     existingBet.Selection = bet.Selection;
                     existingBet.OddValue = bet.OddValue;
                     CalculateTotalOdds();
@@ -30,7 +33,8 @@
             }
 
             // add new bet at head
-            LinkedListNode<Bet> node = Bets.AddFirst(bet);
+            MyLinkedList<Bet>.Node node = Bets.AddFirst(bet);
+
             // store node reference 
             bet.Node = node;
             CalculateTotalOdds();
@@ -62,6 +66,29 @@
         public decimal CalculatePayout()
         {
             return Math.Round(Stake * TotalOdds, 2);
+        }
+
+        // remove bets using game id
+        public bool RemoveBetsByGameIds(List<int> gameIds)
+        {
+            var currentNode = Bets.First;
+            int removedBets = 0;
+            int initialBetsNum = Bets.Count;
+
+            while (currentNode != null)
+            {
+                if (gameIds.Contains(currentNode.Value.GameID))
+                {
+                    Bets.Remove(currentNode);
+                    currentNode.Value.Node = null;
+                    removedBets++;
+                }
+                currentNode = currentNode.Next;
+            }
+            if (removedBets > 0)
+                CalculateTotalOdds();
+
+            return initialBetsNum != Bets.Count;
         }
     }
 }

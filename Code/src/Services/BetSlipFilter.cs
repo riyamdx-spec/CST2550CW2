@@ -1,50 +1,38 @@
-﻿using BettingSystem.Models;
+﻿using BettingSystem.Data_Structures;
+using BettingSystem.Models;
 
 namespace BettingSystem.Services
 {
     public class BetSlipFilter
     {
-        public readonly List<BetHistorySlip> BetSlips;
-        public BetSlipFilter(List<BetHistorySlip> betSlips  )
+        public readonly MyList<BetHistorySlip> BetSlips;
+        public BetSlipFilter(MyList<BetHistorySlip> betSlips  )
         {
             //already sorted in descending order of date
             BetSlips = betSlips;
         }
 
-        private List<BetHistorySlip> ReverseList(List<BetHistorySlip> filteredSlips)
-        {
-            int maxIndex = filteredSlips.Count -1;
-            int startIndex = 0;
-            BetHistorySlip temp;
-
-            while (startIndex < maxIndex)
-            {
-                temp = filteredSlips[startIndex];
-                filteredSlips[startIndex] = filteredSlips[maxIndex];
-                filteredSlips[maxIndex] = temp;
-                startIndex++;
-                maxIndex--;
-            }
-            return filteredSlips;
-        }
-
         //sort by date and filter by status
-        public List<BetHistorySlip> FilterBetSlips(string? status, bool ascending)
+        public MyList<BetHistorySlip> FilterBetSlips(string? status, bool ascending)
         {
-            List<BetHistorySlip> filteredBetSlips = new List<BetHistorySlip>(BetSlips);
+            MyList<BetHistorySlip> filteredBetSlips = new MyList<BetHistorySlip>(BetSlips);
 
             //filter by status
             if (!String.IsNullOrWhiteSpace(status) && status != "All")
             {
-                filteredBetSlips = filteredBetSlips
-                                .Where(b => b.Status.Equals(status, StringComparison.OrdinalIgnoreCase))
-                                .ToList();
+                foreach (var slip in BetSlips)
+                {
+                    if (slip.Status.Equals(status, StringComparison.OrdinalIgnoreCase))
+                    {
+                        filteredBetSlips.Add(slip);
+                    }
+                }
             }
 
             //sort in ascending order of date by reversing the list
             if (ascending) 
             {
-                return ReverseList(filteredBetSlips);
+                filteredBetSlips.Reverse();
             }
 
             return filteredBetSlips;

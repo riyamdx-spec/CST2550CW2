@@ -1,78 +1,171 @@
 USE BettingSystemDB;
 GO
 
+-- Generate PlayerRating for all players based on position
+-- This matches the logic in your OddsGenerator.cs code
+
 -- reset identity counter
 DBCC CHECKIDENT ('BetType', RESEED, 0);
 
 -- Populate table BetType
 INSERT INTO BetType(bet_type_name)
 VALUES
-('Outcome'),
+('Match Outcome'),
 ('Double Chance'),
 ('Correct Score'),
-('Over/Under Goals'),
+('Over/Under'),
 ('Both Teams to Score'),
-('First Goalscorer'),
+('First Goal Scorer'),
 ('Total Corners'),
 ('Yellow Cards'),
 ('Red Cards');
 
--- Populate table League
-BULK INSERT League
-FROM 'DataSource/insert_leagues.csv'
-WITH (
-	FIRSTROW = 2,
-	FIELDTERMINATOR = ',',
-	ROWTERMINATOR = '\n',
-	TABLOCK
-);
+-- Generate player ratings based on position with some randomness
+INSERT INTO PlayerRating (player_id, scoring_rating, is_active)
+SELECT
+    player_id,
+    CASE
+        -- Attackers: 70-95 rating
+        WHEN player_position IN ('ATT', 'FW') THEN 70 + (ABS(CHECKSUM(NEWID())) % 26)
 
--- Populate table Team
-BULK INSERT Team
-FROM 'DataSource/insert_teams.csv'
-WITH (
-    FIRSTROW = 2,
-    FIELDTERMINATOR = ',',
-    ROWTERMINATOR = '\n',
-    TABLOCK
-);
+        -- Midfielders: 50-80 rating
+        WHEN player_position IN ('MID', 'MF') THEN 50 + (ABS(CHECKSUM(NEWID())) % 31)
 
--- Populate table LeagueTeam
-BULK INSERT LeagueTeam
-FROM 'DataSource/insert_league_teams.csv'
-WITH (
-    FIRSTROW = 2,
-    FIELDTERMINATOR = ',',
-    ROWTERMINATOR = '\n',
-    TABLOCK
-);
+        -- Defenders: 20-50 rating
+        WHEN player_position IN ('DEF', 'DF') THEN 20 + (ABS(CHECKSUM(NEWID())) % 31)
 
--- Populate table Player
-BULK INSERT Player
-FROM 'DataSource/insert_players.csv'
-WITH (
-    FIRSTROW = 2,
-    FIELDTERMINATOR = ',',
-    ROWTERMINATOR = '\n',
-    TABLOCK
-);
+        -- Goalkeepers: 5-15 rating
+        WHEN player_position = 'GK' THEN 5 + (ABS(CHECKSUM(NEWID())) % 11)
 
--- Populate table Game
-BULK INSERT Game
-FROM 'DataSource/insert_games.csv'
-WITH (
-    FIRSTROW = 2,
-    FIELDTERMINATOR = ',',
-    ROWTERMINATOR = '\n',
-    TABLOCK
+        -- Default fallback
+        ELSE 50
+        END as scoring_rating,
+    1 as is_active
+FROM Player
+WHERE NOT EXISTS (
+    SELECT 1 FROM PlayerRating pr WHERE pr.player_id = Player.player_id
 );
+GO
 
--- Populate table GameResult
-BULK INSERT GameResult
-FROM 'DataSource/insert_game_results.csv'
-WITH (
-    FIRSTROW = 2,
-    FIELDTERMINATOR = ',',
-    ROWTERMINATOR = '\n',
-    TABLOCK
-);
+-- Boost ratings for world-class attackers (based on your player names)
+UPDATE pr
+SET scoring_rating = 98
+    FROM PlayerRating pr
+INNER JOIN Player p ON pr.player_id = p.player_id
+WHERE p.player_name IN (
+    'Kylian Mbappe',      -- PSG/Real Madrid
+    'Erling Haaland',     -- Man City (if you add him)
+    'Mohamed Salah'       -- Liverpool (if you add him)
+    );
+GO
+
+-- Boost ratings for elite attackers (90-95)
+UPDATE pr
+SET scoring_rating = CASE
+                         WHEN p.player_name = 'Joao Felix' THEN 92
+                         WHEN p.player_name = 'C. Immobile' THEN 90
+                         WHEN p.player_name = 'Goncalo Ramos' THEN 91
+                         WHEN p.player_name = 'B. Embolo' THEN 88
+                         WHEN p.player_name = 'D. Origi' THEN 85
+                         WHEN p.player_name = 'M. Kean' THEN 87
+                         WHEN p.player_name = 'R. Kolo Muani' THEN 89
+                         WHEN p.player_name = 'N. Gonzalez' THEN 86
+                         WHEN p.player_name = 'A. Pinamonti' THEN 84
+                         WHEN p.player_name = 'Joao Pedro' THEN 88
+                         WHEN p.player_name = 'Ansu Fati' THEN 87
+                         WHEN p.player_name = 'N. Madueke' THEN 85
+                         WHEN p.player_name = 'E. Nketiah' THEN 83
+                         WHEN p.player_name = 'M. Greenwood' THEN 86
+                         WHEN p.player_name = 'A. Garnacho' THEN 84
+                         WHEN p.player_name = 'Y. Minteh' THEN 82
+                         WHEN p.player_name = 'Vitor Roque' THEN 85
+                         WHEN p.player_name = 'G. Mikautadze' THEN 83
+                         WHEN p.player_name = 'A. Gouiri' THEN 84
+                         ELSE pr.scoring_rating
+    END
+    FROM PlayerRating pr
+INNER JOIN Player p ON pr.player_id = p.player_id
+WHERE p.player_position IN ('ATT', 'FW')
+  AND p.player_name IN (
+    'Joao Felix', 'C. Immobile', 'Goncalo Ramos', 'B. Embolo', 'D. Origi',
+    'M. Kean', 'R. Kolo Muani', 'N. Gonzalez', 'A. Pinamonti', 'Joao Pedro',
+    'Ansu Fati', 'N. Madueke', 'E. Nketiah', 'M. Greenwood', 'A. Garnacho',
+    'Y. Minteh', 'Vitor Roque', 'G. Mikautadze', 'A. Gouiri'
+    );
+GO
+
+-- Boost ratings for top midfielders (75-85)
+UPDATE pr
+SET scoring_rating = CASE
+                         WHEN p.player_name = 'T. Kroos' THEN 78
+                         WHEN p.player_name = 'Douglas Luiz' THEN 76
+                         WHEN p.player_name = 'X. Simons' THEN 80
+                         WHEN p.player_name = 'W. McKennie' THEN 74
+                         WHEN p.player_name = 'P. Zielinski' THEN 77
+                         WHEN p.player_name = 'Pablo Torre' THEN 79
+                         WHEN p.player_name = 'M. Kudus' THEN 82
+                         WHEN p.player_name = 'E. Smith Rowe' THEN 78
+                         WHEN p.player_name = 'E. Eze' THEN 81
+                         WHEN p.player_name = 'M. Olise' THEN 83
+                         WHEN p.player_name = 'T. Almada' THEN 80
+                         ELSE pr.scoring_rating
+    END
+    FROM PlayerRating pr
+INNER JOIN Player p ON pr.player_id = p.player_id
+WHERE p.player_position IN ('MID', 'MF')
+  AND p.player_name IN (
+    'T. Kroos', 'Douglas Luiz', 'X. Simons', 'W. McKennie', 'P. Zielinski',
+    'Pablo Torre', 'M. Kudus', 'E. Smith Rowe', 'E. Eze', 'M. Olise', 'T. Almada'
+    );
+GO
+
+-- Verify the results
+
+PRINT 'Player Rating Generation Complete';
+
+
+-- Show summary statistics
+SELECT
+    'Total Player Ratings' as Metric,
+    COUNT(*) as Count
+FROM PlayerRating
+UNION ALL
+SELECT
+    'Active Players',
+    COUNT(*)
+FROM PlayerRating
+WHERE is_active = 1;
+
+PRINT '';
+PRINT 'Ratings by Position:';
+
+SELECT
+    p.player_position as Position,
+    COUNT(*) as PlayerCount,
+    MIN(pr.scoring_rating) as MinRating,
+    AVG(pr.scoring_rating) as AvgRating,
+    MAX(pr.scoring_rating) as MaxRating
+FROM Player p
+    INNER JOIN PlayerRating pr ON p.player_id = pr.player_id
+WHERE pr.is_active = 1
+GROUP BY p.player_position
+ORDER BY AVG(pr.scoring_rating) DESC;
+
+PRINT '';
+PRINT 'Top 20 Rated Players:';
+
+SELECT TOP 20
+    p.player_name as PlayerName,
+    t.team_name as Team,
+       p.player_position as Position,
+    pr.scoring_rating as Rating
+FROM Player p
+    INNER JOIN PlayerRating pr ON p.player_id = pr.player_id
+    INNER JOIN Team t ON p.team_id = t.team_id
+WHERE pr.is_active = 1
+ORDER BY pr.scoring_rating DESC, p.player_name;
+
+
+PRINT 'Ratings generated successfully!';
+
+GO

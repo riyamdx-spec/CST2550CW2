@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Forms.CustomControls;
 using BettingSystem.Models;
 using BettingSystem.Services;
@@ -10,13 +11,13 @@ namespace BettingSystem.Forms
         private AppUser CurrentUser;
         private readonly DatabaseManager DbManager = new DatabaseManager();
         private SessionManager CurrentSession;
+        private Simulator AppSimulator;
 
-        private List<BetHistorySlip> BetSlips;
+        private MyList<BetHistorySlip> BetSlips;
         private BetSlipFilter SlipFilter;
-        private Dictionary<int, GameResult> GameResults;
+        private MyDictionary<int, GameResult> GameResults;
         private string CurrentStatusFilter = "All";
         private bool SortingDateAsc = false;
-
 
         public HistoryPage(AppUser loggedInUser, SessionManager sessionManager)
         {
@@ -24,8 +25,7 @@ namespace BettingSystem.Forms
             CurrentSession = sessionManager;
             BetSlips = CurrentSession.HistoryBetSlips;
             SlipFilter = new BetSlipFilter(BetSlips);
-
-            //GameResults = sessionManager.GameResults;
+            AppSimulator = CurrentSession.AppSimulator;
 
             InitializeComponent();
 
@@ -40,10 +40,25 @@ namespace BettingSystem.Forms
             navBar1.AccountClicked += NavBar1_AccountClicked;
             navBar1.LogoutClicked += NavBar1_LogoutClicked;
 
+            //memory updated event
+            AppSimulator.HistoryUpdated += AppSimulator_HistoryUpdated;
+
             //resize bet slips panels
             slipsFlowLayoutPanel.SizeChanged += UpdateSlipPanel;
 
             this.FormClosing += HistoryPage_FormClosing;
+        }
+
+        private void AppSimulator_HistoryUpdated()
+        {
+            //checks if it is on UI thread
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(AppSimulator_HistoryUpdated));
+                return;
+            }
+            FilterSlips(SortingDateAsc, CurrentStatusFilter);
+            DisplaySlips();
         }
 
         private void HistoryPage_FormClosing(object? sender, FormClosingEventArgs e)
@@ -91,11 +106,12 @@ namespace BettingSystem.Forms
             var gameIds = BetSlips
                 .SelectMany(slip => slip.Bets)
                 .Select(bet => bet.GameId)
-                .Distinct()
-                .ToList();
+                .Distinct();
+
+            var gameIdsList = (MyList<int>)gameIds;
 
             //fetch game results
-            GameResults = await DbManager.FetchGameResultsAsync(gameIds);
+            GameResults = await DbManager.FetchGameResultsAsync(gameIdsList);
         }
 
         public async Task LoadPage()
@@ -142,7 +158,7 @@ namespace BettingSystem.Forms
         private void SlipPanel_Click(object sender, EventArgs e)
         {
             BetHistorySlip slip = (BetHistorySlip)((Control)sender).Tag!;
-            HistoryBetsPopup editPopup = new HistoryBetsPopup(slip.Bets, GameResults);
+            HistoryBetsPopup editPopup = new HistoryBetsPopup(slip.Bets, GameResults, CurrentSession.Players);
             editPopup.ShowDialog();
         }
 
@@ -184,12 +200,16 @@ namespace BettingSystem.Forms
             //filter and sort only if there is a change
             if (selectedSortingDateAsc != SortingDateAsc || selectedStatus != CurrentStatusFilter)
             {
-                SortingDateAsc = selectedSortingDateAsc;
-                CurrentStatusFilter = selectedStatus;
-
-                BetSlips = SlipFilter.FilterBetSlips(selectedStatus, selectedSortingDateAsc);
+                FilterSlips(selectedSortingDateAsc, selectedStatus);
                 DisplaySlips();
             }
+        }
+
+        private void FilterSlips(bool selectedSortingDateAsc, string selectedStatus)
+        {
+            SortingDateAsc = selectedSortingDateAsc;
+            CurrentStatusFilter = selectedStatus;
+            BetSlips = SlipFilter.FilterBetSlips(selectedStatus, selectedSortingDateAsc);
         }
 
         public async Task ReInitialisePage()
@@ -211,18 +231,18 @@ namespace BettingSystem.Forms
             var gameIds = BetSlips
                .SelectMany(slip => slip.Bets)
                .Select(bet => bet.GameId)
-               .Distinct()
-               .ToList();
+               .Distinct();
 
             var missingIds = gameIds
-                .Where(id => !GameResults.ContainsKey(id))
-                .ToList();
+                .Where(id => !GameResults.ContainsKey(id));
 
-            if (missingIds.Count == 0)
+            if (missingIds.Count() == 0)
                 return;
 
+            var missingList = (MyList<int>)missingIds;
+
             //fetch game results
-            var newResults = await DbManager.FetchGameResultsAsync(missingIds);
+            var newResults = await DbManager.FetchGameResultsAsync(missingList);
 
             //merge wih Game Resuls
             foreach (var result in newResults)

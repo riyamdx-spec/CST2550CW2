@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Forms;
 using BettingSystem.Models;
 
@@ -10,19 +11,20 @@ namespace BettingSystem.Services
 
         public FootballMatchCollection MatchesCollection { set; get; }
 
-        public Dictionary<int, GameResult> GameResults { set; get; }
+        public MyDictionary<int, GameResult> GameResults { set; get; }
         
-        public List<BetHistorySlip> HistoryBetSlips { set; get; }
+        public MyList<BetHistorySlip> HistoryBetSlips { set; get; }
         public BetSlip UserSlip { set; get;}
 
         private AppUser CurrentUser { set; get; }
 
         public League[] Leagues { set; get; }
-        public Dictionary<int, Team> TeamsDict { set; get; }
-        public Dictionary<int, List<Player>> Players { set; get; }
+        public MyDictionary<int, Team> TeamsDict { set; get; }
+        public MyDictionary<int, MyList<Player>> Players { set; get; }
         public bool IsLoggingOut { get; private set; }
         public bool IsExiting { get; set; }
 
+        public Simulator AppSimulator;
 
         public SessionManager(AppUser currentUser)
         {
@@ -33,23 +35,26 @@ namespace BettingSystem.Services
             if (CurrentUser.Role == "user")
             {
                 UserSlip = new BetSlip(currentUser.UserID);
-                HistoryBetSlips = new List<BetHistorySlip>();
-                GameResults = new Dictionary<int, GameResult>();
+                GameResults = new MyDictionary<int, GameResult>();
             }
+            //start timer for simulator
+            AppSimulator = new Simulator(CurrentUser, this);
         }
         
         public async Task FetchUserData()
         {
+            MatchesCollection = await DbManager.FetchMatchesAsync();
             HistoryBetSlips = await DbManager.FetchBetHistoryAsync(CurrentUser.UserID);
+            Players = await DbManager.FetchPlayersAsync();
         }
 
         public async Task FetchAdminData()
         {
-            MatchesCollection = await DbManager.FetchMatchesAsync();
+            MatchesCollection = await DbManager.FetchMatchesAsync(true);
             GameResults = await DbManager.FetchGameResultsAsync(null, true);
             Leagues = await DbManager.FetchLeaguesAsync();
             TeamsDict = await DbManager.FetchTeamsAsync(true);
-            Players = await DbManager.FetchPlayersAsync(true);
+            Players = await DbManager.FetchPlayersAsync();
         }
 
         public void OpenProfilePage(Form currentForm)
@@ -139,7 +144,7 @@ namespace BettingSystem.Services
         {
 
         }
-        public void OpenAdminMatchPage(Form currentForm)
+        public async Task OpenAdminMatchPage(Form currentForm)
         {
             AdminMatchPage? matchPage = Application.OpenForms.OfType<AdminMatchPage>().FirstOrDefault();
 
@@ -150,7 +155,7 @@ namespace BettingSystem.Services
             else
             {
                 // reinitialise content on page
-                matchPage.Reset();
+                await matchPage.Reset();
             }
 
             matchPage.Size = currentForm.Size;
@@ -184,7 +189,7 @@ namespace BettingSystem.Services
         {
 
         }
-        public void LogOut(Form currentForm)
+        public async Task LogOut(Form currentForm)
         {
             IsLoggingOut = true;
             var openForms = Application.OpenForms.Cast<Form>().ToList();
@@ -193,6 +198,9 @@ namespace BettingSystem.Services
                 if (!(activeForm is landingPage))
                     activeForm.Close();
             }
+
+            //stop timer for simulation
+            await AppSimulator.DisposeAsync();
 
             IsLoggingOut = false;
             landingPage? appLandingPage = Application.OpenForms.OfType<landingPage>().FirstOrDefault();
