@@ -1,0 +1,162 @@
+﻿using BettingSystem.Data;
+using BettingSystem.Models;
+using BettingSystem.Services;
+
+namespace BettingSystem.Forms
+{
+    public partial class AdminUsersPage : BaseForm
+    {
+        private AppUser CurrentAdmin;
+        private SessionManager CurrentSession;
+        private readonly DatabaseManager DBManager = new DatabaseManager();
+        private List<AppUser> Users = new List<AppUser>();
+
+        public AdminUsersPage(AppUser admin, SessionManager session)
+        {
+            InitializeComponent();
+            dgvUsers.ReadOnly = false; // added to show dropdown
+            CurrentAdmin = admin;
+            CurrentSession = session;
+
+            adminNavBar1.SetAdmin(CurrentAdmin);
+            adminNavBar1.UsersPageClicked += (s, e) => CurrentSession.OpenAdminViewUsersPage(this);
+            adminNavBar1.SearchMatchesPageClicked += (s, e) => CurrentSession.OpenAdminMatchPage(this);
+            adminNavBar1.AddMatchesPageClicked += (s, e) => CurrentSession.OpenAdminAddMatchPage(this);
+            adminNavBar1.LogoutClicked += (s, e) => CurrentSession.LogOut(this);
+
+            this.Load += AdminUsersPage_Load;
+        }
+
+        private async void AdminUsersPage_Load(object sender, EventArgs e)
+        {
+            AddColumnHeaders();
+            CaptureBaseLayout();
+            await LoadUsers();
+
+            dgvUsers.CellValueChanged += DgvUsers_CellValueChanged;
+            dgvUsers.CurrentCellDirtyStateChanged += DgvUsers_CurrentCellDirtyStateChanged;
+            dgvUsers.CellBeginEdit += OnCellBeginEdit;
+        }
+
+        private async Task LoadUsers()
+        {
+            Users = await DBManager.FetchAllUsersAsync();
+            PopulateGrid();
+        }
+
+        private void AddColumnHeaders()
+        {
+            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colId", HeaderText = "ID", FillWeight = 40 });
+            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colFirstName", HeaderText = "First Name", FillWeight = 80 });
+            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colLastName", HeaderText = "Last Name", FillWeight = 80 });
+            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDob", HeaderText = "Date of Birth", FillWeight = 80 });
+            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEmail", HeaderText = "Email", FillWeight = 140 });
+            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRegistration", HeaderText = "Registered", FillWeight = 90 });
+            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colBalance", HeaderText = "Balance", FillWeight = 70 });
+            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRole", HeaderText = "Role", FillWeight = 60 });
+
+            var statusCol = new DataGridViewComboBoxColumn
+            {
+                Name = "colStatus",
+                HeaderText = "Status",
+                FillWeight = 70,
+                FlatStyle = FlatStyle.Flat,
+                DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox,
+                ReadOnly = false
+            };
+            statusCol.Items.AddRange("active", "suspended", "banned");
+            dgvUsers.Columns.Add(statusCol);
+        }
+
+        private void PopulateGrid()
+        {
+            dgvUsers.Rows.Clear();
+
+            foreach (AppUser user in Users)
+            {
+                int rowIndex = dgvUsers.Rows.Add(
+                    user.UserID,
+                    user.FirstName,
+                    user.LastName,
+                    user.Dob.ToString("dd/MM/yyyy"),
+                    user.Email,
+                    user.RegistrationDate.ToString("dd/MM/yyyy"),
+                    $"${user.WalletBalance:F2}",
+                    user.Role,
+                    user.Status
+                );
+
+                DataGridViewRow row = dgvUsers.Rows[rowIndex];
+                StyleStatusCell(row, user.Status);
+            }
+        }
+
+        private void OnCellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
+        {
+            // Check if status column is being edited
+            if (dgvUsers.Columns[e.ColumnIndex].Name == "colStatus")
+            {
+                int userId = Convert.ToInt32(dgvUsers.Rows[e.RowIndex].Cells["colId"].Value);
+                AppUser selectedUser = Users.First(u => u.UserID == userId);
+
+                // if status is banned, prevent editing
+                if (selectedUser.Status == "banned")
+                {
+                    e.Cancel = true;
+                    new Notification("Cannot modify banned users", NotificationType.Warning, this);
+                }
+            }
+        }
+
+        private void StyleStatusCell(DataGridViewRow row, string status)
+        {
+            var cell = row.Cells["colStatus"];
+            cell.Style.ForeColor = status switch
+            {
+                "active" => Color.FromArgb(93, 185, 64),
+                "suspended" => Color.FromArgb(255, 165, 0),
+                "banned" => Color.FromArgb(220, 53, 53),
+                _ => Color.FromArgb(241, 241, 241)
+            };
+            cell.Style.Font = new Font("Times New Roman", 10F, FontStyle.Bold);
+        }
+
+        // ensure changes in dropdown are committed immediately
+        private void DgvUsers_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        {
+            if (dgvUsers.IsCurrentCellDirty)
+                dgvUsers.CommitEdit(DataGridViewDataErrorContexts.Commit);
+        }
+
+        // handle status change when dropdown value changes
+        private async void DgvUsers_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            if (dgvUsers.Columns[e.ColumnIndex].Name != "colStatus") return;
+
+            int userId = Convert.ToInt32(dgvUsers.Rows[e.RowIndex].Cells["colId"].Value);
+            AppUser selectedUser = Users.First(u => u.UserID == userId);
+            string newStatus = dgvUsers.Rows[e.RowIndex].Cells["colStatus"].Value.ToString()!;
+
+            if (newStatus == selectedUser.Status) return;
+
+            await UpdateUserStatus(selectedUser, newStatus);
+            StyleStatusCell(dgvUsers.Rows[e.RowIndex], newStatus);
+        }
+
+        private async Task UpdateUserStatus(AppUser user, string newStatus)
+        {
+            (bool success, string message) = await DBManager.UpdateUserStatusAsync(user.UserID, newStatus);
+
+            if (success)
+            {
+                user.Status = newStatus;
+                new Notification(message, NotificationType.Success, this);
+            }
+            else
+            {
+                new Notification(message, NotificationType.Error, this);
+            }
+        }
+    }
+}
