@@ -2,6 +2,7 @@
 using BettingSystem.Forms.CustomControls;
 using BettingSystem.Models;
 using BettingSystem.Services;
+using BettingSystem.Data_Structures;
 
 namespace BettingSystem.Forms
 {
@@ -11,7 +12,7 @@ namespace BettingSystem.Forms
         private SessionManager CurrentSession;
         private BetSlip UserSlip;
         private FootballMatchCollection MatchesCollection;
-        private Dictionary<int, Team> TeamsDict;
+        private MyDictionary<int, Team> TeamsDict;
         private League[] Leagues;
 
         private readonly DatabaseManager DBManager = new DatabaseManager();
@@ -204,7 +205,7 @@ namespace BettingSystem.Forms
             navBar1.DisplayInfo();
 
             // reset slip
-            //UserSlip.Bets.Clear(); //might bypass total odds
+            //UserSlip.Bets.Clear(); // might bypass total odds
             foreach (Bet bet in UserSlip.Bets.ToList())
                 UserSlip.RemoveBet(bet);
             UserSlip.Stake = 0;
