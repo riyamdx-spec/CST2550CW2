@@ -4,7 +4,6 @@ using BettingSystem.Forms.CustomControls;
 using BettingSystem.Models;
 using BettingSystem.Services;
 using System.Drawing.Drawing2D;
-using System.Text.RegularExpressions;
 
 namespace BettingSystem.Forms
 {
@@ -15,7 +14,6 @@ namespace BettingSystem.Forms
         private readonly DatabaseManager DBManager = new DatabaseManager();
         private readonly ImageLoader ImgLoader = new ImageLoader();
         private readonly Validation validator = new Validation();
-        private Simulator AppSimulator;
 
         private League[] Leagues;
         private MyDictionary<int, Team> TeamsDict;
@@ -70,11 +68,6 @@ namespace BettingSystem.Forms
             navBar1.BetSlipClicked += NavBar1_BetSlipClicked;
             navBar1.LogoutClicked += NavBar1_LogoutClicked;
 
-            AppSimulator = CurrentSession.AppSimulator;
-
-            //memory updated event
-            AppSimulator.MatchStatusUpdated += AppSimulator_MatchStatusUpdated;
-
             //make a search
             searchbarTextBox.KeyDown += Searchbar_KeyDown;
 
@@ -88,29 +81,6 @@ namespace BettingSystem.Forms
 
             this.Load += MainPage_Load;
             this.FormClosing += MainPage_FormClosing;
-        }
-
-        private void AppSimulator_MatchStatusUpdated()
-        {
-            //checks if it is on UI thread
-            if (this.InvokeRequired)
-            {
-                this.BeginInvoke(new Action(AppSimulator_MatchStatusUpdated));
-                return;
-            }
-
-            if (!String.IsNullOrEmpty(CurrentSearchTerm))
-            {
-                FilterByTeams(CurrentSearchTerm);
-                return;
-            }
-            if (CurrentLeague > 0)
-            {
-                FilterByLeagues(CurrentLeague);
-                return;
-            }
-
-            LoadMatches(MatchesCollection.AllMatches);
         }
 
         private async void MainPage_Load(object sender, EventArgs e)
@@ -141,7 +111,6 @@ namespace BettingSystem.Forms
                 }
                 else
                 {
-                    await AppSimulator.DisposeAsync();
                     CurrentSession.IsExiting = true;
                     Application.Exit();
                 }
@@ -155,7 +124,6 @@ namespace BettingSystem.Forms
                 logOutPopup closingPopup = new logOutPopup(true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
                 {
-                    await AppSimulator.DisposeAsync();
                     CurrentSession.LogOut(this);
                 }
 
