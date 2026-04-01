@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BettingSystem.Models;
+using System;
 using System.Collections;
 
 namespace BettingSystem.Data_Structures
@@ -119,25 +120,6 @@ namespace BettingSystem.Data_Structures
             }
             _items[_count - 1] = default(T);
             _count --;
-        }
-
-        // insertion sort
-        // sort in descending order of date
-        public void InsertionSort(Func<T, DateTime> getDate)
-        {
-            for (int i = 1; i < _count; ++i)
-            {
-                T key = _items[i];
-                DateTime keyDate = getDate(key);
-                int j = i - 1;
-
-                while (j >= 0 && getDate(_items[j]).CompareTo(keyDate) < 0)
-                {
-                    _items[j + 1] = _items[j];
-                    j--;
-                }
-                _items[j + 1] = key;
-            }
         }
 
         // reverse list
