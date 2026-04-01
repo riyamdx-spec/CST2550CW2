@@ -50,7 +50,7 @@ namespace BettingSystem.Forms
         }
         private void betSlipsPageBtn_Click(object sender, EventArgs e)
         {
-
+            BetSlipClicked?.Invoke(this, new EventArgs());
         }
 
         private void LogOutToolStripMenuItem_Click(Object sender, EventArgs e)
