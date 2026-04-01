@@ -24,7 +24,6 @@
             // adminNavBar1
             adminNavBar1.Dock = DockStyle.Top;
             adminNavBar1.Name = "adminNavBar1";
-            adminNavBar1.Location = new Point(0, 0);
             adminNavBar1.Size = new Size(1200, 85);
             adminNavBar1.TabIndex = 0;
 
