@@ -129,6 +129,7 @@ namespace BettingSystem.Services
             }
             else
             {
+                // reinitialise content on page
                 betSlipPage.ReloadSlip();
             }
 
@@ -146,6 +147,12 @@ namespace BettingSystem.Services
             if (usersPage is null)
             {
                 usersPage = new AdminUsersPage(CurrentUser, this);
+            }
+
+            else
+            {
+                // reinitialise content on page
+                await usersPage.ReloadPage();
             }
 
             usersPage.Size = currentForm.Size;
@@ -201,6 +208,11 @@ namespace BettingSystem.Services
             if (financialPage is null)
             {
                 financialPage = new AdminFinancialPage(CurrentUser, this);
+            }
+            else
+            {
+                // reinitialise content on page
+                await financialPage.ReloadPage();
             }
 
             financialPage.Size = currentForm.Size;
