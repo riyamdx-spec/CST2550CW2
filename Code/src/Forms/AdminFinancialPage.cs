@@ -37,6 +37,7 @@ namespace BettingSystem.Forms
             adminNavBar1.LogoutClicked += (s, e) => CurrentSession.LogOut(this);
 
             this.Load += AdminFinancialPage_Load;
+            this.FormClosing += AdminFinancialPage_FormClosing;
         }
 
         private async void AdminFinancialPage_Load(object sender, EventArgs e)
@@ -63,6 +64,23 @@ namespace BettingSystem.Forms
             BuildProfitLossChart(profitLoss);
             BuildTransactionVolumeChart(transactionVolume);
             BuildBetStatusChart(betStatus);
+        }
+
+        private void AdminFinancialPage_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            {
+                logOutPopup closingPopup = new logOutPopup(false, true);
+                if (closingPopup.ShowDialog() == DialogResult.No)
+                {
+                    e.Cancel = true;
+                }
+                else
+                {
+                    CurrentSession.IsExiting = true;
+                    Application.Exit();
+                }
+            }
         }
 
         private void SetChartPanelWidths()
@@ -125,6 +143,7 @@ namespace BettingSystem.Forms
 
         private void BuildProfitLossChart(List<MonthlyProfitLoss> data)
         {
+            data = data.OrderBy(d => DateTime.ParseExact(d.Month, "MMM yy", null)).ToList();
             chartProfitLoss.Plot.Clear();
             ApplyDarkTheme(chartProfitLoss);
 
@@ -163,11 +182,16 @@ namespace BettingSystem.Forms
             chartProfitLoss.Plot.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.NumericManual(
                 xs, labels
             );
-            chartProfitLoss.Plot.Axes.Bottom.TickLabelStyle.Rotation = 45;
+            chartProfitLoss.Plot.Axes.Bottom.TickLabelStyle.Rotation = 0;
             chartProfitLoss.Plot.Axes.Bottom.TickLabelStyle.FontSize = 9;
             chartProfitLoss.Plot.Axes.Left.TickLabelStyle.FontSize = 9;
 
             chartProfitLoss.Plot.ShowLegend(Alignment.LowerRight);
+
+            chartProfitLoss.Plot.Axes.AutoScale();
+            //var limits = chartProfitLoss.Plot.Axes.GetLimits();
+            //chartProfitLoss.Plot.Axes.SetLimitsY(0, limits.Top);
+
             chartProfitLoss.Refresh();
         }
 
@@ -183,12 +207,12 @@ namespace BettingSystem.Forms
                 return;
             }
 
-            var months = data.Select(d => d.Month).Distinct().ToList();
+            var months = data.Select(d => d.Month).Distinct().OrderBy(m => DateTime.ParseExact(m, "MMM yy", null)).ToList();
             var types = new[] { "deposit", "withdrawal", "bet", "payout" };
             var colors = new[] { SpGreen, SpOrange, SpBlue, SpRed };
             var names = new[] { "Deposits", "Withdrawals", "Bets", "Payouts" };
 
-            double barWidth = 0.6;
+            double barWidth = 0.8;
             double groupWidth = barWidth / types.Length;
 
             for (int t = 0; t < types.Length; t++)
@@ -215,11 +239,16 @@ namespace BettingSystem.Forms
             chartTransactionVolume.Plot.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.NumericManual(
                 tickPositions, months.ToArray()
             );
-            chartTransactionVolume.Plot.Axes.Bottom.TickLabelStyle.Rotation = 45;
+            chartTransactionVolume.Plot.Axes.Bottom.TickLabelStyle.Rotation = 0;
             chartTransactionVolume.Plot.Axes.Bottom.TickLabelStyle.FontSize = 9;
             chartTransactionVolume.Plot.Axes.Left.TickLabelStyle.FontSize = 9;
 
             chartTransactionVolume.Plot.ShowLegend(Alignment.UpperRight);
+            chartTransactionVolume.Plot.Axes.AutoScale();
+
+            var limits = chartTransactionVolume.Plot.Axes.GetLimits();
+            chartTransactionVolume.Plot.Axes.SetLimitsY(0, limits.Top);
+
             chartTransactionVolume.Refresh();
         }
 
