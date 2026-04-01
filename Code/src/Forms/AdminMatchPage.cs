@@ -56,7 +56,7 @@ namespace BettingSystem.Forms
 
             if (selectedMatch.GameStatus != "Completed")
             {
-                new Notification("Results will be available after match is completed", NotificationType.Info, this); 
+                new Notification("Results will be available after match is completed", NotificationType.Info, this);
                 return;
             }
             if (GameResults.TryGetValue(selectedMatch.GameID, out var gameResults))
@@ -279,15 +279,17 @@ namespace BettingSystem.Forms
 
             CurrentLeague = selectedLeagueId;
             CurrentSearchTerm = searchedTerm;
-            MyList<FootballMatch> matchDisplayed = new MyList<FootballMatch>();
             MyList<FootballMatch> leageMatches = CurrentLeague == 0 ? MatchesCollection.AllMatches : MatchFilter.FilterMatchByLeague(CurrentLeague);
 
             if (!String.IsNullOrEmpty(CurrentSearchTerm))
             {
-                matchDisplayed = MatchFilter.FilterMatchByTeams(searchedTerm, leageMatches);
+                MyList<FootballMatch>  matchDisplayed = MatchFilter.FilterMatchByTeams(searchedTerm, leageMatches);
+                await DisplayMatches(matchDisplayed);
             }
-
-            await DisplayMatches(matchDisplayed);
+            else
+            {
+                await DisplayMatches(leageMatches);
+            }
         }
 
         //clear search and show all matches in selected league
