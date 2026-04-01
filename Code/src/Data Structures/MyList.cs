@@ -139,6 +139,25 @@ namespace BettingSystem.Data_Structures
             }
         }
 
+        //insert match at correct position
+        public void InsertMatch(FootballMatch newMatch)
+        {
+            if (_count + 1 >= _capacity)
+                Resize();
+
+            DateTime itemDate = newMatch.GameDate;
+            int i = _count - 1;
+            while (i >= 0 && (_items[i]) is FootballMatch match && match.GameDate < itemDate)
+            {
+                //right shift
+                _items[i + 1] = _items[i];
+                i--;
+            }
+            //insert match at correct position
+            _items[i + 1] = (T)(object)newMatch;
+            _count++;
+        }
+
         // return index of a value
         public int IndexOf(T value)
         {
