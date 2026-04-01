@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using System.Configuration;
 using System.Security.Cryptography;
 
+
 namespace BettingSystem.Data
 {
     // class to read from or write to database
@@ -53,7 +54,7 @@ namespace BettingSystem.Data
 
                         //check status
                         string status = reader["user_status"].ToString()!;
-                        if (status != "active")
+                        if (status != "Active")
                         {
                             return (null, $"Your account has been {status}. Please contact admin@gmail.com for support.");
                         }
@@ -1103,14 +1104,19 @@ namespace BettingSystem.Data
             MyList<int> startedGames = new MyList<int>();
             MyList<int> completedGames = new MyList<int>();
 
-            string query = @"UPDATE Game
+            string query = @"DECLARE @now DATETIME = GETDATE();
+                            
+                            UPDATE Game
                             SET game_status = CASE 
-                                WHEN GETDATE() >= DATEADD(MINUTE, 5, game_date) THEN 'Completed'
-                                WHEN GETDATE() >= game_date  THEN 'Started'
+                                WHEN @now >= DATEADD(MINUTE, 5, game_date) AND game_status <> 'Completed' THEN 'Completed'
+                                WHEN @now >= game_date AND game_status = 'Scheduled' THEN 'Started'
                                 ELSE game_status
                             END
                             OUTPUT inserted.game_id, inserted.game_status
-                            WHERE CAST(game_date AS DATE) = CAST(GETDATE() AS DATE)";
+                            WHERE
+                                (@now >= game_date AND game_status = 'Scheduled')
+                                OR
+                                (@now >= DATEADD(MINUTE, 5, game_date) AND game_status <> 'Completed');";
 
             using (SqlCommand command = new SqlCommand(query, sqlConnection, sqlTransaction))
             {
@@ -1243,7 +1249,7 @@ namespace BettingSystem.Data
                         string betStatus = reader["result"].ToString()!;
                         if (betStatus != "Pending")
                         {
-                            int betId = Convert.ToInt32(reader["game_id"]);
+                            int betId = Convert.ToInt32(reader["bet_id"]);
                             updatedBets[betId] = betStatus;
                         }
                     }
@@ -1279,7 +1285,7 @@ namespace BettingSystem.Data
 
                     ELSE bet_status
                 END
-                OUTPUT inserted.slip_id, inserted.result
+                OUTPUT inserted.slip_id, inserted.bet_status
                 WHERE bet_status = 'Pending'
             ";
 
@@ -1289,7 +1295,7 @@ namespace BettingSystem.Data
                 {
                     while (await reader.ReadAsync())
                     {
-                        string slipStatus = reader["result"].ToString()!;
+                        string slipStatus = reader["bet_status"].ToString()!;
                         if (slipStatus != "Pending")
                         {
                             int slipId = Convert.ToInt32(reader["slip_id"]);
@@ -1321,7 +1327,6 @@ namespace BettingSystem.Data
                             updatedBets = await UpdateBetResultAsync(completedMatchIds, connection, transaction);
                             updatedSlips = await UpdateBetSlipStatusAsync(connection, transaction);
                         }
-
                         transaction.Commit();
                         return (startedMatchIds, completedMatchIds, updatedBets, updatedSlips);
                     }
