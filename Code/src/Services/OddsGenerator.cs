@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Data.SqlClient;
 
 namespace BettingSystem.Services
 {
@@ -8,41 +7,9 @@ namespace BettingSystem.Services
     {
         private const decimal StandardMargin = 0.93m;
         private const decimal HighVarianceMargin = 0.85m;
-        private readonly string _connectionString;
 
         public OddsGenerator(string? connectionString = null)
         {
-            _connectionString =
-                connectionString
-                ?? Environment.GetEnvironmentVariable("ODDS_CONNECTION_STRING")
-                ?? string.Empty;
-        }
-
-        // Gets team ratings from the database
-        public TeamRatings GetTeamRatings(int teamId, int leagueId)
-        {
-            using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand(
-                @"SELECT attack_rating, defense_rating, discipline_rating, avg_corners_per_game
-                  FROM TeamRating
-                  WHERE team_id = @teamId AND league_id = @leagueId",
-                conn);
-
-            cmd.Parameters.AddWithValue("@teamId", teamId);
-            cmd.Parameters.AddWithValue("@leagueId", leagueId);
-
-            using var reader = cmd.ExecuteReader();
-            if (reader.Read())
-            {
-                return new TeamRatings(
-                    Convert.ToInt32(reader["attack_rating"]),
-                    Convert.ToInt32(reader["defense_rating"]),
-                    Convert.ToInt32(reader["discipline_rating"]),
-                    Convert.ToDecimal(reader["avg_corners_per_game"]));
-            }
-
-            // Default ratings if team not found
-            return new TeamRatings(60, 60, 60, 5.0m);
         }
 
         // 1. Match Outcome (Home/Draw/Away) Odds
@@ -67,108 +34,51 @@ namespace BettingSystem.Services
                 ToOdds(awayProbability, StandardMargin, 1.20m, 15.00m));
         }
 
-        public OutcomeOdds GenerateOutcomeOdds(int gameId, int homeTeamId, int awayTeamId, int leagueId, bool persist = true)
+        public OutcomeOdds GenerateOutcomeOdds(TeamRatings homeRatings, TeamRatings awayRatings)
         {
-            var outcome = CalculateOutcomeOdds(GetTeamRatings(homeTeamId, leagueId), GetTeamRatings(awayTeamId, leagueId));
-
-            if (persist)
-            {
-                SaveOddsToDatabase(BuildOutcomeOdds(gameId, outcome));
-            }
-
-            return outcome;
+            return CalculateOutcomeOdds(homeRatings, awayRatings);
         }
 
         // 2. Double Chance Odds
-        public IReadOnlyList<GeneratedOdd> GenerateDoubleChanceOdds(int gameId, decimal homeOdds, decimal drawOdds, decimal awayOdds, bool persist = true)
+        public IReadOnlyList<GeneratedOdd> GenerateDoubleChanceOdds(int gameId, decimal homeOdds, decimal drawOdds, decimal awayOdds)
         {
-            var odds = BuildDoubleChanceOdds(gameId, new OutcomeOdds(homeOdds, drawOdds, awayOdds));
-
-            if (persist)
-            {
-                SaveOddsToDatabase(odds);
-            }
-
-            return odds;
+            return BuildDoubleChanceOdds(gameId, new OutcomeOdds(homeOdds, drawOdds, awayOdds));
         }
 
         // 3. Over or Under goals Odds
-        public IReadOnlyList<GeneratedOdd> GenerateOverUnderOdds(int gameId, int homeAttack, int homeDefense, int awayAttack, int awayDefense, bool persist = true)
+        public IReadOnlyList<GeneratedOdd> GenerateOverUnderOdds(int gameId, int homeAttack, int homeDefense, int awayAttack, int awayDefense)
         {
-            var odds = BuildOverUnderOdds(gameId, new TeamRatings(homeAttack, homeDefense, 60, 5.0m), new TeamRatings(awayAttack, awayDefense, 60, 5.0m));
-
-            if (persist)
-            {
-                SaveOddsToDatabase(odds);
-            }
-
-            return odds;
+            return BuildOverUnderOdds(gameId, new TeamRatings(homeAttack, homeDefense, 60, 5.0m), new TeamRatings(awayAttack, awayDefense, 60, 5.0m));
         }
 
         // 4. Both Teams to Score Odds
-        public IReadOnlyList<GeneratedOdd> GenerateBothTeamsToScoreOdds(int gameId, int homeAttack, int awayAttack, bool persist = true)
+        public IReadOnlyList<GeneratedOdd> GenerateBothTeamsToScoreOdds(int gameId, int homeAttack, int awayAttack)
         {
-            var odds = BuildBothTeamsToScoreOdds(gameId, homeAttack, awayAttack);
-
-            if (persist)
-            {
-                SaveOddsToDatabase(odds);
-            }
-
-            return odds;
+            return BuildBothTeamsToScoreOdds(gameId, homeAttack, awayAttack);
         }
 
         // 5. Total Corners
-        public IReadOnlyList<GeneratedOdd> GenerateCornerOdds(int gameId, int homeAttack, int awayAttack, bool persist = true)
+        public IReadOnlyList<GeneratedOdd> GenerateCornerOdds(int gameId, int homeAttack, int awayAttack)
         {
-            var odds = BuildCornerOdds(gameId, new TeamRatings(homeAttack, 60, 60, 5.0m), new TeamRatings(awayAttack, 60, 60, 5.0m));
-
-            if (persist)
-            {
-                SaveOddsToDatabase(odds);
-            }
-
-            return odds;
+            return BuildCornerOdds(gameId, new TeamRatings(homeAttack, 60, 60, 5.0m), new TeamRatings(awayAttack, 60, 60, 5.0m));
         }
 
         // 6. Yellow Cards Odds
-        public IReadOnlyList<GeneratedOdd> GenerateYellowCardOdds(int gameId, int homeDiscipline, int awayDiscipline, bool persist = true)
+        public IReadOnlyList<GeneratedOdd> GenerateYellowCardOdds(int gameId, int homeDiscipline, int awayDiscipline)
         {
-            var odds = BuildYellowCardOdds(gameId, homeDiscipline, awayDiscipline);
-
-            if (persist)
-            {
-                SaveOddsToDatabase(odds);
-            }
-
-            return odds;
+            return BuildYellowCardOdds(gameId, homeDiscipline, awayDiscipline);
         }
 
         // 7. Red Cards Odds
-        public IReadOnlyList<GeneratedOdd> GenerateRedCardOdds(int gameId, int homeDiscipline, int awayDiscipline, bool persist = true)
+        public IReadOnlyList<GeneratedOdd> GenerateRedCardOdds(int gameId, int homeDiscipline, int awayDiscipline)
         {
-            var odds = BuildRedCardOdds(gameId, homeDiscipline, awayDiscipline);
-
-            if (persist)
-            {
-                SaveOddsToDatabase(odds);
-            }
-
-            return odds;
+            return BuildRedCardOdds(gameId, homeDiscipline, awayDiscipline);
         }
 
         // 8. First Goal Scorer Odds
-        public IReadOnlyList<GeneratedOdd> GenerateFirstGoalScorerOdds(int gameId, int homeTeamId, int awayTeamId, bool persist = true)
+        public IReadOnlyList<GeneratedOdd> GenerateFirstGoalScorerOdds(int gameId, IReadOnlyCollection<PlayerInfo> players)
         {
-            var players = GetPlayersForTeams(homeTeamId, awayTeamId);
-            var odds = BuildFirstGoalScorerOdds(gameId, players);
-
-            if (persist && odds.Count > 0)
-            {
-                SaveOddsToDatabase(odds);
-            }
-
-            return odds;
+            return BuildFirstGoalScorerOdds(gameId, players);
         }
 
         // 9. Correct Score Odds
@@ -183,16 +93,9 @@ namespace BettingSystem.Services
             return new GeneratedOdd(gameId, "Correct Score", selection, ToOdds(combinedProbability, HighVarianceMargin, 6.0m, 100.0m));
         }
 
-        public decimal GenerateCorrectScoreOdds(int gameId, int homeGoals, int awayGoals, int homeTeamId, int awayTeamId, int leagueId, bool persist = true)
+        public decimal GenerateCorrectScoreOdds(int gameId, int homeGoals, int awayGoals, TeamRatings homeRatings, TeamRatings awayRatings)
         {
-            var odd = GenerateCorrectScoreOdd(gameId, homeGoals, awayGoals, GetTeamRatings(homeTeamId, leagueId), GetTeamRatings(awayTeamId, leagueId));
-
-            if (persist)
-            {
-                SaveOddsToDatabase(new[] { odd });
-            }
-
-            return odd.OddValue;
+            return GenerateCorrectScoreOdd(gameId, homeGoals, awayGoals, homeRatings, awayRatings).OddValue;
         }
 
         public IReadOnlyList<GeneratedOdd> BuildAllOddsForGame(int gameId, TeamRatings homeRatings, TeamRatings awayRatings, IReadOnlyCollection<PlayerInfo>? players = null)
@@ -216,109 +119,6 @@ namespace BettingSystem.Services
             return generatedOdds;
         }
 
-        public IReadOnlyList<GeneratedOdd> GenerateAllOddsForGame(int gameId, int homeTeamId, int awayTeamId, int leagueId, bool persist = true)
-        {
-            var homeRatings = GetTeamRatings(homeTeamId, leagueId);
-            var awayRatings = GetTeamRatings(awayTeamId, leagueId);
-            var players = GetPlayersForTeams(homeTeamId, awayTeamId);
-
-            // Main Method to generate all odds for a game
-            Console.WriteLine($"Generating odds for game {gameId} (Home: {homeTeamId} vs Away: {awayTeamId})...");
-
-            var generatedOdds = BuildAllOddsForGame(gameId, homeRatings, awayRatings, players);
-
-            if (persist)
-            {
-                SaveOddsToDatabase(generatedOdds);
-            }
-
-            Console.WriteLine($"All odds generated for game {gameId} ({generatedOdds.Count} odds created).");
-            return generatedOdds;
-        }
-
-        public OutcomeOdds GetOutcomeOdds(int gameId)
-        {
-            using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand(
-                @"SELECT o.selection, o.odd_value
-                  FROM Odd o
-                  INNER JOIN BetType bt ON o.bet_type_id = bt.bet_type_id
-                  WHERE o.game_id = @gameId AND bt.bet_type_name = 'Match Outcome'",
-                conn);
-
-            cmd.Parameters.AddWithValue("@gameId", gameId);
-
-            decimal home = 0;
-            decimal draw = 0;
-            decimal away = 0;
-
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
-            {
-                var selection = Convert.ToString(reader["selection"]);
-                var value = Convert.ToDecimal(reader["odd_value"]);
-
-                switch (selection)
-                {
-                    case "Home Win":
-                        home = value;
-                        break;
-                    case "Draw":
-                        draw = value;
-                        break;
-                    case "Away Win":
-                        away = value;
-                        break;
-                }
-            }
-
-            return new OutcomeOdds(home, draw, away);
-        }
-
-        // Helper to hold player information for first-goal-scorer generation
-        public List<PlayerInfo> GetPlayersForTeams(int homeTeamId, int awayTeamId)
-        {
-            using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand(
-                @"SELECT p.player_id, p.player_name, p.player_position, pr.scoring_rating, p.team_id
-                  FROM Player p
-                  INNER JOIN PlayerRating pr ON p.player_id = pr.player_id
-                  WHERE (p.team_id = @homeTeam OR p.team_id = @awayTeam)
-                    AND pr.is_active = 1",
-                conn);
-
-            cmd.Parameters.AddWithValue("@homeTeam", homeTeamId);
-            cmd.Parameters.AddWithValue("@awayTeam", awayTeamId);
-
-            var players = new List<PlayerInfo>();
-            using var reader = cmd.ExecuteReader();
-            while (reader.Read())
-            {
-                var rawPosition = Convert.ToString(reader["player_position"]);
-                var normalizedPosition = string.IsNullOrWhiteSpace(rawPosition)
-                    ? "ATT"
-                    : rawPosition.Trim().ToUpperInvariant() switch
-                    {
-                        "ATT" => "ATT",
-                        "MID" => "MID",
-                        "DEF" => "DEF",
-                        "GK" => "GK",
-                        "FW" => "ATT",
-                        "MF" => "MID",
-                        "DF" => "DEF",
-                        _ => "ATT"
-                    };
-
-                players.Add(new PlayerInfo(
-                    Convert.ToInt32(reader["player_id"]),
-                    Convert.ToString(reader["player_name"]) ?? string.Empty,
-                    normalizedPosition,
-                    Convert.ToInt32(reader["scoring_rating"]),
-                    Convert.ToInt32(reader["team_id"])));
-            }
-
-            return players;
-        }
 
         private IReadOnlyList<GeneratedOdd> BuildOutcomeOdds(int gameId, OutcomeOdds outcomeOdds) =>
             new List<GeneratedOdd>
@@ -438,87 +238,6 @@ namespace BettingSystem.Services
             return generatedOdds;
         }
 
-        private void SaveOddsToDatabase(IEnumerable<GeneratedOdd> odds)
-        {
-            using var conn = CreateOpenConnection();
-            var betTypeCache = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-            foreach (var odd in odds)
-            {
-                SaveOddToDatabase(conn, betTypeCache, odd);
-            }
-        }
-
-        private void SaveOddToDatabase(SqlConnection conn, IDictionary<string, int> betTypeCache, GeneratedOdd odd)
-        {
-            var betTypeId = GetBetTypeId(conn, betTypeCache, odd.BetTypeName);
-            using var cmd = new SqlCommand(
-                @"BEGIN TRY
-                      INSERT INTO Odd (game_id, bet_type_id, selection, odd_value, creation_date, is_active)
-                      VALUES (@gameId, @betTypeId, @selection, @oddValue, @creationDate, @isActive)
-                  END TRY
-                  BEGIN CATCH
-                      IF ERROR_NUMBER() IN (2601, 2627)
-                      BEGIN
-                          UPDATE Odd
-                          SET odd_value = @oddValue,
-                              creation_date = @creationDate,
-                              is_active = @isActive
-                          WHERE game_id = @gameId
-                            AND bet_type_id = @betTypeId
-                            AND selection = @selection;
-                      END
-                      ELSE
-                      BEGIN
-                          THROW;
-                      END
-                  END CATCH",
-                conn);
-
-            cmd.Parameters.AddWithValue("@gameId", odd.GameId);
-            cmd.Parameters.AddWithValue("@betTypeId", betTypeId);
-            cmd.Parameters.AddWithValue("@selection", odd.Selection);
-            cmd.Parameters.AddWithValue("@oddValue", odd.OddValue);
-            cmd.Parameters.AddWithValue("@creationDate", DateTime.UtcNow);
-            cmd.Parameters.AddWithValue("@isActive", true);
-            cmd.ExecuteNonQuery();
-        }
-
-        private int GetBetTypeId(SqlConnection conn, IDictionary<string, int> betTypeCache, string betTypeName)
-        {
-            if (betTypeCache.TryGetValue(betTypeName, out var cachedId))
-            {
-                return cachedId;
-            }
-
-            using var cmd = new SqlCommand(
-                "SELECT bet_type_id FROM BetType WHERE bet_type_name = @name",
-                conn);
-            cmd.Parameters.AddWithValue("@name", betTypeName);
-
-            var result = cmd.ExecuteScalar();
-            if (result is null)
-            {
-                throw new InvalidOperationException($"Bet type '{betTypeName}' not found in database.");
-            }
-
-            var betTypeId = Convert.ToInt32(result);
-            betTypeCache[betTypeName] = betTypeId;
-            return betTypeId;
-        }
-
-        private SqlConnection CreateOpenConnection()
-        {
-            if (string.IsNullOrWhiteSpace(_connectionString))
-            {
-                throw new InvalidOperationException(
-                    "Connection string is not configured. Pass one to OddsGenerator or set ODDS_CONNECTION_STRING.");
-            }
-
-            var conn = new SqlConnection(_connectionString);
-            conn.Open();
-            return conn;
-        }
 
         private static GeneratedOdd CreateBinaryMarketOdd(int gameId, string betTypeName, string selection, double probability) =>
             new(gameId, betTypeName, selection, ToOdds(probability, StandardMargin, 1.20m, 50.0m));
