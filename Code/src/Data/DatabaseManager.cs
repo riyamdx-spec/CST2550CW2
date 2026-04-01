@@ -849,7 +849,7 @@ namespace BettingSystem.Data
         {
             MyDictionary<int, GameResult> gameResult = new MyDictionary<int, GameResult>();
 
-            if (gameIds is null || gameIds.Count == 0)
+            if (!all & (gameIds is null || gameIds.Count == 0))
                 return gameResult;
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
