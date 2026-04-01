@@ -115,19 +115,12 @@ namespace BettingSystem.Forms
         {
             LeagueTeams = await DbManager.FetchLeagueTeamAsync();
             DisplayLeagueNames();
-            SetDateTimePicker();
+            selectedMatchDate.MinDate = DateTime.Now.AddMinutes(5);
             leagueComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             homeTeamComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             awayTeamComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         }
 
-        private void SetDateTimePicker()
-        {
-            selectedMatchDate.Format = DateTimePickerFormat.Custom;
-            selectedMatchDate.CustomFormat = "dd/MM/yyyy HH:mm";
-            selectedMatchDate.ShowUpDown = false;
-            selectedMatchDate.MinDate = DateTime.Now.AddMinutes(5);
-        }
         public void DisplayLeagueNames()
         {
             foreach (League league in Leagues)
