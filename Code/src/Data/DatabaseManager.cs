@@ -1303,7 +1303,7 @@ namespace BettingSystem.Data
         }
 
         // execute updates for the match status, bet results and bet slip status
-        public async Task<(MyList<int>? startedGames, MyList<int>? completedGames, MyDictionary<int, string> updatedBets, MyDictionary<int, string> updatedSlips)> WrapTableUpdatesAsync()
+        public async Task<(MyList<int> startedGames, MyList<int> completedGames, MyDictionary<int, string> updatedBets, MyDictionary<int, string> updatedSlips)> WrapTableUpdatesAsync()
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
@@ -1411,37 +1411,6 @@ namespace BettingSystem.Data
                 {
                     Console.WriteLine($"Error: {e.Message}");
                     return new MyList<UserActivity>();
-                }
-            }
-        }
-
-        // insert into user activity table
-        public async Task<UserActivity> RecordActivityAsync(int userId, string activityType, int score, string ip, int refId, SqlConnection sqlConnection, SqlTransaction sqlTransaction)
-        {
-            string query = @"INSERT INTO UserActivity (app_user_id, activity_type, associated_risk_score, ip_address, reference_id) 
-                            OUTPUT INSERTED.activity_id, INSERTED.activityDate
-                            VALUES (@userId, @activityType, @score, @ip, @refId)";
-
-            using (SqlCommand command = new SqlCommand(query, sqlConnection, sqlTransaction))
-            {
-                command.Parameters.AddWithValue("@userId", userId);
-                command.Parameters.AddWithValue("@activityType", activityType);
-                command.Parameters.AddWithValue("@score", score);
-                command.Parameters.AddWithValue("@ip", ip);
-                command.Parameters.AddWithValue("@refId", refId);
-
-                using (SqlDataReader reader = await command.ExecuteReaderAsync())
-                {
-                    if (await reader.ReadAsync())
-                    {
-                        int activity_id = Convert.ToInt32(reader["activity_id"]);
-                        DateTime activityDate = Convert.ToDateTime(reader["activity_date"]);
-                        return new UserActivity(activity_id, userId, activityType, activityDate, score, ip, refId);
-                    }
-                    else
-                    {
-                        throw new Exception("Failed to insert user activity");
-                    }
                 }
             }
         }
