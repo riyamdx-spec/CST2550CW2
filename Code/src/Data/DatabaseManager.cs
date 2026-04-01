@@ -13,9 +13,15 @@ namespace BettingSystem.Data
         private readonly string _connectionString;
         private readonly OddsGenerator _oddsGenerator;
 
-        public DatabaseManager()
+        public DatabaseManager() : this(null)
         {
-            _connectionString = ConfigurationManager.ConnectionStrings["BettingDB"].ConnectionString;
+        }
+
+        public DatabaseManager(string? connectionString)
+        {
+            _connectionString = string.IsNullOrWhiteSpace(connectionString)
+                ? ConfigurationManager.ConnectionStrings["BettingDB"].ConnectionString
+                : connectionString;
             _oddsGenerator = new OddsGenerator(_connectionString);
         }
 
@@ -1623,6 +1629,40 @@ namespace BettingSystem.Data
                 Console.WriteLine($"Error generating/saving all odds for game {gameId}: {e.Message}");
                 throw;
             }
+        }
+
+        public OutcomeOdds GenerateOutcomeOdds(int gameId, int homeTeamId, int awayTeamId, int leagueId, bool persist = true)
+        {
+            var homeRatings = GetTeamRatingsAsync(homeTeamId, leagueId).GetAwaiter().GetResult();
+            var awayRatings = GetTeamRatingsAsync(awayTeamId, leagueId).GetAwaiter().GetResult();
+
+            var outcomeOdds = _oddsGenerator.GenerateOutcomeOdds(homeRatings, awayRatings);
+
+            if (persist)
+            {
+                SaveOddsAsync(new[]
+                {
+                    new GeneratedOdd(gameId, "Match Outcome", "Home Win", outcomeOdds.Home),
+                    new GeneratedOdd(gameId, "Match Outcome", "Draw", outcomeOdds.Draw),
+                    new GeneratedOdd(gameId, "Match Outcome", "Away Win", outcomeOdds.Away)
+                }).GetAwaiter().GetResult();
+            }
+
+            return outcomeOdds;
+        }
+
+        public IReadOnlyList<GeneratedOdd> GenerateAllOddsForGame(int gameId, int homeTeamId, int awayTeamId, int leagueId, bool persist = true)
+        {
+            var homeRatings = GetTeamRatingsAsync(homeTeamId, leagueId).GetAwaiter().GetResult();
+            var awayRatings = GetTeamRatingsAsync(awayTeamId, leagueId).GetAwaiter().GetResult();
+            var generatedOdds = _oddsGenerator.BuildAllOddsForGame(gameId, homeRatings, awayRatings);
+
+            if (persist)
+            {
+                SaveOddsAsync(generatedOdds).GetAwaiter().GetResult();
+            }
+
+            return generatedOdds;
         }
     }
 }
