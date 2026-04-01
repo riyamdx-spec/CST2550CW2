@@ -200,13 +200,13 @@ namespace BettingSystem.Forms
             }
         }
 
-        private void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
+        private async void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
         {
             if (!CurrentSession.IsLoggingOut)
             {
                 logOutPopup closingPopup = new logOutPopup(true, true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
-                    CurrentSession.LogOut(this);
+                    await CurrentSession.LogOut(this);
             }
         }
 
