@@ -7,35 +7,53 @@ namespace BettingSystem.Services
     public class Simulator
     {
         private readonly DatabaseManager DbManager = new DatabaseManager();
-        private SessionManager CurrentSession;
+        private SessionManager? _currentSession;
 
         private PeriodicTimer _timer;
         private Task _timerTask;
         private CancellationTokenSource _cts;
+        private bool _isRunning;
 
         public event Action? MatchStatusUpdated;
         public event Action? BetSlipUpdated;
         public event Action? HistoryUpdated;
 
-        public Simulator(AppUser currentUser, SessionManager session)
+        public Simulator()
         {
-            CurrentSession = session;
+            _currentSession = null;
             _timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
             _cts = new CancellationTokenSource();
-            _timerTask = TimerExecution(_cts.Token);
+        }
+
+        public void Start()
+        {
+            _timerTask = Task.Run(async () =>
+            {
+                await UpdatesDB();
+                await TimerExecution(_cts.Token);
+            });
         }
 
         private async Task TimerExecution(CancellationToken token)
         {
             while (await _timer.WaitForNextTickAsync(token))
             {
+                //prevent overlapping
+                if (_isRunning)
+                    continue;
+
                 try
                 {
+                    _isRunning = true;
                     await UpdatesDB();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"Error: {e.Message}");
+                }
+                finally
+                {
+                    _isRunning=false;
                 }
             }
         }
@@ -44,24 +62,66 @@ namespace BettingSystem.Services
         public async ValueTask DisposeAsync()
         {
             _timer.Dispose();
-            await _timerTask;
+            if (_timerTask != null)
+            {
+                try
+                {
+                    await _timerTask;
+                }catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e}");
+                }
+            }
             GC.SuppressFinalize(this);
+        }
+
+        public void SetSession( SessionManager sessionManager)
+        {
+            _currentSession = sessionManager;
         }
 
         private async Task UpdatesDB()
         {
             var (startedMatchIds, completedMatchIds, updatedBets, updatedSlips) = await DbManager.WrapTableUpdatesAsync();
-            if (startedMatchIds?.Count > 0 || completedMatchIds?.Count > 0)
+
+            if (_currentSession is not null && (startedMatchIds?.Count > 0 || completedMatchIds?.Count > 0) )
             {
-                UpdateMemory(startedMatchIds, completedMatchIds, updatedBets, updatedSlips);
+                if (_currentSession.IsAdmin)
+                {
+                    UpdateAdminSide(startedMatchIds, completedMatchIds);
+                }
+                else
+                {
+                    UpdateMemory(startedMatchIds, completedMatchIds, updatedBets, updatedSlips);
+                }
             }
+            
+        }
+
+        //update match status on admin panel
+        private void UpdateAdminSide(MyList<int> startedMatchIds, MyList<int> completedMatchIds)
+        {
+            var allMatches = _currentSession.MatchesCollection.AllMatches;
+
+            //update match status
+            foreach(FootballMatch match in allMatches)
+            {
+                if (startedMatchIds.Contains(match.GameID))
+                {
+                    match.GameStatus = "Started";
+                }else if (completedMatchIds.Contains(match.GameID))
+                {
+                    match.GameStatus = "Completed";
+                }
+            }
+            MatchStatusUpdated?.Invoke();
         }
 
         private void UpdateMemory(MyList<int> startedMatchIds, MyList<int> completedMatchIds, MyDictionary<int, string> updatedBets, MyDictionary<int, string> updatedSlips)
         {
             var removedMatchesId = new List<int>();
-            var memoryBetSlip = CurrentSession.UserSlip;
-            var historyBetSlips = CurrentSession.HistoryBetSlips;
+            var memoryBetSlip = _currentSession.UserSlip;
+            var historyBetSlips = _currentSession.HistoryBetSlips;
 
             if (startedMatchIds.Count > 0) 
                 removedMatchesId.AddRange(startedMatchIds);
@@ -85,8 +145,8 @@ namespace BettingSystem.Services
         // remove matches which already started or are completed
         private void UpdateMatches(List<int> removedMatchesId)
         {
-            var allMatches = CurrentSession.MatchesCollection.AllMatches;
-            var matchesByLeague = CurrentSession.MatchesCollection.MatchesByLeague;
+            var allMatches = _currentSession.MatchesCollection.AllMatches;
+            var matchesByLeague = _currentSession.MatchesCollection.MatchesByLeague;
             var removedMatches = allMatches
                 .Where(m => removedMatchesId.Contains(m.GameID))
                 .ToList();
@@ -99,13 +159,12 @@ namespace BettingSystem.Services
                     matchesByLeague[leagueId].Remove(match);
                 }
             }
-            MatchStatusUpdated?.Invoke();
         }
 
         // update slips and bets in history
         private bool UpdateHistoryBets(MyDictionary<int, string> updatedBets, MyDictionary<int, string> updatedSlips)
         {
-            var historyBetSlips = CurrentSession.HistoryBetSlips;
+            var historyBetSlips = _currentSession.HistoryBetSlips;
             bool changed = false;
 
             foreach (var slip in historyBetSlips)
