@@ -23,22 +23,24 @@ namespace BettingSystem.Services
         public MyDictionary<int, MyList<Player>> Players { set; get; }
         public bool IsLoggingOut { get; private set; }
         public bool IsExiting { get; set; }
+        public bool IsAdmin { get; set; }
 
         public Simulator AppSimulator;
 
-        public SessionManager(AppUser currentUser)
+        public SessionManager(AppUser currentUser, Simulator appSimulator)
         {
             CurrentUser = currentUser;
             IsLoggingOut = false;
             IsExiting = false;
-
+            AppSimulator = appSimulator;
             if (CurrentUser.Role == "user")
             {
                 UserSlip = new BetSlip(currentUser.UserID);
                 GameResults = new MyDictionary<int, GameResult>();
+                IsAdmin = false;
+                return;
             }
-            //start timer for simulator
-            AppSimulator = new Simulator(CurrentUser, this);
+            IsAdmin = true;
         }
         
         public async Task FetchUserData()
@@ -185,14 +187,11 @@ namespace BettingSystem.Services
                     activeForm.Close();
             }
 
-            //stop timer for simulation
-            await AppSimulator.DisposeAsync();
-
             IsLoggingOut = false;
             landingPage? appLandingPage = Application.OpenForms.OfType<landingPage>().FirstOrDefault();
             if (appLandingPage is null)
             {
-                appLandingPage = new landingPage();
+                appLandingPage = new landingPage(AppSimulator);
             }
             appLandingPage.Size = currentForm.Size;
             appLandingPage.Location = currentForm.Location;
