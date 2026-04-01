@@ -677,15 +677,13 @@ namespace BettingSystem.Data
 
             try
             {
-                await Task.Run(() =>
-                    _oddsGenerator.GenerateCorrectScoreOdds(
-                        gameId,
-                        homeGoals,
-                        awayGoals,
-                        homeTeamId,
-                        awayTeamId,
-                        leagueId,
-                        persist: true));
+                await GenerateAndSaveCorrectScoreOddAsync(
+                    gameId,
+                    homeGoals,
+                    awayGoals,
+                    homeTeamId,
+                    awayTeamId,
+                    leagueId);
             }
             catch (Exception e)
             {
@@ -1037,7 +1035,7 @@ namespace BettingSystem.Data
                         }
 
                         //generate odds for the new match
-                        _oddsGenerator.GenerateAllOddsForGame(insertedGameId, newMatch.HomeTeamID, newMatch.AwayTeamID, newMatch.LeagueID);
+                        await GenerateAndSaveAllOddsAsync(insertedGameId, newMatch.HomeTeamID, newMatch.AwayTeamID, newMatch.LeagueID);
 
                         newMatch.GameID = insertedGameId;
                         matchResult.GameId = insertedGameId;
@@ -1369,6 +1367,187 @@ namespace BettingSystem.Data
                     Console.WriteLine($"Error: {e.Message}");
                     return false;
                 }
+            }
+        }
+
+        // Get bet_type_id by name (used for odds persistence)
+        private async Task<int> GetBetTypeIdAsync(string betTypeName)
+        {
+            string query = "SELECT bet_type_id FROM BetType WHERE bet_type_name = @name";
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@name", betTypeName);
+                try
+                {
+                    await connection.OpenAsync();
+                    var result = await command.ExecuteScalarAsync();
+                    if (result is null)
+                        throw new InvalidOperationException($"Bet type '{betTypeName}' not found in database.");
+                    return Convert.ToInt32(result);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error retrieving bet type: {e.Message}");
+                    throw;
+                }
+            }
+        }
+
+        // Save generated odds to database
+        public async Task SaveOddsAsync(IEnumerable<GeneratedOdd> odds)
+        {
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                await connection.OpenAsync();
+                foreach (var odd in odds)
+                {
+                    await SaveSingleOddAsync(connection, odd);
+                }
+            }
+        }
+
+        // Save a single odd (INSERT or UPDATE if exists)
+        private async Task SaveSingleOddAsync(SqlConnection connection, GeneratedOdd odd)
+        {
+            try
+            {
+                int betTypeId = await GetBetTypeIdAsync(odd.BetTypeName);
+                
+                const string query = @"BEGIN TRY
+                                          INSERT INTO Odd (game_id, bet_type_id, selection, odd_value)
+                                          VALUES (@gameId, @betTypeId, @selection, @oddValue)
+                                      END TRY
+                                      BEGIN CATCH
+                                          IF ERROR_NUMBER() IN (2601, 2627)
+                                          BEGIN
+                                              UPDATE Odd
+                                              SET odd_value = @oddValue
+                                              WHERE game_id = @gameId
+                                                AND bet_type_id = @betTypeId
+                                                AND selection = @selection
+                                          END
+                                          ELSE
+                                          BEGIN
+                                              THROW
+                                          END
+                                      END CATCH";
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@gameId", odd.GameId);
+                    command.Parameters.AddWithValue("@betTypeId", betTypeId);
+                    command.Parameters.AddWithValue("@selection", odd.Selection);
+                    command.Parameters.AddWithValue("@oddValue", odd.OddValue);
+                    
+                    await command.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error saving odd for game {odd.GameId}, selection '{odd.Selection}': {e.Message}");
+                throw;
+            }
+        }
+
+        // Public wrapper for OddsGenerator to persist odds with the persist parameter
+        public async Task<decimal> GenerateAndSaveCorrectScoreOddAsync(
+            int gameId,
+            int homeGoals,
+            int awayGoals,
+            int homeTeamId,
+            int awayTeamId,
+            int leagueId)
+        {
+            try
+            {
+                // Get team ratings from database
+                var homeRatings = await GetTeamRatingsAsync(homeTeamId, leagueId);
+                var awayRatings = await GetTeamRatingsAsync(awayTeamId, leagueId);
+
+                // Generate the odd (just calculation, no persistence)
+                var generatedOdd = _oddsGenerator.GenerateCorrectScoreOdd(
+                    gameId,
+                    homeGoals,
+                    awayGoals,
+                    homeRatings,
+                    awayRatings);
+
+                // Persist to database
+                await SaveOddsAsync(new[] { generatedOdd });
+                
+                return generatedOdd.OddValue;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error generating/saving correct score odd: {e.Message}");
+                throw;
+            }
+        }
+
+        // Helper: Get team ratings from database
+        private async Task<TeamRatings> GetTeamRatingsAsync(int teamId, int leagueId)
+        {
+            string query = @"SELECT attack_rating, defense_rating, discipline_rating, avg_corners_per_game
+                            FROM TeamRating
+                            WHERE team_id = @teamId AND league_id = @leagueId";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@teamId", teamId);
+                command.Parameters.AddWithValue("@leagueId", leagueId);
+
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new TeamRatings(
+                                Convert.ToInt32(reader["attack_rating"]),
+                                Convert.ToInt32(reader["defense_rating"]),
+                                Convert.ToInt32(reader["discipline_rating"]),
+                                Convert.ToDecimal(reader["avg_corners_per_game"]));
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error retrieving team ratings: {e.Message}");
+                }
+
+                // Default ratings if team not found
+                return new TeamRatings(60, 60, 60, 5.0m);
+            }
+        }
+
+        // Public wrapper for GenerateAllOddsForGame with persistence
+        public async Task<IReadOnlyList<GeneratedOdd>> GenerateAndSaveAllOddsAsync(
+            int gameId,
+            int homeTeamId,
+            int awayTeamId,
+            int leagueId)
+        {
+            try
+            {
+                // Get team ratings
+                var homeRatings = await GetTeamRatingsAsync(homeTeamId, leagueId);
+                var awayRatings = await GetTeamRatingsAsync(awayTeamId, leagueId);
+
+                // Generate all odds (calculation only)
+                var generatedOdds = _oddsGenerator.BuildAllOddsForGame(gameId, homeRatings, awayRatings);
+
+                // Persist to database
+                await SaveOddsAsync(generatedOdds);
+
+                return generatedOdds;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Error generating/saving all odds for game {gameId}: {e.Message}");
+                throw;
             }
         }
     }
