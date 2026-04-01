@@ -31,19 +31,15 @@ namespace BettingSystem.Services
                 AddNewMatchInMemory(NewMatch, generatedResult);
                 return (true, "Match Successfully Added", generatedResult);
             }
-            return (false, "Failed to Add Match", generatedResult);
+            return (false, "Failed to Add Match", null);
         }
 
         //update games in memory
         public void AddNewMatchInMemory(FootballMatch newMatch, GameResult generatedResult)
         {
             _currentSession.GameResults[newMatch.GameID] = generatedResult;
-            _currentSession.MatchesCollection.AllMatches.Add(newMatch);
-            _currentSession.MatchesCollection.MatchesByLeague[newMatch.LeagueID].Add(newMatch);
-
-            //sort matches
-            _currentSession.MatchesCollection.AllMatches.InsertionSort(m => m.GameDate);
-            _currentSession.MatchesCollection.MatchesByLeague[newMatch.LeagueID].InsertionSort(m => m.GameDate);
+            _currentSession.MatchesCollection.AllMatches.InsertMatch(newMatch);
+            _currentSession.MatchesCollection.MatchesByLeague[newMatch.LeagueID].InsertMatch(newMatch);
         }
 
         // generate random results for match
@@ -57,7 +53,7 @@ namespace BettingSystem.Services
             int? firstScorerId = null;
             Player? firstScorer = null;
 
-            List<Player> randomScorer = new List<Player>();
+            MyList<Player> randomScorer = new MyList<Player>();
             if (homeScore > 0)
             {
                 randomScorer.AddRange(HomeTeamPlayers);
