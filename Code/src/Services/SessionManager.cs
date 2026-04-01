@@ -124,13 +124,44 @@ namespace BettingSystem.Services
 
         public void OpenBetSlipPage(Form currentForm)
         {
+            BetSlipPage? betSlipPage = Application.OpenForms.OfType<BetSlipPage>().FirstOrDefault();
+            if (betSlipPage is null)
+            {
+                betSlipPage = new BetSlipPage(CurrentUser, this);
+            }
+            else
+            {
+                // reinitialise content on page
+                betSlipPage.ReloadSlip();
+            }
 
+            betSlipPage.Size = currentForm.Size;
+            betSlipPage.Location = currentForm.Location;
+            betSlipPage.WindowState = currentForm.WindowState;
+            currentForm.Hide();
+            betSlipPage.Show();
         }
 
         // forms on admin side
-        public void OpenAdminViewUsersPage(Form currentForm)
+        public async Task OpenAdminViewUsersPage(Form currentForm)
         {
+            AdminUsersPage? usersPage = Application.OpenForms.OfType<AdminUsersPage>().FirstOrDefault();
+            if (usersPage is null)
+            {
+                usersPage = new AdminUsersPage(CurrentUser, this);
+            }
 
+            else
+            {
+                // reinitialise content on page
+                await usersPage.ReloadPage();
+            }
+
+            usersPage.Size = currentForm.Size;
+            usersPage.Location = currentForm.Location;
+            usersPage.WindowState = currentForm.WindowState;
+            currentForm.Hide();
+            usersPage.Show();
         }
         public async Task OpenAdminMatchPage(Form currentForm)
         {
@@ -173,9 +204,24 @@ namespace BettingSystem.Services
             addMatchPage.Show();
         }
 
-        public void OpenAdminFinancialPage(Form currentForm)
+        public async Task OpenAdminFinancialPage(Form currentForm)
         {
+            AdminFinancialPage? financialPage = Application.OpenForms.OfType<AdminFinancialPage>().FirstOrDefault();
+            if (financialPage is null)
+            {
+                financialPage = new AdminFinancialPage(CurrentUser, this);
+            }
+            else
+            {
+                // reinitialise content on page
+                await financialPage.ReloadPage();
+            }
 
+            financialPage.Size = currentForm.Size;
+            financialPage.Location = currentForm.Location;
+            financialPage.WindowState = currentForm.WindowState;
+            currentForm.Hide();
+            financialPage.Show();
         }
         public async Task LogOut(Form currentForm)
         {

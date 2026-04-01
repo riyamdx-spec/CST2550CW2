@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BettingSystem.Data;
 using Microsoft.Data.SqlClient;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,14 +10,14 @@ namespace BettingSystem.Services
     public class OddsAutoGeneratorService : IDisposable
     {
         private readonly string _connectionString;
-        private readonly OddsGenerator _oddsGenerator;
+        private readonly DatabaseManager _dbManager;
         private System.Threading.Timer? _timer;
         private int _isRunning;
 
         public OddsAutoGeneratorService(string connectionString)
         {
             _connectionString = connectionString;
-            _oddsGenerator = new OddsGenerator(connectionString);
+            _dbManager = new DatabaseManager(connectionString);
         }
 
         public void Start(TimeSpan? interval = null)
@@ -125,7 +126,7 @@ namespace BettingSystem.Services
         private IReadOnlyList<GeneratedOdd> GenerateAllOddsForGame(GameInfo game)
         {
             // Generate odds for this match
-            return _oddsGenerator.GenerateAllOddsForGame(game.GameId, game.HomeTeamId, game.AwayTeamId, game.LeagueId);
+            return _dbManager.GenerateAllOddsForGame(game.GameId, game.HomeTeamId, game.AwayTeamId, game.LeagueId);
         }
 
         public void Dispose()
