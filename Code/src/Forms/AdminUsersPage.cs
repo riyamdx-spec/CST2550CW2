@@ -22,9 +22,11 @@ namespace BettingSystem.Forms
             adminNavBar1.UsersPageClicked += (s, e) => CurrentSession.OpenAdminViewUsersPage(this);
             adminNavBar1.SearchMatchesPageClicked += (s, e) => CurrentSession.OpenAdminMatchPage(this);
             adminNavBar1.AddMatchesPageClicked += (s, e) => CurrentSession.OpenAdminAddMatchPage(this);
+            adminNavBar1.FinancialPageClicked += (s, e) => CurrentSession.OpenAdminFinancialPage(this);
             adminNavBar1.LogoutClicked += (s, e) => CurrentSession.LogOut(this);
 
             this.Load += AdminUsersPage_Load;
+            this.FormClosing += AdminUsersPage_FormClosing;
         }
 
         private async void AdminUsersPage_Load(object sender, EventArgs e)
@@ -42,6 +44,38 @@ namespace BettingSystem.Forms
         {
             Users = await DBManager.FetchAllUsersAsync();
             PopulateGrid();
+        }
+
+        public async Task ReloadPage()
+        {
+            await LoadUsers();
+        }
+
+        private void AdminUsersPage_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            {
+                logOutPopup closingPopup = new logOutPopup(false, true);
+                if (closingPopup.ShowDialog() == DialogResult.No)
+                {
+                    e.Cancel = true;
+                }
+                else
+                {
+                    CurrentSession.IsExiting = true;
+                    Application.Exit();
+                }
+            }
+        }
+
+        private void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut)
+            {
+                logOutPopup closingPopup = new logOutPopup(true, true);
+                if (closingPopup.ShowDialog() == DialogResult.Yes)
+                    CurrentSession.LogOut(this);
+            }
         }
 
         private void AddColumnHeaders()
