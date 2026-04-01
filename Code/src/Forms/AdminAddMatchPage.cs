@@ -182,7 +182,8 @@ namespace BettingSystem.Forms
                 return;
             }
 
-            (bool valid, string? message) = Validator.CheckMatchEntries(selectedHomeTeam.ID, selectedAwayTeam.ID);
+            DateTime matchDate = selectedMatchDate.Value;
+            (bool valid, string? message) = Validator.CheckMatchEntries(selectedHomeTeam.ID, selectedAwayTeam.ID, matchDate);
             if (!valid)
             {
                 new Notification(message, NotificationType.Warning, this);
@@ -190,10 +191,10 @@ namespace BettingSystem.Forms
             }
 
             AddMatchComboItems selectedLeague = leagueComboBox.SelectedItem as AddMatchComboItems;
-            DateTime matchDate = selectedMatchDate.Value;
 
             FootballMatch newMatch = new FootballMatch(0, selectedLeague.ID, selectedHomeTeam.ID, selectedAwayTeam.ID, matchDate);
             AddNewMatchService addNewMatch = new AddNewMatchService(newMatch, Players[selectedHomeTeam.ID], Players[selectedAwayTeam.ID], CurrentSession);
+
             (valid, message, GameResult generatedResult) = await addNewMatch.AddMatchToDatabase();
             if (!valid)
             {
