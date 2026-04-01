@@ -32,14 +32,15 @@ CREATE TABLE SystemTransaction(
 CREATE TABLE Team(
 	team_id INT PRIMARY KEY IDENTITY(1,1),
 	team_name VARCHAR(100) NOT NULL UNIQUE,
-	logo_path VARCHAR(255)
+	logo_path VARCHAR(255),
 );
 
 -- store leagues information
 CREATE TABLE League(
 	league_id INT PRIMARY KEY IDENTITY(1,1),
 	league_name VARCHAR(100) NOT NULL UNIQUE,
-	logo_path VARCHAR(255)
+	logo_path VARCHAR(255),
+	banner_path VARCHAR(255)
 );
 
 -- associate teams with leagues
@@ -56,7 +57,7 @@ CREATE TABLE Player(
 	player_id INT PRIMARY KEY IDENTITY(1,1),
 	player_name VARCHAR(100) NOT NULL,
 	team_id INT NOT NULL,
-	player_position VARCHAR(5) NOT NULL CHECK (player_position IN ('GK', 'DF', 'MF', 'FW')),
+	player_position VARCHAR(5) NOT NULL,
 	FOREIGN KEY(team_id) REFERENCES Team(team_id)
 );
 
@@ -67,7 +68,7 @@ CREATE TABLE Game(
 	home_team_id INT NOT NULL,
 	away_team_id INT NOT NULL,
 	game_date DATETIME2 NOT NULL,
-	game_status VARCHAR(9) NOT NULL CHECK (game_status IN ('Scheduled','Completed')), 
+	game_status VARCHAR(9) NOT NULL CHECK (game_status IN ('Scheduled','Completed', 'Started')), 
 	FOREIGN KEY(league_id) REFERENCES League(league_id),
 	FOREIGN KEY(home_team_id) REFERENCES Team(team_id),
 	FOREIGN KEY(away_team_id) REFERENCES Team(team_id)
@@ -75,8 +76,7 @@ CREATE TABLE Game(
 
 -- store results of matches
 CREATE TABLE GameResult(
-	result_id INT PRIMARY KEY IDENTITY(1,1),
-	game_id INT NOT NULL,
+	game_id INT NOT NULL PRIMARY KEY,
 	home_team_score INT CHECK (home_team_score >= 0),
 	away_team_score INT CHECK (away_team_score >= 0),
 	first_scorer_id INT,
@@ -101,12 +101,14 @@ CREATE TABLE Odd(
 	selection VARCHAR(100) NOT NULL,
 	odd_value decimal(6,3) NOT NULL CHECK (odd_value > 0),
 	creation_date DATETIME2 NOT NULL DEFAULT GETDATE(),
-    is_active BIT NOT NULL DEFAULT 1,
+    	is_active BIT NOT NULL DEFAULT 1,
 	FOREIGN KEY(game_id) REFERENCES Game(game_id),
 	FOREIGN KEY(bet_type_id) REFERENCES BetType(bet_type_id)
 );
 
-INDEX idx_odd_game_active ON Odd(game_id, is_active);
+GO
+CREATE INDEX idx_odd_game_active ON Odd(game_id, is_active);
+GO
 
 -- store paid bet slips of user
 CREATE TABLE BetSlip(
@@ -114,7 +116,7 @@ CREATE TABLE BetSlip(
 	app_user_id INT NOT NULL,
 	bet_date DATETIME2 NOT NULL DEFAULT GETDATE(),
 	bet_status VARCHAR(7) NOT NULL CHECK (bet_status IN ('Pending','Won','Lost')),
-    total_odds decimal(6,3) NOT NULL CHECK (total_odds > 0),
+    	total_odds decimal(6,3) NOT NULL CHECK (total_odds > 0),
 	stake DECIMAL(10,2) NOT NULL CHECK (stake > 0),
 	payout DECIMAL(10,2) CHECK (payout >= 0),
 	FOREIGN KEY(app_user_id) REFERENCES AppUser(app_user_id)
@@ -151,7 +153,7 @@ CREATE TABLE PlayerRating(
     scoring_rating INT NOT NULL CHECK (scoring_rating BETWEEN 1 AND 100),
     is_active BIT NOT NULL DEFAULT 1,
     last_updated DATETIME2 NOT NULL DEFAULT GETDATE(),
-	FOREIGN KEY (player_id) REFERENCES Player(player_id)
+    FOREIGN KEY (player_id) REFERENCES Player(player_id)
 );
 
 -- log the odds generation process for auditing and debugging purposes
@@ -167,6 +169,7 @@ CREATE TABLE OddsGenerationLog(
     FOREIGN KEY(bet_type_id) REFERENCES BetType(bet_type_id)
 );
 
+GO
 CREATE INDEX idx_odds_generation_log_game_active ON OddsGenerationLog(game_id, is_active);
 GO
 
