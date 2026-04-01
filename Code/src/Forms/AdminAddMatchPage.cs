@@ -14,8 +14,6 @@ namespace BettingSystem.Forms
         private League[] Leagues;
         private MyDictionary<int, Team> TeamsDict;
         private MyDictionary<int, MyList<Player>> Players;
-        private MyDictionary<int, GameResult> GameResults;
-        private FootballMatchCollection MatchesCollection;
 
         private int CurrentLeagueID = -1;
         private SessionManager CurrentSession;
@@ -31,8 +29,6 @@ namespace BettingSystem.Forms
             Leagues = CurrentSession.Leagues;
             TeamsDict = CurrentSession.TeamsDict;
             Players = CurrentSession.Players;
-            GameResults = CurrentSession.GameResults;
-            MatchesCollection = CurrentSession.MatchesCollection;
 
             adminNavBar1.SetAdmin(admin);
 
@@ -64,13 +60,13 @@ namespace BettingSystem.Forms
             }
         }
 
-        private void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
+        private async void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
         {
             if (!CurrentSession.IsLoggingOut)
             {
                 logOutPopup closingPopup = new logOutPopup(true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
-                    CurrentSession.LogOut(this);
+                    await CurrentSession.LogOut(this);
             }
         }
 
@@ -81,9 +77,9 @@ namespace BettingSystem.Forms
         }
 
 
-        private void AdminNavBar1_SearchMatchesPageClicked(object? sender, EventArgs e)
+        private async void AdminNavBar1_SearchMatchesPageClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenAdminMatchPage(this);
+            await CurrentSession.OpenAdminMatchPage(this);
         }
 
         private void AdminNavBar1_UsersPageClicked(object? sender, EventArgs e)
