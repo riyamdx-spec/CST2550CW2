@@ -108,10 +108,6 @@ CREATE TABLE Odd(
 	FOREIGN KEY(bet_type_id) REFERENCES BetType(bet_type_id)
 );
 
-GO
-CREATE INDEX idx_odd_game_active ON Odd(game_id, is_active);
-GO
-
 -- store paid bet slips of user
 CREATE TABLE BetSlip(
 	slip_id INT PRIMARY KEY IDENTITY(1,1),
