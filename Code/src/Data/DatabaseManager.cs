@@ -1508,7 +1508,7 @@ namespace BettingSystem.Data
             using (SqlConnection connection = new SqlConnection(_connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
-                command.Parameters.AddWithValue("@status", newStatus);
+                command.Parameters.AddWithValue("@newStatus", newStatus);
                 command.Parameters.AddWithValue("@userId", userId);
                 try
                 {
