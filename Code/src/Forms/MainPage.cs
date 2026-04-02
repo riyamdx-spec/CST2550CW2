@@ -635,7 +635,7 @@ namespace BettingSystem.Forms
                 matchOdds.RemoveAll(odd => odd.BetTypeID == scoreOdd.BetTypeID && odd.Selection == scoreOdd.Selection);
                 matchOdds.Add(scoreOdd);
 
-                scoreOddLbl.Text = scoreOdd.OddValue.ToString();
+                scoreOddLbl.Text = (Math.Round(scoreOdd.OddValue, 2)).ToString();
                 scoreOddLbl.ForeColor = Color.FromArgb(93, 185, 64);
                 scoreOddLbl.Visible = true;
 
