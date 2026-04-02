@@ -18,7 +18,7 @@
 
         public override string ToString()
         {
-            return $"{Name} - {Position} - Odd: {PlayerOdd.OddValue}";
+            return $"{Name} - {Position} - Odd: {Math.Round(PlayerOdd.OddValue, 2)}";
         }
     }
 }
