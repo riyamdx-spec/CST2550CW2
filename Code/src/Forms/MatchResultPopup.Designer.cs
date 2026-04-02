@@ -348,7 +348,7 @@
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "MatchResultPopup";
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "MatchResultPopup";
             panelBg.ResumeLayout(false);
             resultsPanelBg.ResumeLayout(false);

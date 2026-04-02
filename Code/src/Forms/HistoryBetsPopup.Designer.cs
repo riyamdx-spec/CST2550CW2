@@ -80,7 +80,7 @@
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "HistoryBetsPopup";
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "HistoryBetsPopup";
             panelBg.ResumeLayout(false);
             ResumeLayout(false);

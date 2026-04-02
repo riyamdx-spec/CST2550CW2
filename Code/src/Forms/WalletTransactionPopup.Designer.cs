@@ -37,6 +37,7 @@ namespace BettingSystem.Forms
             cancelBtn = new RoundedButton();
             transactionErrorMsg = new Label();
             entriesLayout = new TableLayoutPanel();
+            amountTextbox = new UnderlineTextBox();
             cvvTextbox = new UnderlineTextBox();
             cardNumTextbox = new UnderlineTextBox();
             lblCvvError = new Label();
@@ -52,7 +53,6 @@ namespace BettingSystem.Forms
             lblBalance = new Label();
             walletIcon = new PictureBox();
             backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
-            amountTextbox = new UnderlineTextBox();
             backgroundPanel.SuspendLayout();
             btnPanel.SuspendLayout();
             btnTableLayoutPanel.SuspendLayout();
@@ -181,6 +181,18 @@ namespace BettingSystem.Forms
             entriesLayout.RowStyles.Add(new RowStyle());
             entriesLayout.Size = new Size(593, 203);
             entriesLayout.TabIndex = 2;
+            // 
+            // amountTextbox
+            // 
+            amountTextbox.BackColor = Color.FromArgb(36, 36, 36);
+            amountTextbox.BorderStyle = BorderStyle.None;
+            amountTextbox.Dock = DockStyle.Bottom;
+            amountTextbox.Font = new Font("Times New Roman", 11F);
+            amountTextbox.ForeColor = Color.FromArgb(241, 241, 241);
+            amountTextbox.Location = new Point(244, 19);
+            amountTextbox.Name = "amountTextbox";
+            amountTextbox.Size = new Size(326, 17);
+            amountTextbox.TabIndex = 27;
             // 
             // cvvTextbox
             // 
@@ -356,18 +368,6 @@ namespace BettingSystem.Forms
             walletIcon.TabIndex = 0;
             walletIcon.TabStop = false;
             // 
-            // amountTextbox
-            // 
-            amountTextbox.BackColor = Color.FromArgb(36, 36, 36);
-            amountTextbox.BorderStyle = BorderStyle.None;
-            amountTextbox.Dock = DockStyle.Bottom;
-            amountTextbox.Font = new Font("Times New Roman", 11F);
-            amountTextbox.ForeColor = Color.FromArgb(241, 241, 241);
-            amountTextbox.Location = new Point(244, 19);
-            amountTextbox.Name = "amountTextbox";
-            amountTextbox.Size = new Size(326, 17);
-            amountTextbox.TabIndex = 27;
-            // 
             // WalletPopup
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -378,7 +378,7 @@ namespace BettingSystem.Forms
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "WalletPopup";
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "DepositMoneyPopup";
             backgroundPanel.ResumeLayout(false);
             btnPanel.ResumeLayout(false);

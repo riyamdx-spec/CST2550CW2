@@ -306,7 +306,7 @@
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             Name = "ChangePasswordPopup";
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "ChangePasswordPopup";
             changePasswordBgPanel.ResumeLayout(false);
             ConfirmationBtntableLayoutPanel.ResumeLayout(false);
