@@ -8,7 +8,7 @@ namespace BettingSystem.Services
         private const decimal StandardMargin = 0.93m;
         private const decimal HighVarianceMargin = 0.85m;
 
-        public OddsGenerator(string? connectionString = null)
+        public OddsGenerator()
         {
         }
 
@@ -90,7 +90,7 @@ namespace BettingSystem.Services
             var combinedProbability = PoissonProbability(homeGoals, homeExpected) * PoissonProbability(awayGoals, awayExpected);
             var selection = $"{homeGoals}-{awayGoals}";
 
-            return new GeneratedOdd(gameId, "Correct Score", selection, ToOdds(combinedProbability, HighVarianceMargin, 6.0m, 100.0m));
+            return new GeneratedOdd(gameId, 3, selection, ToOdds(combinedProbability, HighVarianceMargin, 6.0m, 100.0m));
         }
 
         public decimal GenerateCorrectScoreOdds(int gameId, int homeGoals, int awayGoals, TeamRatings homeRatings, TeamRatings awayRatings)
@@ -123,9 +123,9 @@ namespace BettingSystem.Services
         private IReadOnlyList<GeneratedOdd> BuildOutcomeOdds(int gameId, OutcomeOdds outcomeOdds) =>
             new List<GeneratedOdd>
             {
-                new(gameId, "Match Outcome", "Home Win", outcomeOdds.Home),
-                new(gameId, "Match Outcome", "Draw", outcomeOdds.Draw),
-                new(gameId, "Match Outcome", "Away Win", outcomeOdds.Away)
+                new(gameId, 1, "Home Win", outcomeOdds.Home),
+                new(gameId, 1, "Draw", outcomeOdds.Draw),
+                new(gameId, 1, "Away Win", outcomeOdds.Away)
             };
 
         private IReadOnlyList<GeneratedOdd> BuildDoubleChanceOdds(int gameId, OutcomeOdds outcomeOdds)
@@ -136,9 +136,9 @@ namespace BettingSystem.Services
 
             return new List<GeneratedOdd>
             {
-                new(gameId, "Double Chance", "1X", ToOdds(homeProbability + drawProbability, StandardMargin, 1.05m, 8.0m)),
-                new(gameId, "Double Chance", "12", ToOdds(homeProbability + awayProbability, StandardMargin, 1.05m, 8.0m)),
-                new(gameId, "Double Chance", "X2", ToOdds(drawProbability + awayProbability, StandardMargin, 1.05m, 8.0m))
+                new(gameId, 2, "1X", ToOdds(homeProbability + drawProbability, StandardMargin, 1.05m, 8.0m)),
+                new(gameId, 2, "12", ToOdds(homeProbability + awayProbability, StandardMargin, 1.05m, 8.0m)),
+                new(gameId, 2, "X2", ToOdds(drawProbability + awayProbability, StandardMargin, 1.05m, 8.0m))
             };
         }
 
@@ -148,12 +148,12 @@ namespace BettingSystem.Services
 
             return new List<GeneratedOdd>
             {
-                CreateBinaryMarketOdd(gameId, "Over/Under", "Over 2.5", expectedGoals > 2.5 ? 0.55 : 0.45),
-                CreateBinaryMarketOdd(gameId, "Over/Under", "Under 2.5", expectedGoals > 2.5 ? 0.45 : 0.55),
-                CreateBinaryMarketOdd(gameId, "Over/Under", "Over 1.5", expectedGoals > 1.5 ? 0.65 : 0.35),
-                CreateBinaryMarketOdd(gameId, "Over/Under", "Under 1.5", expectedGoals > 1.5 ? 0.35 : 0.65),
-                CreateBinaryMarketOdd(gameId, "Over/Under", "Over 3.5", expectedGoals > 3.5 ? 0.40 : 0.60),
-                CreateBinaryMarketOdd(gameId, "Over/Under", "Under 3.5", expectedGoals > 3.5 ? 0.60 : 0.40)
+                CreateBinaryMarketOdd(gameId, 4, "Over 2.5", expectedGoals > 2.5 ? 0.55 : 0.45),
+                CreateBinaryMarketOdd(gameId, 4, "Under 2.5", expectedGoals > 2.5 ? 0.45 : 0.55),
+                CreateBinaryMarketOdd(gameId, 4, "Over 1.5", expectedGoals > 1.5 ? 0.65 : 0.35),
+                CreateBinaryMarketOdd(gameId, 4, "Under 1.5", expectedGoals > 1.5 ? 0.35 : 0.65),
+                CreateBinaryMarketOdd(gameId, 4, "Over 3.5", expectedGoals > 3.5 ? 0.40 : 0.60),
+                CreateBinaryMarketOdd(gameId, 4, "Under 3.5", expectedGoals > 3.5 ? 0.60 : 0.40)
             };
         }
 
@@ -163,8 +163,8 @@ namespace BettingSystem.Services
 
             return new List<GeneratedOdd>
             {
-                CreateBinaryMarketOdd(gameId, "Both Teams to Score", "Yes", probability),
-                CreateBinaryMarketOdd(gameId, "Both Teams to Score", "No", 1 - probability)
+                CreateBinaryMarketOdd(gameId, 5, "Yes", probability),
+                CreateBinaryMarketOdd(gameId, 5, "No", 1 - probability)
             };
         }
 
@@ -174,12 +174,12 @@ namespace BettingSystem.Services
 
             return new List<GeneratedOdd>
             {
-                CreateBinaryMarketOdd(gameId, "Total Corners", "Over 8.5", expectedCorners > 8.5 ? 0.58 : 0.42),
-                CreateBinaryMarketOdd(gameId, "Total Corners", "Under 8.5", expectedCorners > 8.5 ? 0.42 : 0.58),
-                CreateBinaryMarketOdd(gameId, "Total Corners", "Over 9.5", expectedCorners > 9.5 ? 0.55 : 0.45),
-                CreateBinaryMarketOdd(gameId, "Total Corners", "Under 9.5", expectedCorners > 9.5 ? 0.45 : 0.55),
-                CreateBinaryMarketOdd(gameId, "Total Corners", "Over 10.5", expectedCorners > 10.5 ? 0.52 : 0.48),
-                CreateBinaryMarketOdd(gameId, "Total Corners", "Under 10.5", expectedCorners > 10.5 ? 0.48 : 0.52)
+                CreateBinaryMarketOdd(gameId, 7, "Over 8.5", expectedCorners > 8.5 ? 0.58 : 0.42),
+                CreateBinaryMarketOdd(gameId, 7, "Under 8.5", expectedCorners > 8.5 ? 0.42 : 0.58),
+                CreateBinaryMarketOdd(gameId, 7, "Over 9.5", expectedCorners > 9.5 ? 0.55 : 0.45),
+                CreateBinaryMarketOdd(gameId, 7, "Under 9.5", expectedCorners > 9.5 ? 0.45 : 0.55),
+                CreateBinaryMarketOdd(gameId, 7, "Over 10.5", expectedCorners > 10.5 ? 0.52 : 0.48),
+                CreateBinaryMarketOdd(gameId, 7, "Under 10.5", expectedCorners > 10.5 ? 0.48 : 0.52)
             };
         }
 
@@ -189,10 +189,10 @@ namespace BettingSystem.Services
 
             return new List<GeneratedOdd>
             {
-                CreateBinaryMarketOdd(gameId, "Yellow Cards", "Over 3.5", expectedYellows > 3.5 ? 0.58 : 0.42),
-                CreateBinaryMarketOdd(gameId, "Yellow Cards", "Under 3.5", expectedYellows > 3.5 ? 0.42 : 0.58),
-                CreateBinaryMarketOdd(gameId, "Yellow Cards", "Over 4.5", expectedYellows > 4.5 ? 0.54 : 0.46),
-                CreateBinaryMarketOdd(gameId, "Yellow Cards", "Under 4.5", expectedYellows > 4.5 ? 0.46 : 0.54)
+                CreateBinaryMarketOdd(gameId, 8, "Over 3.5", expectedYellows > 3.5 ? 0.58 : 0.42),
+                CreateBinaryMarketOdd(gameId, 8, "Under 3.5", expectedYellows > 3.5 ? 0.42 : 0.58),
+                CreateBinaryMarketOdd(gameId, 8, "Over 4.5", expectedYellows > 4.5 ? 0.54 : 0.46),
+                CreateBinaryMarketOdd(gameId, 8, "Under 4.5", expectedYellows > 4.5 ? 0.46 : 0.54)
             };
         }
 
@@ -203,10 +203,10 @@ namespace BettingSystem.Services
 
             return new List<GeneratedOdd>
             {
-                CreateBinaryMarketOdd(gameId, "Red Cards", "Over 0.5", redCardProbability),
-                CreateBinaryMarketOdd(gameId, "Red Cards", "Under 0.5", 1 - redCardProbability),
-                CreateBinaryMarketOdd(gameId, "Red Cards", "Over 1.5", twoOrMoreCardsProbability),
-                CreateBinaryMarketOdd(gameId, "Red Cards", "Under 1.5", 1 - twoOrMoreCardsProbability)
+                CreateBinaryMarketOdd(gameId, 9, "Over 0.5", redCardProbability),
+                CreateBinaryMarketOdd(gameId, 9, "Under 0.5", 1 - redCardProbability),
+                CreateBinaryMarketOdd(gameId, 9, "Over 1.5", twoOrMoreCardsProbability),
+                CreateBinaryMarketOdd(gameId, 9, "Under 1.5", 1 - twoOrMoreCardsProbability)
             };
         }
 
@@ -224,14 +224,13 @@ namespace BettingSystem.Services
                     "MID" => 1.2,
                     "DEF" => 0.3,
                     "GK" => 0.05,
-                    // Goalkeepers
                     _ => 0.05
                 };
 
                 generatedOdds.Add(new GeneratedOdd(
                     gameId,
-                    "First Goal Scorer",
-                    player.PlayerName,
+                    6,
+                    player.PlayerId.ToString(),
                     ToOdds(baseProbability, HighVarianceMargin, 3.0m, 50.0m)));
             }
 
@@ -239,8 +238,8 @@ namespace BettingSystem.Services
         }
 
 
-        private static GeneratedOdd CreateBinaryMarketOdd(int gameId, string betTypeName, string selection, double probability) =>
-            new(gameId, betTypeName, selection, ToOdds(probability, StandardMargin, 1.20m, 50.0m));
+        private static GeneratedOdd CreateBinaryMarketOdd(int gameId, int betTypeId, string selection, double probability) =>
+            new(gameId, betTypeId, selection, ToOdds(probability, StandardMargin, 1.20m, 50.0m));
 
         private static double InvertOdds(decimal odds) => odds <= 0 ? 0 : 1d / (double)odds;
 

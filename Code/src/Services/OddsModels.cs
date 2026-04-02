@@ -7,7 +7,7 @@ public sealed record TeamRatings(int Attack, int Defense, int Discipline, decima
 
 public sealed record OutcomeOdds(decimal Home, decimal Draw, decimal Away);
 
-public sealed record GeneratedOdd(int GameId, string BetTypeName, string Selection, decimal OddValue);
+public sealed record GeneratedOdd(int GameId, int BetTypeId, string Selection, decimal OddValue);
 
 // Helper to hold player information for first-goal-scorer generation
 public sealed record PlayerInfo(int PlayerId, string PlayerName, string Position, int ScoringRating, int TeamId);
