@@ -7,11 +7,11 @@ namespace BettingSystem
 {
     public class UnderlineTextBox : TextBox
     {
-        private static readonly Color DefaultLineColor = ColorTranslator.FromHtml("#f1f1f1");
-        private static readonly Color DefaultFocusColor = ColorTranslator.FromHtml("#f1f1f1");
+        private static readonly Color _defaultLineColor = ColorTranslator.FromHtml("#f1f1f1");
+        private static readonly Color _defaultFocusColor = ColorTranslator.FromHtml("#f1f1f1");
 
-        private Color _lineColor = DefaultLineColor;
-        private Color _focusColor = DefaultFocusColor;
+        private Color _lineColor = _defaultLineColor;
+        private Color _focusColor = _defaultFocusColor;
         private bool _isFocused = false;
 
         [Browsable(true)]
@@ -70,11 +70,11 @@ namespace BettingSystem
         }
 
         // Designer serialization helpers
-        public bool ShouldSerializeLineColor() => _lineColor != DefaultLineColor;
-        public void ResetLineColor() => LineColor = DefaultLineColor;
+        public bool ShouldSerializeLineColor() => _lineColor != _defaultLineColor;
+        public void ResetLineColor() => LineColor = _defaultLineColor;
 
-        public bool ShouldSerializeFocusColor() => _focusColor != DefaultFocusColor;
-        public void ResetFocusColor() => FocusColor = DefaultFocusColor;
+        public bool ShouldSerializeFocusColor() => _focusColor != _defaultFocusColor;
+        public void ResetFocusColor() => FocusColor = _defaultFocusColor;
     }
 
 }

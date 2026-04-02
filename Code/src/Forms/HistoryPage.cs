@@ -8,28 +8,28 @@ namespace BettingSystem.Forms
 {
     public partial class HistoryPage : Form
     {
-        private AppUser CurrentUser;
-        private readonly DatabaseManager DbManager = new DatabaseManager();
-        private SessionManager CurrentSession;
-        private Simulator AppSimulator;
+        private AppUser _currentUser;
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
+        private SessionManager _currentSession;
+        private Simulator _appSimulator;
 
-        private MyList<BetHistorySlip> BetSlips;
-        private BetSlipFilter SlipFilter;
-        private MyDictionary<int, GameResult> GameResults;
-        private string CurrentStatusFilter = "All";
-        private bool SortingDateAsc = false;
+        private MyList<BetHistorySlip> _betSlips;
+        private BetSlipFilter _slipFilter;
+        private MyDictionary<int, GameResult> _gameResults;
+        private string _currentStatusFilter = "All";
+        private bool _sortingDateAsc = false;
 
         public HistoryPage(AppUser loggedInUser, SessionManager sessionManager)
         {
-            CurrentUser = loggedInUser;
-            CurrentSession = sessionManager;
-            BetSlips = CurrentSession.HistoryBetSlips;
-            SlipFilter = new BetSlipFilter(BetSlips);
-            AppSimulator = CurrentSession.AppSimulator;
+            _currentUser = loggedInUser;
+            _currentSession = sessionManager;
+            _betSlips = _currentSession.HistoryBetSlips;
+            _slipFilter = new BetSlipFilter(_betSlips);
+            _appSimulator = _currentSession.AppSimulator;
 
             InitializeComponent();
 
-            navBar1.SetCurrentUser(CurrentUser);
+            navBar1.SetCurrentUser(_currentUser);
             SetRadioBtnTag();
 
             _ = LoadPage();
@@ -41,7 +41,7 @@ namespace BettingSystem.Forms
             navBar1.LogoutClicked += NavBar1_LogoutClicked;
 
             //memory updated event
-            AppSimulator.HistoryUpdated += AppSimulator_HistoryUpdated;
+            _appSimulator.HistoryUpdated += AppSimulator_HistoryUpdated;
 
             //resize bet slips panels
             slipsFlowLayoutPanel.SizeChanged += UpdateSlipPanel;
@@ -70,7 +70,7 @@ namespace BettingSystem.Forms
 
         private void HistoryPage_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false);
                 if (closingPopup.ShowDialog() == DialogResult.No)
@@ -79,7 +79,7 @@ namespace BettingSystem.Forms
                 }
                 else
                 {
-                    CurrentSession.IsExiting = true;
+                    _currentSession.IsExiting = true;
                     Application.Exit();
                 }
             }
@@ -87,11 +87,11 @@ namespace BettingSystem.Forms
 
         private void NavBar1_LogoutClicked(object? sender, EventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut)
+            if (!_currentSession.IsLoggingOut)
             {
                 logOutPopup closingPopup = new logOutPopup(true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
-                    CurrentSession.LogOut(this);
+                    _currentSession.LogOut(this);
             }
         }
         private void SetRadioBtnTag()
@@ -110,7 +110,7 @@ namespace BettingSystem.Forms
 
         private async Task FetchData()
         {
-            var gameIds = BetSlips
+            var gameIds = _betSlips
                 .SelectMany(slip => slip.Bets)
                 .Select(bet => bet.GameId)
                 .Distinct();
@@ -118,7 +118,7 @@ namespace BettingSystem.Forms
             var gameIdsList = (MyList<int>)gameIds;
 
             //fetch game results
-            GameResults = await DbManager.FetchGameResultsAsync(gameIdsList);
+            _gameResults = await _dbManager.FetchGameResultsAsync(gameIdsList);
         }
 
         public async Task LoadPage()
@@ -134,7 +134,7 @@ namespace BettingSystem.Forms
             slipsFlowLayoutPanel.Controls.Clear();
 
             // check if user has no bet slips
-            if (BetSlips is null || BetSlips.Count == 0)
+            if (_betSlips is null || _betSlips.Count == 0)
             {
                 Label noSlipsLbl = new Label();
                 noSlipsLbl.Text = "No Bet Slips Found.";
@@ -149,9 +149,9 @@ namespace BettingSystem.Forms
             }
 
             //display slips
-            foreach (BetHistorySlip slip in BetSlips)
+            foreach (BetHistorySlip slip in _betSlips)
             {
-                BetSlipPanel slipPanel = new BetSlipPanel(slip, CurrentUser);
+                BetSlipPanel slipPanel = new BetSlipPanel(slip, _currentUser);
                 slipPanel.Margin = new Padding(0, 15, 0, 0);
                 slipPanel.ClaimClicked += SlipPanel_ClaimClicked;
                 slipPanel.Click += SlipPanel_Click;
@@ -165,7 +165,7 @@ namespace BettingSystem.Forms
         private void SlipPanel_Click(object sender, EventArgs e)
         {
             BetHistorySlip slip = (BetHistorySlip)((Control)sender).Tag!;
-            HistoryBetsPopup editPopup = new HistoryBetsPopup(slip.Bets, GameResults, CurrentSession.Players);
+            HistoryBetsPopup editPopup = new HistoryBetsPopup(slip.Bets, _gameResults, _currentSession.Players);
             editPopup.ShowDialog();
         }
 
@@ -205,7 +205,7 @@ namespace BettingSystem.Forms
             string selectedStatus = (string)statusChecked!.Tag!;
 
             //filter and sort only if there is a change
-            if (selectedSortingDateAsc != SortingDateAsc || selectedStatus != CurrentStatusFilter)
+            if (selectedSortingDateAsc != _sortingDateAsc || selectedStatus != _currentStatusFilter)
             {
                 FilterSlips(selectedSortingDateAsc, selectedStatus);
                 DisplaySlips();
@@ -214,9 +214,9 @@ namespace BettingSystem.Forms
 
         private void FilterSlips(bool selectedSortingDateAsc, string selectedStatus)
         {
-            SortingDateAsc = selectedSortingDateAsc;
-            CurrentStatusFilter = selectedStatus;
-            BetSlips = SlipFilter.FilterBetSlips(selectedStatus, selectedSortingDateAsc);
+            _sortingDateAsc = selectedSortingDateAsc;
+            _currentStatusFilter = selectedStatus;
+            _betSlips = _slipFilter.FilterBetSlips(selectedStatus, selectedSortingDateAsc);
         }
 
         public async Task ReInitialisePage()
@@ -224,8 +224,8 @@ namespace BettingSystem.Forms
             newestRadioBtn.Checked = true;
             allRadioBtn.Checked = true;
 
-            CurrentStatusFilter = "All";
-            SortingDateAsc = false;
+            _currentStatusFilter = "All";
+            _sortingDateAsc = false;
 
             await FetchNewGameResults();
 
@@ -235,13 +235,13 @@ namespace BettingSystem.Forms
 
         private async Task FetchNewGameResults()
         {
-            var gameIds = BetSlips
+            var gameIds = _betSlips
                .SelectMany(slip => slip.Bets)
                .Select(bet => bet.GameId)
                .Distinct();
 
             var missingIds = gameIds
-                .Where(id => !GameResults.ContainsKey(id));
+                .Where(id => !_gameResults.ContainsKey(id));
 
             if (missingIds.Count() == 0)
                 return;
@@ -249,27 +249,27 @@ namespace BettingSystem.Forms
             var missingList = (MyList<int>)missingIds;
 
             //fetch game results
-            var newResults = await DbManager.FetchGameResultsAsync(missingList);
+            var newResults = await _dbManager.FetchGameResultsAsync(missingList);
 
             //merge wih Game Resuls
             foreach (var result in newResults)
             {
-                GameResults[result.Key] = result.Value;
+                _gameResults[result.Key] = result.Value;
             }
         }
 
         //change pages
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenMainPage(this);
+            _currentSession.OpenMainPage(this);
         }
         private void NavBar1_BetSlipClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenBetSlipPage(this);
+            _currentSession.OpenBetSlipPage(this);
         }
         private void NavBar1_AccountClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenMainPage(this);
+            _currentSession.OpenMainPage(this);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace BettingSystem.Services
 {
     public class Simulator
     {
-        private readonly DatabaseManager DbManager = new DatabaseManager();
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
         private SessionManager? _currentSession;
 
         private PeriodicTimer _timer;
@@ -25,6 +25,7 @@ namespace BettingSystem.Services
             _cts = new CancellationTokenSource();
         }
 
+        //start timer
         public void Start()
         {
             _timerTask = Task.Run(async () =>
@@ -80,10 +81,12 @@ namespace BettingSystem.Services
             _currentSession = sessionManager;
         }
 
+        //update database
         private async Task UpdatesDB()
         {
-            var (startedMatchIds, completedMatchIds, updatedBets, updatedSlips) = await DbManager.WrapTableUpdatesAsync();
+            var (startedMatchIds, completedMatchIds, updatedBets, updatedSlips) = await _dbManager.WrapTableUpdatesAsync();
 
+            //update in memory
             if (_currentSession is not null && (startedMatchIds?.Count > 0 || completedMatchIds?.Count > 0) )
             {
                 if (_currentSession.IsAdmin)
@@ -114,6 +117,7 @@ namespace BettingSystem.Services
                     match.GameStatus = "Completed";
                 }
             }
+            //event to update UI
             MatchStatusUpdated?.Invoke();
         }
 

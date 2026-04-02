@@ -6,13 +6,13 @@
 
         private Form _owner;
 
-        private System.Windows.Forms.Timer animationTimer;
-        private int targetX;
-        private int hiddenX;
+        private System.Windows.Forms.Timer _animationTimer;
+        private int _targetX;
+        private int _hiddenX;
 
-        private bool slidingIn = true;
-        private int displayTime = 1000;
-        private int elapsed = 0;
+        private bool _slidingIn = true;
+        private int _displayTime = 1000;
+        private int _elapsed = 0;
 
         public Notification(string message, NotificationType type, Form owner, Point? position = null)
         {
@@ -67,18 +67,18 @@
             Point ownerScreenPosition = owner.PointToScreen(Point.Empty);
             int y = ownerScreenPosition.Y + 20;
 
-            targetX = ownerScreenPosition.X + owner.ClientSize.Width - this.Width - 20;
-            hiddenX = ownerScreenPosition.X + owner.ClientSize.Width - this.Width;
-            this.Location = new Point(hiddenX, y);
+            _targetX = ownerScreenPosition.X + owner.ClientSize.Width - this.Width - 20;
+            _hiddenX = ownerScreenPosition.X + owner.ClientSize.Width - this.Width;
+            this.Location = new Point(_hiddenX, y);
 
             this.Show(owner);
             this.BringToFront();
 
             // setup animation timer
-            animationTimer = new System.Windows.Forms.Timer();
-            animationTimer.Interval = 10;
-            animationTimer.Tick += Animate;
-            animationTimer.Start();
+            _animationTimer = new System.Windows.Forms.Timer();
+            _animationTimer.Interval = 10;
+            _animationTimer.Tick += Animate;
+            _animationTimer.Start();
         }
 
         private void MakePanelRounded(Panel panel)
@@ -95,30 +95,30 @@
 
         private void Animate(object sender, EventArgs e)
         {
-            if (slidingIn)
+            if (_slidingIn)
             {
-                if (this.Left > targetX)
+                if (this.Left > _targetX)
                 {
                     this.Left -= 10;
                 }
                 else
                 {
-                    slidingIn = false;
+                    _slidingIn = false;
                 }
             }
             else
             {
-                elapsed += animationTimer.Interval;
+                _elapsed += _animationTimer.Interval;
 
-                if (elapsed >= displayTime)
+                if (_elapsed >= _displayTime)
                 {
-                    if (this.Left < hiddenX)
+                    if (this.Left < _hiddenX)
                     {
                         this.Left += 10;
                     }
                     else
                     {
-                        animationTimer.Stop();
+                        _animationTimer.Stop();
                         this.Close();
                     }
                 }

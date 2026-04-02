@@ -4,15 +4,15 @@ namespace BettingSystem.Forms
 {
     public partial class logOutPopup : Form
     {
-        private bool LoggingOut;
-        private bool ForAdmin;
+        private bool _loggingOut;
+        private bool _forAdmin;
 
         public logOutPopup(bool loggingOut, bool admin=false)
         {
             InitializeComponent();
-            LoggingOut = loggingOut;
-            ForAdmin = admin;
-            if (LoggingOut)
+            _loggingOut = loggingOut;
+            _forAdmin = admin;
+            if (_loggingOut)
             {
                 DisplayLogOutLabels();
             }
@@ -26,7 +26,7 @@ namespace BettingSystem.Forms
         {
             popupLbl.Text = "Confirm Logout";
             messageLbl.Text = $"Are you sure you want to log out?";
-            if (!ForAdmin)
+            if (!_forAdmin)
                 messageLbl.Text += "\nAll unpaid bets will be lost and cannot be recovered.";
         }
 
@@ -34,7 +34,7 @@ namespace BettingSystem.Forms
         {
             popupLbl.Text = "Confirm Exit";
             messageLbl.Text = "Are you sure you want to exit the app?";
-            if (!ForAdmin)
+            if (!_forAdmin)
                 messageLbl.Text += "\nAll unpaid bets will be lost and cannot be recovered.";
         }
 

@@ -15,31 +15,20 @@ namespace BettingSystem.Forms
     public partial class ChangePasswordPopup : Form
     {
 
-        private DatabaseManager db = new DatabaseManager();
-        private Validation validator = new Validation();
-        private AppUser currentUser;
+        private DatabaseManager _dbManager = new DatabaseManager();
+        private Validation _validator = new Validation();
+        private AppUser _currentUser;
 
         public ChangePasswordPopup(AppUser currentUser)
         {
             InitializeComponent();
             confirmChangeBtn.Click += confirmChangeBtn_Click;
             cancelBtn.Click += (s, e) => this.Close();
-            this.currentUser = currentUser;
+            _currentUser = currentUser;
 
             currentPasswordTextbox.TextChanged += (s, e) => HideError();
             newPasswordTextbox.TextChanged += (s, e) => HideError();
         }
-
-        //public ChangePasswordPopup()
-        //{
-        //    InitializeComponent();
-        //    confirmChangeBtn.Click += confirmChangeBtn_Click;
-        //    cancelBtn.Click += (s, e) => this.Close();
-
-        //    currentPasswordTextbox.TextChanged += (s, e) => HideError();
-        //    newPasswordTextbox.TextChanged += (s, e) => HideError();
-        //}
-
         private void txtPassword_TextChanged(object? sender, EventArgs e)
         {
             string password = newPasswordTextbox.Text;
@@ -75,7 +64,7 @@ namespace BettingSystem.Forms
             }
 
             // check new password validity
-            if (!validator.CheckPasswordValidity(newPassword))
+            if (!_validator.CheckPasswordValidity(newPassword))
             {
                 ShowError("New password is in incorrect format.", newPasswordTextbox);
                 return;
@@ -83,7 +72,7 @@ namespace BettingSystem.Forms
 
             confirmChangeBtn.Enabled = false;
 
-            var (success, message) = await db.ChangePasswordAsync(currentPassword, newPassword, currentUser.UserID);
+            var (success, message) = await _dbManager.ChangePasswordAsync(currentPassword, newPassword, _currentUser.UserID);
             confirmChangeBtn.Enabled = true;
 
             if (success)

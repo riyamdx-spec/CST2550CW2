@@ -5,15 +5,15 @@ namespace BettingSystem.Forms
 {
     public partial class AccountPage : Form
     {
-        private readonly AppUser CurrentUser;
-        private SessionManager CurrentSession;
+        private readonly AppUser _currentUser;
+        private SessionManager _currentSession;
         public AccountPage(AppUser loggedInUser, SessionManager sessionManager)
         {
-            CurrentUser = loggedInUser;
-            CurrentSession = sessionManager;
+            _currentUser = loggedInUser;
+            _currentSession = sessionManager;
 
             InitializeComponent();
-            navBar1.SetCurrentUser(CurrentUser);
+            navBar1.SetCurrentUser(_currentUser);
 
             //event from navbar
             navBar1.MatchesClicked += NavBar1_MatchesClicked;
@@ -26,7 +26,7 @@ namespace BettingSystem.Forms
 
         private void AccountPage_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false);
                 if (closingPopup.ShowDialog() == DialogResult.No)
@@ -35,7 +35,7 @@ namespace BettingSystem.Forms
                 }
                 else
                 {
-                    CurrentSession.IsExiting = true;
+                    _currentSession.IsExiting = true;
                     Application.Exit();
                 }
             }
@@ -43,28 +43,28 @@ namespace BettingSystem.Forms
 
         private void NavBar1_LogoutClicked(object? sender, EventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut)
+            if (!_currentSession.IsLoggingOut)
             {
                 logOutPopup closingPopup = new logOutPopup(true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
-                    CurrentSession.LogOut(this);
+                    _currentSession.LogOut(this);
             }
         }
 
         // to open bet slip page
         private void NavBar1_BetSlipClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenBetSlipPage(this);
+            _currentSession.OpenBetSlipPage(this);
         }
 
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenMainPage(this);
+            _currentSession.OpenMainPage(this);
         }
 
         private async void historyBtn_Click(object sender, EventArgs e)
         {
-           await CurrentSession.OpenHistoryPage(this);
+           await _currentSession.OpenHistoryPage(this);
         }
 
         public void LoadAccountPage()
@@ -78,21 +78,21 @@ namespace BettingSystem.Forms
 
         private void DisplayDetails()
         {
-            FNameLbl.Text = $"First Name: {CurrentUser.FirstName}";
-            LNameLbl.Text = $"Last Name: {CurrentUser.LastName}";
-            EmailLbl.Text = $"Email: {CurrentUser.Email}";
-            dobLbl.Text = $"Date of Birth: {CurrentUser.Dob.ToString("dd/MM/yyyy")}";
+            FNameLbl.Text = $"First Name: {_currentUser.FirstName}";
+            LNameLbl.Text = $"Last Name: {_currentUser.LastName}";
+            EmailLbl.Text = $"Email: {_currentUser.Email}";
+            dobLbl.Text = $"Date of Birth: {_currentUser.Dob.ToString("dd/MM/yyyy")}";
         }
 
         public void DisplayBalance()
         {
-            amountLbl.Text = $"$ {CurrentUser.WalletBalance}";
+            amountLbl.Text = $"$ {_currentUser.WalletBalance}";
         }
 
         //open popup to edit details
         private void editBtn_Click(object sender, EventArgs e)
         {
-            EditFormPopup editPopup = new EditFormPopup(CurrentUser);
+            EditFormPopup editPopup = new EditFormPopup(_currentUser);
 
             //update details displayed when user makes changes
             if (editPopup.ShowDialog() == DialogResult.OK)
@@ -104,14 +104,14 @@ namespace BettingSystem.Forms
         //open popup to change password
         private void changePasswordBtn_Click(object sender, EventArgs e)
         {
-            ChangePasswordPopup changePasswordPopup = new ChangePasswordPopup(CurrentUser);
+            ChangePasswordPopup changePasswordPopup = new ChangePasswordPopup(_currentUser);
             changePasswordPopup.ShowDialog();
         }
 
         //open popup to make a deposit
         private void depositBtn_Click(object sender, EventArgs e)
         {
-            WalletPopup walletTransactionPopup = new WalletPopup("Deposit", CurrentUser);
+            WalletPopup walletTransactionPopup = new WalletPopup("Deposit", _currentUser);
             if (walletTransactionPopup.ShowDialog() == DialogResult.OK)
             {
                 navBar1.DisplayInfo(); //open label in navbar to update balance displayed
@@ -121,7 +121,7 @@ namespace BettingSystem.Forms
         //open popup to withdraw money
         private void withdrawBtn_Click(object sender, EventArgs e)
         {
-            WalletPopup walletTransactionPopup = new WalletPopup("Withdraw", CurrentUser);
+            WalletPopup walletTransactionPopup = new WalletPopup("Withdraw", _currentUser);
             if (walletTransactionPopup.ShowDialog() == DialogResult.OK)
             {
                 navBar1.DisplayInfo();

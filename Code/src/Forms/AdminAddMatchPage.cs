@@ -8,12 +8,12 @@ namespace BettingSystem.Forms
 {
     public partial class AdminAddMatchPage : Form
     {
-        private readonly Validation Validator = new Validation();
-        private readonly DatabaseManager DbManager = new DatabaseManager();
-        private MyDictionary<int, MyList<int>> LeagueTeams;
-        private League[] Leagues;
-        private MyDictionary<int, Team> TeamsDict;
-        private MyDictionary<int, MyList<Player>> Players;
+        private readonly Validation _validator = new Validation();
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
+        private MyDictionary<int, MyList<int>> _leagueTeams;
+        private League[] _leagues;
+        private MyDictionary<int, Team> _teamsDict;
+        private MyDictionary<int, MyList<Player>> _players;
 
         private int CurrentLeagueID = -1;
         private SessionManager CurrentSession;
@@ -26,9 +26,9 @@ namespace BettingSystem.Forms
             contentPanel.Resize += CenterPanel;
 
             CurrentSession = currentSession;
-            Leagues = CurrentSession.Leagues;
-            TeamsDict = CurrentSession.TeamsDict;
-            Players = CurrentSession.Players;
+            _leagues = CurrentSession.Leagues;
+            _teamsDict = CurrentSession.TeamsDict;
+            _players = CurrentSession.Players;
 
             adminNavBar1.SetAdmin(admin);
 
@@ -113,7 +113,7 @@ namespace BettingSystem.Forms
 
         public async void LoadPage(object sender, EventArgs e)
         {
-            LeagueTeams = await DbManager.FetchLeagueTeamAsync();
+            _leagueTeams = await _dbManager.FetchLeagueTeamAsync();
             DisplayLeagueNames();
             selectedMatchDate.MinDate = DateTime.Now.AddMinutes(5);
             leagueComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -123,7 +123,7 @@ namespace BettingSystem.Forms
 
         public void DisplayLeagueNames()
         {
-            foreach (League league in Leagues)
+            foreach (League league in _leagues)
             {
                 AddMatchComboItems leagueComboItem = new AddMatchComboItems(league.LeagueId, league.Name);
                 leagueComboBox.Items.Add(leagueComboItem);
@@ -141,8 +141,8 @@ namespace BettingSystem.Forms
             awayTeamComboBox.Items.Clear();
 
             AddMatchComboItems selectedLeague = leagueComboBox.SelectedItem as AddMatchComboItems;
-            var teams = LeagueTeams[selectedLeague.ID]
-                .Select(id => TeamsDict[id])
+            var teams = _leagueTeams[selectedLeague.ID]
+                .Select(id => _teamsDict[id])
                 .ToList();
 
             foreach (var team in teams)
@@ -172,7 +172,7 @@ namespace BettingSystem.Forms
             }
 
             DateTime matchDate = selectedMatchDate.Value;
-            (bool valid, string? message) = Validator.CheckMatchEntries(selectedHomeTeam.ID, selectedAwayTeam.ID, matchDate);
+            (bool valid, string? message) = _validator.CheckMatchEntries(selectedHomeTeam.ID, selectedAwayTeam.ID, matchDate);
             if (!valid)
             {
                 new Notification(message, NotificationType.Warning, this);
@@ -182,7 +182,7 @@ namespace BettingSystem.Forms
             AddMatchComboItems selectedLeague = leagueComboBox.SelectedItem as AddMatchComboItems;
 
             FootballMatch newMatch = new FootballMatch(0, selectedLeague.ID, selectedHomeTeam.ID, selectedAwayTeam.ID, matchDate);
-            AddNewMatchService addNewMatch = new AddNewMatchService(newMatch, Players[selectedHomeTeam.ID], Players[selectedAwayTeam.ID], CurrentSession);
+            AddNewMatchService addNewMatch = new AddNewMatchService(newMatch, _players[selectedHomeTeam.ID], _players[selectedAwayTeam.ID], CurrentSession);
 
             (valid, message, GameResult generatedResult) = await addNewMatch.AddMatchToDatabase();
             if (!valid)

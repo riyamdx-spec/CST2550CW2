@@ -8,28 +8,28 @@ namespace BettingSystem.Forms
 {
     public partial class BetSlipPage : BaseForm
     {
-        private AppUser CurrentUser;
-        private SessionManager CurrentSession;
-        private BetSlip UserSlip;
-        private FootballMatchCollection MatchesCollection;
-        private MyDictionary<int, Team> TeamsDict;
-        private League[] Leagues;
+        private AppUser _currentUser;
+        private SessionManager _currentSession;
+        private BetSlip _userSlip;
+        private FootballMatchCollection _matchesCollection;
+        private MyDictionary<int, Team> _teamsDict;
+        private League[] _leagues;
 
-        private readonly DatabaseManager DBManager = new DatabaseManager();
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
 
-        private Dictionary<int, string> BetTypeNames;
+        private Dictionary<int, string> _betTypeNames;
 
         public BetSlipPage(AppUser user, SessionManager session)
         {
             InitializeComponent();
-            CurrentUser = user;
-            CurrentSession = session;
-            UserSlip = session.UserSlip;
-            MatchesCollection = session.MatchesCollection;
-            TeamsDict = session.TeamsDict;
-            Leagues = session.Leagues;
+            _currentUser = user;
+            _currentSession = session;
+            _userSlip = session.UserSlip;
+            _matchesCollection = session.MatchesCollection;
+            _teamsDict = session.TeamsDict;
+            _leagues = session.Leagues;
 
-            navBar1.SetCurrentUser(CurrentUser);
+            navBar1.SetCurrentUser(_currentUser);
             navBar1.MatchesClicked += NavBar1_MatchesClicked;
             navBar1.AccountClicked += NavBar1_AccountClicked;
             navBar1.LogoutClicked += NavBar1_LogoutClicked;
@@ -37,7 +37,7 @@ namespace BettingSystem.Forms
             this.Load += BetSlipPage_Load;
             this.FormClosing += BetSlipPage_FormClosing;
 
-            CurrentSession.AppSimulator.BetSlipUpdated += AppSimulator_BetSlipUpdated;
+            _currentSession.AppSimulator.BetSlipUpdated += AppSimulator_BetSlipUpdated;
         }
 
         private void AppSimulator_BetSlipUpdated()
@@ -54,7 +54,7 @@ namespace BettingSystem.Forms
 
         private void BetSlipPage_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false, true);
                 if (closingPopup.ShowDialog() == DialogResult.No)
@@ -63,7 +63,7 @@ namespace BettingSystem.Forms
                 }
                 else
                 {
-                    CurrentSession.IsExiting = true;
+                    _currentSession.IsExiting = true;
                     Application.Exit();
                 }
             }
@@ -71,24 +71,24 @@ namespace BettingSystem.Forms
 
         private void NavBar1_LogoutClicked(object? sender, EventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut)
+            if (!_currentSession.IsLoggingOut)
             {
                 logOutPopup closingPopup = new logOutPopup(true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
-                    CurrentSession.LogOut(this);
+                    _currentSession.LogOut(this);
             }
         }
 
         private async void BetSlipPage_Load(object sender, EventArgs e)
         {
-            BetTypeNames = await DBManager.FetchBetTypesAsync();
+            _betTypeNames = await _dbManager.FetchBetTypesAsync();
             CaptureBaseLayout();
             LoadBetSlips();
         }
 
         public void ReloadSlip()
         {
-            UserSlip = CurrentSession.UserSlip;
+            _userSlip = _currentSession.UserSlip;
             LoadBetSlips();
             UpdateSummary();
         }
@@ -96,7 +96,7 @@ namespace BettingSystem.Forms
         private void LoadBetSlips()
         {
             pnlSlipList.Controls.Clear();
-            if (!UserSlip.Bets.Any())
+            if (!_userSlip.Bets.Any())
             {
                 Label emptyLbl = new Label();
                 emptyLbl.Text = "Your bet slip is empty.";
@@ -111,15 +111,15 @@ namespace BettingSystem.Forms
 
             }
 
-            foreach (Bet bet in UserSlip.Bets)
+            foreach (Bet bet in _userSlip.Bets)
             {
-                FootballMatch match = MatchesCollection.AllMatches
+                FootballMatch match = _matchesCollection.AllMatches
                     .First(m => m.GameID == bet.GameID);
 
-                Team homeTeam = TeamsDict[match.HomeTeamID];
-                Team awayTeam = TeamsDict[match.AwayTeamID];
-                string leagueName = Leagues.First(l => l.LeagueId == match.LeagueID).Name;
-                string betTypeName = BetTypeNames.TryGetValue(bet.BetTypeID, out string? name) ? name : "Unknown";
+                Team homeTeam = _teamsDict[match.HomeTeamID];
+                Team awayTeam = _teamsDict[match.AwayTeamID];
+                string leagueName = _leagues.First(l => l.LeagueId == match.LeagueID).Name;
+                string betTypeName = _betTypeNames.TryGetValue(bet.BetTypeID, out string? name) ? name : "Unknown";
 
                 var card = new BetCard();
                 card.SetData(
@@ -133,12 +133,12 @@ namespace BettingSystem.Forms
                 );
                 card.OnRemove += () =>
                 {
-                    UserSlip.RemoveBet(bet);
+                    _userSlip.RemoveBet(bet);
                     pnlSlipList.Controls.Remove(card);
                     card.Dispose();
 
                     // show empty message if no bets left
-                    if (!UserSlip.Bets.Any())
+                    if (!_userSlip.Bets.Any())
                         LoadBetSlips();
                 };
                 AddCard(card);
@@ -149,8 +149,8 @@ namespace BettingSystem.Forms
 
         private void UpdateSummary()
         {
-            lblTotalOdds.Text = UserSlip.TotalOdds.ToString("F2");
-            lblPayout.Text = $"${UserSlip.CalculatePayout():F2}";
+            lblTotalOdds.Text = _userSlip.TotalOdds.ToString("F2");
+            lblPayout.Text = $"${_userSlip.CalculatePayout():F2}";
             pnlSummaryContainer.Show();
         }
 
@@ -158,12 +158,12 @@ namespace BettingSystem.Forms
         {
             if (decimal.TryParse(txtStake.Text, out decimal stake))
             {
-                UserSlip.Stake = stake;
-                lblPayout.Text = $"${UserSlip.CalculatePayout():F2}";
+                _userSlip.Stake = stake;
+                lblPayout.Text = $"${_userSlip.CalculatePayout():F2}";
             }
             else
             {
-                UserSlip.Stake = 0;
+                _userSlip.Stake = 0;
                 lblPayout.Text = "$0.00";
             }
         }
@@ -171,7 +171,7 @@ namespace BettingSystem.Forms
         private async void btnPlaceBet_Click(object sender, EventArgs e)
         {
             // validate slip is not empty
-            if (!UserSlip.Bets.Any())
+            if (!_userSlip.Bets.Any())
             {
                 new Notification("Your bet slip is empty.", NotificationType.Error, this);
                 return;
@@ -185,18 +185,18 @@ namespace BettingSystem.Forms
             }
 
             // check user has enough balance
-            if (stake > CurrentUser.WalletBalance)
+            if (stake > _currentUser.WalletBalance)
             {
                 new Notification("Insufficient balance.", NotificationType.Error, this);
                 return;
             }
 
-            UserSlip.Stake = stake;
+            _userSlip.Stake = stake;
 
             btnPlaceBet.Enabled = false;
 
             // save bet slip to database
-            (bool success, string message) = await DBManager.SaveBetSlipAsync(UserSlip);
+            (bool success, string message) = await _dbManager.SaveBetSlipAsync(_userSlip);
 
             if (!success)
             {
@@ -206,9 +206,9 @@ namespace BettingSystem.Forms
             }
 
             // deduct stake from wallet
-            decimal newBalance = CurrentUser.WalletBalance - stake;
-            bool walletUpdated = await DBManager.ProcessWalletTransactionAsync(
-                CurrentUser.UserID,
+            decimal newBalance = _currentUser.WalletBalance - stake;
+            bool walletUpdated = await _dbManager.ProcessWalletTransactionAsync(
+                _currentUser.UserID,
                 "bet",
                 newBalance,
                 stake
@@ -222,12 +222,12 @@ namespace BettingSystem.Forms
             }
 
             // update balance in memory
-            CurrentUser.WalletBalance = newBalance;
+            _currentUser.WalletBalance = newBalance;
             navBar1.DisplayInfo();
 
             // reset slip
-            UserSlip.Bets.Clear();
-            UserSlip.Stake = 0;
+            _userSlip.Bets.Clear();
+            _userSlip.Stake = 0;
 
             // show confirmation
             new Notification("Bet placed successfully!", NotificationType.Success, this);
@@ -256,12 +256,12 @@ namespace BettingSystem.Forms
 
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenMainPage(this);
+            _currentSession.OpenMainPage(this);
         }
 
         private void NavBar1_AccountClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenProfilePage(this);
+            _currentSession.OpenProfilePage(this);
         }
     }
 }

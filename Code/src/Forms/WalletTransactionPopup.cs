@@ -5,17 +5,17 @@ namespace BettingSystem.Forms
 {
     public partial class WalletPopup : Form
     {
-        private AppUser CurrentUser;
-        private string WalletAction;
-        private readonly Validation Validator;
-        private readonly WalletService WalletServices;
+        private AppUser _currentUser;
+        private string _walletAction;
+        private readonly Validation _validator;
+        private readonly WalletService _walletServices;
 
         public WalletPopup(string action, AppUser loggedInUser)
         {
-            CurrentUser = loggedInUser;
-            WalletAction = action;
-            Validator = new Validation();
-            WalletServices = new WalletService();
+            _currentUser = loggedInUser;
+            _walletAction = action;
+            _validator = new Validation();
+            _walletServices = new WalletService();
 
             InitializeComponent();
 
@@ -24,8 +24,8 @@ namespace BettingSystem.Forms
 
         private void LoadDetails()
         {
-            lblBalance.Text = $"Current Balance: ${Math.Round(CurrentUser.WalletBalance, 2)}";
-            confirmTransactionBtn.Text = WalletAction; ;
+            lblBalance.Text = $"Current Balance: ${Math.Round(_currentUser.WalletBalance, 2)}";
+            confirmTransactionBtn.Text = _walletAction; ;
         }
 
         //remove error messages
@@ -53,7 +53,7 @@ namespace BettingSystem.Forms
             string? message;
 
             //validate amount
-            (fieldValid, message) = Validator.CheckAmount(amount);
+            (fieldValid, message) = _validator.CheckAmount(amount);
             if (!fieldValid)
             {
                 valid = false;
@@ -61,7 +61,7 @@ namespace BettingSystem.Forms
             }
 
             //validate cardNumber
-            (fieldValid, message) = Validator.CheckCardNumber(cardNumber);
+            (fieldValid, message) = _validator.CheckCardNumber(cardNumber);
             if (!fieldValid)
             {
                 valid = false;
@@ -69,7 +69,7 @@ namespace BettingSystem.Forms
             }
 
             //validate expiryDate
-            (fieldValid, message) = Validator.CheckExpiryDate(expiryDate);
+            (fieldValid, message) = _validator.CheckExpiryDate(expiryDate);
             if (!fieldValid)
             {
                 valid = false;
@@ -77,7 +77,7 @@ namespace BettingSystem.Forms
             }
 
             //validate cvv
-            (fieldValid, message) = Validator.CheckCVV(cvv);
+            (fieldValid, message) = _validator.CheckCVV(cvv);
             if (!fieldValid)
             {
                 valid = false;
@@ -126,13 +126,13 @@ namespace BettingSystem.Forms
             string message;
 
             // do transaction
-            if (WalletAction == "Deposit") // to deposit money
+            if (_walletAction == "Deposit") // to deposit money
             {
-                (valid, message) = await WalletServices.DepositOrPayoutAsync(CurrentUser, amountEntered, "deposit");
+                (valid, message) = await _walletServices.DepositOrPayoutAsync(_currentUser, amountEntered, "deposit");
             }
             else //to withdraw money
             {
-                (valid, message) = await WalletServices.WithdrawalOrPlaceBetAsync(CurrentUser, amountEntered, "withdrawal");
+                (valid, message) = await _walletServices.WithdrawalOrPlaceBetAsync(_currentUser, amountEntered, "withdrawal");
             }
             if (valid)
             {
