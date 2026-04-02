@@ -236,6 +236,9 @@ namespace BettingSystem.Services
                     activeForm.Close();
             }
 
+            //clear session in simulator
+            AppSimulator.SetSession(null);
+
             IsLoggingOut = false;
             landingPage? appLandingPage = Application.OpenForms.OfType<landingPage>().FirstOrDefault();
             if (appLandingPage is null)
