@@ -2,9 +2,9 @@
 using BettingSystem.Models;
 using BettingSystem.Services;
 using Microsoft.Data.SqlClient;
+using Microsoft.VisualBasic.ApplicationServices;
 using System.Configuration;
 using System.Security.Cryptography;
-
 
 namespace BettingSystem.Data
 {
@@ -13,29 +13,23 @@ namespace BettingSystem.Data
     {
         private readonly string _connectionString;
         private readonly OddsGenerator _oddsGenerator;
+        private MyDictionary<int, MyList<PlayerInfo>>? _playersRatings;
 
-        public DatabaseManager() : this(null)
-        {
-        }
+        public DatabaseManager() : this(null) { }
 
         public DatabaseManager(string? connectionString)
         {
             _connectionString = string.IsNullOrWhiteSpace(connectionString)
                 ? ConfigurationManager.ConnectionStrings["BettingDB"].ConnectionString
                 : connectionString;
-            _oddsGenerator = new OddsGenerator(_connectionString);
-        }
-
-        public OddsAutoGeneratorService CreateOddsAutoGeneratorService()
-        {
-            return new OddsAutoGeneratorService(_connectionString);
+            _oddsGenerator = new OddsGenerator();
         }
 
         //to login
         public async Task<(AppUser? userObj, string message)> LoginAsync(string email, string password)
         {
             //fetch user's data
-            string query = "SELECT app_user_id, first_name, last_name, email, dob, wallet_balance, password_hash, user_role, user_status FROM AppUser WHERE email = @email";
+            string query = "SELECT app_user_id, first_name, last_name, email, dob, wallet_balance, password_hash, user_role, user_status, registration_date FROM AppUser WHERE email = @email";
             using (SqlConnection connection = new SqlConnection(_connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
@@ -67,15 +61,15 @@ namespace BettingSystem.Data
 
                         //create user object if they are not banned or suspended
                         AppUser loggedInUser = new AppUser(
-                            Convert.ToInt32(reader["app_user_id"]),
-                            reader["first_name"].ToString()!,
-                            reader["last_name"].ToString()!,
-                            Convert.ToDateTime(reader["dob"]),
-                            reader["email"].ToString()!,
-                            Convert.ToDecimal(reader["wallet_balance"]),
-                            reader["user_role"].ToString()!,
-                            reader["user_status"].ToString()!
-                         );
+                           Convert.ToInt32(reader["app_user_id"]),
+                           reader["first_name"].ToString()!,
+                           reader["last_name"].ToString()!,
+                           Convert.ToDateTime(reader["dob"]),
+                           reader["email"].ToString()!,
+                           Convert.ToDecimal(reader["wallet_balance"]),
+                           reader["user_role"].ToString()!,
+                           reader["user_status"].ToString()!
+                        );
 
                         return (loggedInUser, "Logged In Successfully");
                     }
@@ -133,6 +127,8 @@ namespace BettingSystem.Data
                 command.Parameters.AddWithValue("@dob", dob);
                 command.Parameters.AddWithValue("@email", email);
                 command.Parameters.AddWithValue("@password", password);
+
+                await connection.OpenAsync();
 
                 await connection.OpenAsync();
 
@@ -415,7 +411,6 @@ namespace BettingSystem.Data
         public async Task<MyDictionary<int, Team>> FetchTeamsAsync(bool all=false)
         {
             //store teams in dictionary keyed by id
-            //Dictionary<int, Team> teamsByID = new Dictionary<int, Team>();
             MyDictionary<int, Team> teamsByID = new MyDictionary<int, Team>();
             string query;
 
@@ -663,19 +658,56 @@ namespace BettingSystem.Data
             }
         }
 
-        // fetch an existing correct score odd; generate and persist one if missing
-        public async Task<Odd?> GetOrCreateCorrectScoreOddAsync(
-            int gameId,
-            int homeGoals,
-            int awayGoals,
-            int homeTeamId,
-            int awayTeamId,
-            int leagueId)
+        //find matches which do not have odd in database
+        public async Task<List<GameInfo>> GetMatchesWithoutOdds()
+        {
+            var games = new List<GameInfo>();
+            string query = @"SELECT g.game_id,
+                                g.home_team_id,
+                                g.away_team_id,
+                                g.league_id,
+                                homeTeam.team_name AS home_team_name,
+                                awayTeam.team_name AS away_team_name
+                             FROM Game g
+                             INNER JOIN Team homeTeam ON homeTeam.team_id = g.home_team_id
+                             INNER JOIN Team awayTeam ON awayTeam.team_id = g.away_team_id
+                             WHERE NOT EXISTS (
+                                   SELECT 1
+                                   FROM Odd o
+                                   WHERE o.game_id = g.game_id
+                               )";
+
+            using (SqlConnection conn = new SqlConnection(_connectionString))
+            using (SqlCommand cmd = new SqlCommand(query, conn))
+            {
+                await conn.OpenAsync();
+                using (SqlDataReader reader = await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        games.Add(new GameInfo(
+                            Convert.ToInt32(reader["game_id"]),
+                            Convert.ToInt32(reader["home_team_id"]),
+                            Convert.ToInt32(reader["away_team_id"]),
+                            Convert.ToInt32(reader["league_id"]),
+                            Convert.ToString(reader["home_team_name"]) ?? string.Empty,
+                            Convert.ToString(reader["away_team_name"]) ?? string.Empty)
+                        );
+                    }
+                }
+            }
+
+            return games;
+        }
+
+        // fetch an existing correct score odd
+        // generate and persist one if missing
+        public async Task<Odd?> GetOrCreateCorrectScoreOddAsync(int gameId, int homeGoals, int awayGoals, int homeTeamId, int awayTeamId, int leagueId)
         {
             string selection = $"{homeGoals}-{awayGoals}";
-            const string betTypeName = "Correct Score";
+            const int betTypeId = 3;
 
-            Odd? existingOdd = await FetchOddByBetTypeNameAsync(gameId, betTypeName, selection);
+            Odd? existingOdd = await FetchOddByBetTypeNameAsync(gameId, betTypeId, selection);
             if (existingOdd is not null)
             {
                 return existingOdd;
@@ -689,7 +721,8 @@ namespace BettingSystem.Data
                     awayGoals,
                     homeTeamId,
                     awayTeamId,
-                    leagueId);
+                    leagueId
+                );
             }
             catch (Exception e)
             {
@@ -697,23 +730,22 @@ namespace BettingSystem.Data
                 return null;
             }
 
-            return await FetchOddByBetTypeNameAsync(gameId, betTypeName, selection);
+            return await FetchOddByBetTypeNameAsync(gameId, betTypeId, selection);
         }
 
-        private async Task<Odd?> FetchOddByBetTypeNameAsync(int gameId, string betTypeName, string selection)
+        private async Task<Odd?> FetchOddByBetTypeNameAsync(int gameId, int betTypeId, string selection)
         {
             const string query = @"SELECT TOP 1 o.odd_id, o.game_id, o.bet_type_id, o.selection, o.odd_value
                                    FROM Odd o
                                    INNER JOIN BetType bt ON bt.bet_type_id = o.bet_type_id
                                    WHERE o.game_id = @gameId
-                                     AND bt.bet_type_name = @betTypeName
                                      AND o.selection = @selection";
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
                 command.Parameters.AddWithValue("@gameId", gameId);
-                command.Parameters.AddWithValue("@betTypeName", betTypeName);
+                command.Parameters.AddWithValue("@betTypeId", betTypeId);
                 command.Parameters.AddWithValue("@selection", selection);
 
                 try
@@ -789,14 +821,14 @@ namespace BettingSystem.Data
                         string betQuery = @"SELECT b.bet_id, b.result, o.selection, o.odd_value, bt.bet_type_id, bt.bet_type_name,
                                                 ht.team_name AS home_team, at.team_name AS away_team, 
                                                 g.game_date, l.league_name, g.game_id
-                                FROM Bet b
-                                INNER JOIN Odd o ON b.odd_id = o.odd_id
-                                INNER JOIN BetType bt ON o.bet_type_id = bt.bet_type_id
-                                INNER JOIN Game g ON o.game_id = g.game_id
-                                INNER JOIN Team ht ON g.home_team_id = ht.team_id
-                                INNER JOIN Team at ON g.away_team_id = at.team_id
-                                INNER JOIN League l ON g.league_id = l.league_id
-                                WHERE b.slip_id = @slipID";
+                                            FROM Bet b
+                                            INNER JOIN Odd o ON b.odd_id = o.odd_id
+                                            INNER JOIN BetType bt ON o.bet_type_id = bt.bet_type_id
+                                            INNER JOIN Game g ON o.game_id = g.game_id
+                                            INNER JOIN Team ht ON g.home_team_id = ht.team_id
+                                            INNER JOIN Team at ON g.away_team_id = at.team_id
+                                            INNER JOIN League l ON g.league_id = l.league_id
+                                            WHERE b.slip_id = @slipID";
 
                         using (SqlConnection betConnection = new SqlConnection(_connectionString))
                         {
@@ -924,7 +956,7 @@ namespace BettingSystem.Data
             }
         }
 
-        // fetch players details for upcoming matches
+        // fetch players details
         public async Task<MyDictionary<int, MyList<Player>>> FetchPlayersAsync()
         {
             //store players in dictionary keyed by TeamId
@@ -1041,7 +1073,7 @@ namespace BettingSystem.Data
                         }
 
                         //generate odds for the new match
-                        await GenerateAndSaveAllOddsAsync(insertedGameId, newMatch.HomeTeamID, newMatch.AwayTeamID, newMatch.LeagueID);
+                        await GenerateAndSaveAllOddsAsync(insertedGameId, newMatch.HomeTeamID, newMatch.AwayTeamID, newMatch.LeagueID, connection, transaction);
 
                         newMatch.GameID = insertedGameId;
                         matchResult.GameId = insertedGameId;
@@ -1169,69 +1201,69 @@ namespace BettingSystem.Data
                 }
                 //compare user selection to match results to set bet result as Won or Lost
                 command.CommandText = $@"
-                        UPDATE Bet B
+                        UPDATE B
                         SET B.result = CASE 
                             WHEN B.result = 'Pending' AND
                                 ( 
                                     (O.bet_type_id = 1 AND 
                                         (
-                                            (GR.home_team_score > GR.away_team_score AND O.Selection='Home Win') OR 
-                                            (GR.home_team_score < GR.away_team_score AND O.Selection='Away Win') OR 
-                                            (GR.home_team_score = GR.away_team_score AND O.Selection='Draw')
+                                            (GR.home_team_score > GR.away_team_score AND O.[Selection]='Home Win') OR 
+                                            (GR.home_team_score < GR.away_team_score AND O.[Selection]='Away Win') OR 
+                                            (GR.home_team_score = GR.away_team_score AND O.[Selection]='Draw')
                                         )
                                     )
 
                                     OR
                                     (O.bet_type_id = 2 AND 
                                         (
-                                            (GR.home_team_score >= GR.away_team_score AND O.Selection='1X') OR 
-                                            (GR.home_team_score != GR.away_team_score AND O.Selection='12') OR 
-                                            (GR.home_team_score <= GR.away_team_score AND O.Selection='X2')
+                                            (GR.home_team_score >= GR.away_team_score AND O.[Selection]='1X') OR 
+                                            (GR.home_team_score != GR.away_team_score AND O.[Selection]='12') OR 
+                                            (GR.home_team_score <= GR.away_team_score AND O.[Selection]='X2')
                                         )
                                     )
 
                                     OR
-                                    (O.bet_type_id = 3 AND CONCAT(GR.home_team_score, ' - ', GR.away_team_score) = O.Selection)
+                                    (O.bet_type_id = 3 AND CONCAT(GR.home_team_score, '-', GR.away_team_score) = O.[Selection])
 
                                     OR
                                     (O.bet_type_id = 4 AND 
                                         (
-                                            ((GR.home_team_score + GR.away_team_score) > 2.5 AND O.Selection='Over 2.5') OR 
-                                            ((GR.home_team_score + GR.away_team_score) < 2.5 AND O.Selection='Under 2.5')
+                                            ((GR.home_team_score + GR.away_team_score) > 2.5 AND O.[Selection]='Over 2.5') OR 
+                                            ((GR.home_team_score + GR.away_team_score) < 2.5 AND O.[Selection]='Under 2.5')
                                         )
                                     )
 
                                     OR
                                     (O.bet_type_id = 5 AND 
                                         (
-                                            ((GR.home_team_score > 0 AND GR.away_team_score > 0) AND O.Selection='Yes') OR 
-                                            ((GR.home_team_score = 0 OR GR.away_team_score = 0) AND O.Selection='No')
+                                            ((GR.home_team_score > 0 AND GR.away_team_score > 0) AND O.[Selection]='Yes') OR 
+                                            ((GR.home_team_score = 0 OR GR.away_team_score = 0) AND O.[Selection]='No')
                                         )
                                     )
 
                                     OR
-                                    (O.bet_type_id = 6 AND (GR.first_scorer_id IS NOT NULL AND CAST(GR.first_scorer_id AS VARCHAR) = O.Selection))
+                                    (O.bet_type_id = 6 AND (GR.first_scorer_id IS NOT NULL AND CAST(GR.first_scorer_id AS VARCHAR) = O.[Selection]))
 
                                     OR
                                     (O.bet_type_id = 7 AND 
                                         (
-                                            (LEFT(O.Selection, 4) = 'Over' AND GR.total_corners > CAST(SUBSTRING(O.Selection, 6, LEN(O.Selection)) AS DECIMAL(3, 1))) OR 
-                                            (LEFT(O.Selection, 5) = 'Under' AND GR.total_corners < CAST(SUBSTRING(O.Selection, 7, LEN(O.Selection)) AS DECIMAL(3, 1)))
+                                            (LEFT(O.[Selection], 4) = 'Over' AND GR.total_corners > CAST(SUBSTRING(O.[Selection], 6, LEN(O.[Selection])) AS DECIMAL(3, 1))) OR 
+                                            (LEFT(O.[Selection], 5) = 'Under' AND GR.total_corners < CAST(SUBSTRING(O.[Selection], 7, LEN(O.[Selection])) AS DECIMAL(3, 1)))
                                         )
                                     )
                                     OR
                                     (O.bet_type_id = 8 AND 
                                         (
-                                            (LEFT(O.Selection, 4) = 'Over' AND GR.yellow_cards > CAST(SUBSTRING(O.Selection, 6, LEN(O.Selection)) AS DECIMAL(2, 1))) OR 
-                                            (LEFT(O.Selection, 5) = 'Under' AND GR.yellow_cards < CAST(SUBSTRING(O.Selection, 7, LEN(O.Selection)) AS DECIMAL(2, 1)))
+                                            (LEFT(O.[Selection], 4) = 'Over' AND GR.yellow_cards > CAST(SUBSTRING(O.[Selection], 6, LEN(O.[Selection])) AS DECIMAL(2, 1))) OR 
+                                            (LEFT(O.[Selection], 5) = 'Under' AND GR.yellow_cards < CAST(SUBSTRING(O.[Selection], 7, LEN(O.[Selection])) AS DECIMAL(2, 1)))
                                         )
                                     )
 
                                     OR
                                     (O.bet_type_id = 9 AND 
                                         (
-                                            (LEFT(O.Selection, 4) = 'Over' AND GR.red_cards > CAST(SUBSTRING(O.Selection, 6, LEN(O.Selection)) AS DECIMAL(2, 1))) 
-                                            OR (LEFT(O.Selection, 5) = 'Under' AND GR.red_cards < CAST(SUBSTRING(O.Selection, 7, LEN(O.Selection)) AS DECIMAL(2, 1)))
+                                            (LEFT(O.[Selection], 4) = 'Over' AND GR.red_cards > CAST(SUBSTRING(O.[Selection], 6, LEN(O.[Selection])) AS DECIMAL(2, 1))) 
+                                            OR (LEFT(O.[Selection], 5) = 'Under' AND GR.red_cards < CAST(SUBSTRING(O.[Selection], 7, LEN(O.[Selection])) AS DECIMAL(2, 1)))
                                         )
                                     )
                                 ) 
@@ -1240,7 +1272,7 @@ namespace BettingSystem.Data
                             ELSE 'Lost'
                         END
                         OUTPUT inserted.bet_id, inserted.result
-                        FROM Bet B
+                        FROM Bet AS B
                         INNER JOIN Odd O ON B.odd_id = O.odd_id
                         INNER JOIN GameResult GR ON GR.game_id = O.game_id
                         WHERE B.result = 'Pending' 
@@ -1271,7 +1303,7 @@ namespace BettingSystem.Data
 
             // set status of bets slip as 'Won' if all the bets in it have result 'Won'
             string query = @"
-                UPDATE BetSlip BS
+                UPDATE BS
                 SET bet_status = CASE 
                     WHEN NOT EXISTS(
                         SELECT 1
@@ -1290,6 +1322,7 @@ namespace BettingSystem.Data
                     ELSE bet_status
                 END
                 OUTPUT inserted.slip_id, inserted.bet_status
+                FROM BetSlip AS BS
                 WHERE bet_status = 'Pending'
             ";
 
@@ -1344,69 +1377,25 @@ namespace BettingSystem.Data
             }
         }
 
-        // change status of current user in database
-        public async Task<bool> UpdateUserStatusAsync(int userId, string newStatus)
-        {
-            string query = @"UPDATE AppUser
-                            SET user_status = @newStatus
-                            WHERE app_user_id = @userId";
-
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            using (SqlCommand command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@newStatus", newStatus);
-                command.Parameters.AddWithValue("@userId", userId);
-
-                try
-                {
-                    await connection.OpenAsync();
-                    int updatedRow = await command.ExecuteNonQueryAsync();
-                    return updatedRow > 0;
-                }
-                catch (SqlException e)
-                {
-                    Console.WriteLine($"Database error: {e.Message}");
-                    return false;
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Error: {e.Message}");
-                    return false;
-                }
-            }
-        }
-
-        // Get bet_type_id by name (used for odds persistence)
-        private async Task<int> GetBetTypeIdAsync(string betTypeName)
-        {
-            string query = "SELECT bet_type_id FROM BetType WHERE bet_type_name = @name";
-            using (SqlConnection connection = new SqlConnection(_connectionString))
-            using (SqlCommand command = new SqlCommand(query, connection))
-            {
-                command.Parameters.AddWithValue("@name", betTypeName);
-                try
-                {
-                    await connection.OpenAsync();
-                    var result = await command.ExecuteScalarAsync();
-                    if (result is null)
-                        throw new InvalidOperationException($"Bet type '{betTypeName}' not found in database.");
-                    return Convert.ToInt32(result);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"Error retrieving bet type: {e.Message}");
-                    throw;
-                }
-            }
-        }
-
         // Save generated odds to database
-        public async Task SaveOddsAsync(IEnumerable<GeneratedOdd> odds)
+        public async Task SaveOddsAsync(IEnumerable<GeneratedOdd> odds, SqlConnection? sqlConnection=null, SqlTransaction? transaction=null)
         {
+            var oddList = odds.ToList();
+            if (oddList.Count == 0)
+                return;
+
+            if (sqlConnection is not null)
+            {
+                foreach (var odd in oddList)
+                {
+                    await SaveSingleOddAsync(sqlConnection, odd, transaction);
+                }
+                return;
+            }
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                foreach (var odd in odds)
+                foreach (var odd in oddList)
                 {
                     await SaveSingleOddAsync(connection, odd);
                 }
@@ -1414,12 +1403,10 @@ namespace BettingSystem.Data
         }
 
         // Save a single odd (INSERT or UPDATE if exists)
-        private async Task SaveSingleOddAsync(SqlConnection connection, GeneratedOdd odd)
+        private async Task SaveSingleOddAsync(SqlConnection connection, GeneratedOdd odd, SqlTransaction? transaction=null)
         {
             try
             {
-                int betTypeId = await GetBetTypeIdAsync(odd.BetTypeName);
-                
                 const string query = @"BEGIN TRY
                                           INSERT INTO Odd (game_id, bet_type_id, selection, odd_value)
                                           VALUES (@gameId, @betTypeId, @selection, @oddValue)
@@ -1439,10 +1426,10 @@ namespace BettingSystem.Data
                                           END
                                       END CATCH";
 
-                using (SqlCommand command = new SqlCommand(query, connection))
+                using (SqlCommand command = new SqlCommand(query, connection, transaction))
                 {
                     command.Parameters.AddWithValue("@gameId", odd.GameId);
-                    command.Parameters.AddWithValue("@betTypeId", betTypeId);
+                    command.Parameters.AddWithValue("@betTypeId", odd.BetTypeId);
                     command.Parameters.AddWithValue("@selection", odd.Selection);
                     command.Parameters.AddWithValue("@oddValue", odd.OddValue);
                     
@@ -1457,13 +1444,7 @@ namespace BettingSystem.Data
         }
 
         // Public wrapper for OddsGenerator to persist odds with the persist parameter
-        public async Task<decimal> GenerateAndSaveCorrectScoreOddAsync(
-            int gameId,
-            int homeGoals,
-            int awayGoals,
-            int homeTeamId,
-            int awayTeamId,
-            int leagueId)
+        public async Task<decimal> GenerateAndSaveCorrectScoreOddAsync(int gameId, int homeGoals, int awayGoals, int homeTeamId, int awayTeamId, int leagueId)
         {
             try
             {
@@ -1529,12 +1510,70 @@ namespace BettingSystem.Data
             }
         }
 
+        //Get player information and ratings from database
+        public async Task<MyDictionary<int, MyList<PlayerInfo>>> GetPlayersAsync()
+        {
+            var playersRatingsDict = new MyDictionary<int, MyList<PlayerInfo>>();
+            string query = @"SELECT p.player_id, player_name, team_id, player_position, scoring_rating
+                            FROM Player p
+                            INNER JOIN PlayerRating pr ON p.player_id = pr.player_id";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            int teamID = Convert.ToInt32(reader["team_id"]);
+                            string? rawPosition = reader["player_position"].ToString();
+                            string normalizedPosition = string.IsNullOrWhiteSpace(rawPosition)
+                                ? "ATT"
+                                : rawPosition.Trim().ToUpperInvariant() switch
+                                {
+                                    "ATT" => "ATT",
+                                    "MID" => "MID",
+                                    "DEF" => "DEF",
+                                    "GK" => "GK",
+                                    "FW" => "ATT",
+                                    "MF" => "MID",
+                                    "DF" => "DEF",
+                                    _ => "ATT"
+                                };
+
+                            var player = new PlayerInfo(
+                                Convert.ToInt32(reader["player_id"]),
+                                reader["player_name"].ToString()!,
+                                normalizedPosition,
+                                Convert.ToInt32(reader["scoring_rating"]),
+                                teamID
+                            );
+
+                            //check if a list of players exist for the game
+                            if (!playersRatingsDict.TryGetValue(teamID, out var playersList))
+                            {
+                                playersList = new MyList<PlayerInfo>();
+                                playersRatingsDict[teamID] = playersList;
+                            }
+
+                            playersList.Add(player);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error retrieving player details and ratings: {e.Message}");
+                }
+
+                return playersRatingsDict;
+            }
+        }
+
         // Public wrapper for GenerateAllOddsForGame with persistence
-        public async Task<IReadOnlyList<GeneratedOdd>> GenerateAndSaveAllOddsAsync(
-            int gameId,
-            int homeTeamId,
-            int awayTeamId,
-            int leagueId)
+        public async Task<IReadOnlyList<GeneratedOdd>> GenerateAndSaveAllOddsAsync(int gameId, int homeTeamId, int awayTeamId, int leagueId, SqlConnection? sqlConnection=null, SqlTransaction? transaction=null)
         {
             try
             {
@@ -1542,53 +1581,34 @@ namespace BettingSystem.Data
                 var homeRatings = await GetTeamRatingsAsync(homeTeamId, leagueId);
                 var awayRatings = await GetTeamRatingsAsync(awayTeamId, leagueId);
 
-                // Generate all odds (calculation only)
-                var generatedOdds = _oddsGenerator.BuildAllOddsForGame(gameId, homeRatings, awayRatings);
+                _playersRatings ??= await GetPlayersAsync();
+
+                List<PlayerInfo> gamePlayers = new List<PlayerInfo>();
+
+                if (_playersRatings.TryGetValue(homeTeamId, out var homePlayers))
+                {
+                    gamePlayers.AddRange(homePlayers);
+                }
+
+                if (_playersRatings.TryGetValue(awayTeamId, out var awayPlayers))
+                {
+                    gamePlayers.AddRange(awayPlayers);
+                }
+
+                // odds calculations
+                var generatedOdds = _oddsGenerator.BuildAllOddsForGame(gameId, homeRatings, awayRatings, gamePlayers);
 
                 // Persist to database
-                await SaveOddsAsync(generatedOdds);
+                await SaveOddsAsync(generatedOdds, sqlConnection, transaction);
 
                 return generatedOdds;
             }
+
             catch (Exception e)
             {
                 Console.WriteLine($"Error generating/saving all odds for game {gameId}: {e.Message}");
                 throw;
             }
-        }
-
-        public OutcomeOdds GenerateOutcomeOdds(int gameId, int homeTeamId, int awayTeamId, int leagueId, bool persist = true)
-        {
-            var homeRatings = GetTeamRatingsAsync(homeTeamId, leagueId).GetAwaiter().GetResult();
-            var awayRatings = GetTeamRatingsAsync(awayTeamId, leagueId).GetAwaiter().GetResult();
-
-            var outcomeOdds = _oddsGenerator.GenerateOutcomeOdds(homeRatings, awayRatings);
-
-            if (persist)
-            {
-                SaveOddsAsync(new[]
-                {
-                    new GeneratedOdd(gameId, "Match Outcome", "Home Win", outcomeOdds.Home),
-                    new GeneratedOdd(gameId, "Match Outcome", "Draw", outcomeOdds.Draw),
-                    new GeneratedOdd(gameId, "Match Outcome", "Away Win", outcomeOdds.Away)
-                }).GetAwaiter().GetResult();
-            }
-
-            return outcomeOdds;
-        }
-
-        public IReadOnlyList<GeneratedOdd> GenerateAllOddsForGame(int gameId, int homeTeamId, int awayTeamId, int leagueId, bool persist = true)
-        {
-            var homeRatings = GetTeamRatingsAsync(homeTeamId, leagueId).GetAwaiter().GetResult();
-            var awayRatings = GetTeamRatingsAsync(awayTeamId, leagueId).GetAwaiter().GetResult();
-            var generatedOdds = _oddsGenerator.BuildAllOddsForGame(gameId, homeRatings, awayRatings);
-
-            if (persist)
-            {
-                SaveOddsAsync(generatedOdds).GetAwaiter().GetResult();
-            }
-
-            return generatedOdds;
         }
     }
 }
