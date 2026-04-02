@@ -6,27 +6,22 @@ namespace BettingSystem
 {
     internal static class Program
     {
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
         [STAThread]
         static async Task Main()
         {
             Application.SetHighDpiMode(HighDpiMode.DpiUnaware);
             ApplicationConfiguration.Initialize();
 
-            OddsAutoGeneratorService? oddsAutoGenerator = null;
             try
             {
+                //start match simulator to update database
                 Simulator appSimulator = new Simulator();
-                var dbManager = new DatabaseManager();
-                oddsAutoGenerator = dbManager.CreateOddsAutoGeneratorService();
 
-                var initialRun = oddsAutoGenerator.RunOnce();
-                Console.WriteLine($"Odds bootstrap complete. Games processed: {initialRun.ProcessedGames}, odds generated: {initialRun.GeneratedOdds}.");
+                var oddsService = new OddsAutoGeneratorService();
 
-                oddsAutoGenerator.Start();
-                Application.ApplicationExit += (_, _) => oddsAutoGenerator?.Dispose();
+                //generate odds for matches
+                await oddsService.RunOnce();
+
                 Application.ApplicationExit += (_, _) =>
                 {
                     if (appSimulator != null)
