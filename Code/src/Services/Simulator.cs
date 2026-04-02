@@ -76,7 +76,7 @@ namespace BettingSystem.Services
             GC.SuppressFinalize(this);
         }
 
-        public void SetSession( SessionManager sessionManager)
+        public void SetSession( SessionManager? sessionManager)
         {
             _currentSession = sessionManager;
         }
