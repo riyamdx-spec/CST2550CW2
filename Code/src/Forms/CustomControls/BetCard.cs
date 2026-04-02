@@ -3,23 +3,28 @@
     public partial class BetCard : UserControl
     {
         public event Action OnRemove;
-        private Label _homeTeamLbl;
 
         public BetCard()
         {
             InitializeComponent();
+            betTableLayoutBgPanel.CellPaint += BetTableLayoutBgPanel_CellPaint;
+        }
 
-            _homeTeamLbl = new Label();
-            _homeTeamLbl.Dock = DockStyle.Fill;
-            _homeTeamLbl.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
-            _homeTeamLbl.ForeColor = Color.FromArgb(241, 241, 241);
-            _homeTeamLbl.TextAlign = ContentAlignment.MiddleRight;
-            _homeTeamLbl.AutoSize = false;
-            tableLayoutPanel1.Controls.Add(_homeTeamLbl, 1, 0);
+        //add borders
+        private void BetTableLayoutBgPanel_CellPaint(object? sender, TableLayoutCellPaintEventArgs e)
+        {
+            if (e.Column == 1 && e.Row == 0)
+            {
+                var rectangle = e.CellBounds;
+                rectangle.Inflate(-1, -1);
 
-            betInfoPanel.Resize += CenterBetInfo;
-            tlpBetInfo.Resize += CenterBetInfo;
-            dateTimePanel.Resize += CenterDateTimeLabels;
+                ControlPaint.DrawBorder(e.Graphics, rectangle,
+                    Color.FromArgb(36, 36, 36), 2, ButtonBorderStyle.Solid,
+                    Color.FromArgb(36, 36, 36), 0, ButtonBorderStyle.Solid,
+                    Color.FromArgb(36, 36, 36), 2, ButtonBorderStyle.Solid,
+                    Color.FromArgb(36, 36, 36), 0, ButtonBorderStyle.Solid
+                );
+            }
         }
 
         public void SetData(string league, string home, string away,
@@ -27,7 +32,7 @@
                             DateTime matchDate)
         {
             matchLeagueLbl.Text = league;
-            _homeTeamLbl.Text = home;
+            homeTeamLbl.Text = home;
             awayTeamLbl.Text = away;
             lblBetTypeVal.Text = betType;
             lblSelectionVal.Text = selection;
@@ -36,25 +41,9 @@
             matchTimeLbl.Text = matchDate.ToString("HH:mm");
         }
 
-        private void CenterDateTimeLabels(object sender, EventArgs e)
-        {
-            int totalHeight = matchDateLbl.Height + matchTimeLbl.Height;
-            int startY = (dateTimePanel.Height - totalHeight) / 2;
-            matchDateLbl.Location = new Point((dateTimePanel.Width - matchDateLbl.Width) / 2, startY);
-            matchTimeLbl.Location = new Point((dateTimePanel.Width - matchTimeLbl.Width) / 2, startY + matchDateLbl.Height);
-        }
-
-        private void CenterBetInfo(object sender, EventArgs e)
-        {
-            tlpBetInfo.Left = (betInfoPanel.Width - tlpBetInfo.Width) / 2;
-            tlpBetInfo.Top = (betInfoPanel.Height - tlpBetInfo.Height) / 2;
-        }
-
         private void btnRemove_Click(object sender, EventArgs e)
         {
             OnRemove?.Invoke();
         }
-
-
     }
 }
