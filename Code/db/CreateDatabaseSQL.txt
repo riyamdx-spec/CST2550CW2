@@ -120,7 +120,7 @@ CREATE TABLE BetSlip(
 	app_user_id INT NOT NULL,
 	bet_date DATETIME2 NOT NULL DEFAULT GETDATE(),
 	bet_status VARCHAR(7) NOT NULL CHECK (bet_status IN ('Pending','Won','Lost')),
-    total_odds DECIMAL(6,3) NOT NULL CHECK (total_odds > 0),
+    	total_odds DECIMAL(6,3) NOT NULL CHECK (total_odds > 0),
 	stake DECIMAL(10,2) NOT NULL CHECK (stake > 0),
 	payout DECIMAL(10,2) NOT NULL CHECK (payout >= 0),
 	claimed BIT NOT NULL DEFAULT 0,
@@ -173,23 +173,6 @@ CREATE TABLE PlayerRating(
     last_updated DATETIME2 NOT NULL DEFAULT GETDATE(),
     FOREIGN KEY (player_id) REFERENCES Player(player_id)
 );
-
--- log the odds generation process for auditing and debugging purposes
-CREATE TABLE OddsGenerationLog(
-    odd_id INT PRIMARY KEY IDENTITY(1,1),
-    game_id INT NOT NULL,
-    bet_type_id INT NOT NULL,
-    selection VARCHAR(100) NOT NULL,
-    odd_value decimal(6,3) NOT NULL CHECK (odd_value > 0),
-    creation_date DATETIME2 NOT NULL DEFAULT GETDATE(),
-    is_active BIT NOT NULL DEFAULT 1,
-    FOREIGN KEY(game_id) REFERENCES Game(game_id),
-    FOREIGN KEY(bet_type_id) REFERENCES BetType(bet_type_id)
-);
-
-GO
-CREATE INDEX idx_odds_generation_log_game_active ON OddsGenerationLog(game_id, is_active);
-GO
 
 --- prevent home and away team from being the same in a game
 ALTER TABLE Game
