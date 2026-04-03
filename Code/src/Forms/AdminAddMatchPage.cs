@@ -47,7 +47,7 @@ namespace BettingSystem.Forms
         {
             if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
             {
-                logOutPopup closingPopup = new logOutPopup(false);
+                logOutPopup closingPopup = new logOutPopup(false, true);
                 if (closingPopup.ShowDialog() == DialogResult.No)
                 {
                     e.Cancel = true;
@@ -64,7 +64,7 @@ namespace BettingSystem.Forms
         {
             if (!CurrentSession.IsLoggingOut)
             {
-                logOutPopup closingPopup = new logOutPopup(true);
+                logOutPopup closingPopup = new logOutPopup(true, true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
                     CurrentSession.LogOut(this);
             }
