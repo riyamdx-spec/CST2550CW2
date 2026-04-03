@@ -60,6 +60,7 @@ namespace BettingSystem.Models
             {
                 TotalOdds *= bet.OddValue;
             }
+            TotalOdds = Math.Round(TotalOdds, 3);
         }
 
         // calculate payout if bet is success
