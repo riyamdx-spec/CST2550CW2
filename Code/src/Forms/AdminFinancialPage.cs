@@ -4,6 +4,21 @@ using BettingSystem.Services;
 using ScottPlot;
 using ScottPlot.WinForms;
 
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+
+//using OpenAI;
+//using OpenAI.Models;
+using System.Configuration;
+
+using System.Threading.Tasks;
+using Google.GenAI;
+using Google.GenAI.Types;
+using Microsoft.Extensions.AI;
+
+
 namespace BettingSystem.Forms
 {
     public partial class AdminFinancialPage : BaseForm
@@ -23,6 +38,11 @@ namespace BettingSystem.Forms
         private readonly ScottPlot.Color SpLabel = new ScottPlot.Color(180, 180, 180);
         private readonly ScottPlot.Color SpText = new ScottPlot.Color(241, 241, 241);
 
+        private static readonly HttpClient HttpClient = new HttpClient();
+        private FinancialSummary _lastSummary;
+        private List<MonthlyProfitLoss> _lastProfitLoss;
+        private List<MonthlyTransactionVolume> _lastTransactionVolume;
+        private List<BetStatusCount> _lastBetStatus;
         public AdminFinancialPage(AppUser admin, SessionManager session)
         {
             InitializeComponent();
@@ -45,6 +65,8 @@ namespace BettingSystem.Forms
             CaptureBaseLayout();
             PositionSummaryCards();
             SetChartPanelWidths();
+            PositionGenerateButton();
+            pnlAiReport.Resize += (s, ev) => PositionGenerateButton();
             await LoadAllData();
         }
 
@@ -55,15 +77,15 @@ namespace BettingSystem.Forms
 
         private async Task LoadAllData()
         {
-            var summary = await DBManager.FetchFinancialSummaryAsync();
-            var profitLoss = await DBManager.FetchMonthlyProfitLossAsync();
-            var transactionVolume = await DBManager.FetchMonthlyTransactionVolumeAsync();
-            var betStatus = await DBManager.FetchBetStatusBreakdownAsync();
+            _lastSummary = await DBManager.FetchFinancialSummaryAsync();
+            _lastProfitLoss = await DBManager.FetchMonthlyProfitLossAsync();
+            _lastTransactionVolume = await DBManager.FetchMonthlyTransactionVolumeAsync();
+            _lastBetStatus = await DBManager.FetchBetStatusBreakdownAsync();
 
-            UpdateSummaryCards(summary);
-            BuildProfitLossChart(profitLoss);
-            BuildTransactionVolumeChart(transactionVolume);
-            BuildBetStatusChart(betStatus);
+            UpdateSummaryCards(_lastSummary);
+            BuildProfitLossChart(_lastProfitLoss);
+            BuildTransactionVolumeChart(_lastTransactionVolume);
+            BuildBetStatusChart(_lastBetStatus);
         }
 
         private void AdminFinancialPage_FormClosing(object? sender, FormClosingEventArgs e)
@@ -189,8 +211,6 @@ namespace BettingSystem.Forms
             chartProfitLoss.Plot.ShowLegend(Alignment.LowerRight);
 
             chartProfitLoss.Plot.Axes.AutoScale();
-            //var limits = chartProfitLoss.Plot.Axes.GetLimits();
-            //chartProfitLoss.Plot.Axes.SetLimitsY(0, limits.Top);
 
             chartProfitLoss.Refresh();
         }
@@ -309,6 +329,89 @@ namespace BettingSystem.Forms
             chartBetStatus.Plot.HideGrid();
             chartBetStatus.Plot.ShowLegend(Alignment.LowerRight);
             chartBetStatus.Refresh();
+        }
+
+        private void PositionGenerateButton()
+        {
+            btnGenerateReport.Location = new Point(
+                pnlAiReport.ClientSize.Width - pnlAiReport.Padding.Right - btnGenerateReport.Width,
+                pnlAiReport.Padding.Top
+            );
+        }
+
+        private async void btnGenerateReport_Click(object sender, EventArgs e)
+        {
+            btnGenerateReport.Enabled = false;
+            btnGenerateReport.Text = "Generating...";
+            rtbAiReport.Text = "";
+            lblAiReportStatus.Text = "Analysing financial data...";
+
+            try
+            {
+                string report = await GenerateFinancialReport();
+                rtbAiReport.Text = report;
+                lblAiReportStatus.Text = $"Report generated : {DateTime.Now:dd/MM/yyyy HH:mm}";
+            }
+            catch (Exception ex)
+            {
+                rtbAiReport.Text = "Failed to generate report. Please try again.";
+                lblAiReportStatus.Text = $"Error: {ex.Message}";
+            }
+            finally
+            {
+                btnGenerateReport.Enabled = true;
+                btnGenerateReport.Text = "Generate Report";
+            }
+        }
+
+        private async Task<string> GenerateFinancialReport()
+        {
+            string apiKey = ConfigurationManager.AppSettings["GOOGLE_API_KEY"];
+            if (string.IsNullOrWhiteSpace(apiKey))
+                throw new Exception("OpenAI API key not set in app.config.");
+
+            var client = new Client(apiKey: apiKey);
+
+            // build context from current data
+            var profitLossSummary = string.Join(", ",
+                _lastProfitLoss.Select(p => $"{p.Month}: Revenue ${p.Revenue:F0} / Payouts ${p.Payouts:F0}")
+            );
+
+            var betStatusSummary = string.Join(", ",
+                _lastBetStatus.Select(b => $"{b.Status}: {b.Count}")
+            );
+
+            int totalBets = _lastBetStatus.Sum(b => b.Count);
+            double winRate = totalBets > 0
+                ? (_lastBetStatus.FirstOrDefault(b => b.Status == "Won")?.Count ?? 0) * 100.0 / totalBets
+                : 0;
+
+            string prompt = $"""
+                            You are a financial analyst for a football betting platform called Pitch Bet.
+                            Analyse the following financial data and write a concise executive summary for business stakeholders. (3-4 paragraphs).
+                            Focus on revenue trends, profitability, user activity, and key risks or opportunities.
+                            Provide insights and highlight any anomalies or areas for improvement.
+                            Write in a professional but clear tone. Do not use markdown formatting.
+
+                            Financial Summary:
+                            - Total Revenue: ${_lastSummary.TotalRevenue:F2}
+                            - Total Active Users: {_lastSummary.TotalActiveUsers:N0}
+                            - Total Bets Placed: {_lastSummary.TotalBetsPlaced:N0}
+                            - Total Deposits: ${_lastSummary.TotalDeposits:F2}
+                            - Total Withdrawals: ${_lastSummary.TotalWithdrawals:F2}
+
+                            Monthly Profit & Loss (last 6 months):
+                            {profitLossSummary}
+
+                            Bet Outcomes:
+                            {betStatusSummary}
+                            Win rate: {winRate:F1}%
+                            """;
+
+            var response = await client.Models.GenerateContentAsync(
+                model: "gemini-3-flash-preview", contents: prompt);
+
+            return response.Candidates[0].Content.Parts[0].Text;
         }
 
         protected override void AfterScaling()
