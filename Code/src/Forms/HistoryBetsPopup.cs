@@ -1,7 +1,6 @@
 ﻿using BettingSystem.Data_Structures;
 using BettingSystem.Forms.CustomControls;
 using BettingSystem.Models;
-using BettingSystem.Services;
 
 namespace BettingSystem.Forms
 {
@@ -22,15 +21,35 @@ namespace BettingSystem.Forms
         {
             betsFlowLayoutPanel.Hide();
             betsFlowLayoutPanel.Controls.Clear();
-            string actualResult;
+            string actualResult = "Pending";
             foreach (HistoryBet bet in _bets)
             {
-                actualResult = FindActualResult(bet.GameId, bet.BetTypeId);
-                HistoryBetPanel betPanel = new HistoryBetPanel(bet, actualResult, players);
+                //result will be displayed only for completed matches
+                if (bet.Result != "Pending")
+                {
+                    actualResult = FindActualResult(bet.GameId, bet.BetTypeId);
+                }
+                HistoryBetPanel betPanel = new HistoryBetPanel(bet, actualResult, GetPlayers(players, bet.HomeTeamId, bet.AwayTeamId));
                 betPanel.Margin = new Padding(0, 10, 0, 0);
                 betsFlowLayoutPanel.Controls.Add(betPanel);
             }
             betsFlowLayoutPanel.Show();
+        }
+
+        //get players in the game
+        private MyList<Player> GetPlayers(MyDictionary<int, MyList<Player>> players, int homeId, int awayId)
+        {
+            MyList<Player> gamePlayers = new MyList<Player>();
+
+            if (players.TryGetValue(homeId, out var homePlayers))
+            {
+                gamePlayers.AddRange(homePlayers);
+            }
+            if (players.TryGetValue(awayId, out var awayPlayers))
+            {
+                gamePlayers.AddRange(awayPlayers);
+            }
+            return gamePlayers;
         }
 
         //find actual result of match to display it
