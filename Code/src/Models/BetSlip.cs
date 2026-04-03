@@ -15,9 +15,15 @@ namespace BettingSystem.Models
             TotalOdds = 1;
         }
 
+
         // add bet or update
         public string AddBet(Bet bet)
         {
+            if (bet.Date <= DateTime.Now)
+            {
+                return "Cannot place bet. Game has already started.";
+            }
+
             // check if bet exists
             foreach (Bet existingBet in Bets)
             {
