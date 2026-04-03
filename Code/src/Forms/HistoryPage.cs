@@ -14,7 +14,7 @@ namespace BettingSystem.Forms
         private Simulator _appSimulator;
 
         private MyList<BetHistorySlip> _betSlips;
-        private BetSlipFilter _slipFilter;
+        private BetSlipFilter _slipFilter = new BetSlipFilter();
         private MyDictionary<int, GameResult> _gameResults;
         private string _currentStatusFilter = "All";
         private bool _sortingDateAsc = false;
@@ -24,7 +24,6 @@ namespace BettingSystem.Forms
             _currentUser = loggedInUser;
             _currentSession = sessionManager;
             _betSlips = _currentSession.HistoryBetSlips;
-            _slipFilter = new BetSlipFilter(_betSlips);
             _appSimulator = _currentSession.AppSimulator;
 
             InitializeComponent();
@@ -32,7 +31,7 @@ namespace BettingSystem.Forms
             navBar1.SetCurrentUser(_currentUser);
             SetRadioBtnTag();
 
-            _ = LoadPage();
+            this.Load += LoadPage;
 
             //navbar events
             navBar1.MatchesClicked += NavBar1_MatchesClicked;
@@ -110,6 +109,7 @@ namespace BettingSystem.Forms
 
         private async Task FetchData()
         {
+            _betSlips = await _dbManager.FetchBetHistoryAsync(_currentUser.UserID);
             var gameIds = _betSlips
                 .SelectMany(slip => slip.Bets)
                 .Select(bet => bet.GameId)
@@ -121,20 +121,21 @@ namespace BettingSystem.Forms
             _gameResults = await _dbManager.FetchGameResultsAsync(gameIdsList);
         }
 
-        public async Task LoadPage()
+        public async void LoadPage(object sender, EventArgs e)
         {
             await FetchData();
-            DisplaySlips();
+
+            DisplaySlips(_betSlips);
             UpdateSlipPanel(null, null);
         }
 
-        private void DisplaySlips()
+        private void DisplaySlips(MyList<BetHistorySlip> betSlips)
         {
             slipsFlowLayoutPanel.Hide();
             slipsFlowLayoutPanel.Controls.Clear();
 
             // check if user has no bet slips
-            if (_betSlips is null || _betSlips.Count == 0)
+            if (betSlips is null || betSlips.Count == 0)
             {
                 Label noSlipsLbl = new Label();
                 noSlipsLbl.Text = "No Bet Slips Found.";
@@ -149,7 +150,7 @@ namespace BettingSystem.Forms
             }
 
             //display slips
-            foreach (BetHistorySlip slip in _betSlips)
+            foreach (BetHistorySlip slip in betSlips)
             {
                 BetSlipPanel slipPanel = new BetSlipPanel(slip, _currentUser);
                 slipPanel.Margin = new Padding(0, 15, 0, 0);
@@ -207,16 +208,22 @@ namespace BettingSystem.Forms
             //filter and sort only if there is a change
             if (selectedSortingDateAsc != _sortingDateAsc || selectedStatus != _currentStatusFilter)
             {
-                FilterSlips(selectedSortingDateAsc, selectedStatus);
-                DisplaySlips();
+                _sortingDateAsc = selectedSortingDateAsc;
+                _currentStatusFilter = selectedStatus;
+                DisplaySlips(_slipFilter.FilterBetSlips(_betSlips, selectedStatus, selectedSortingDateAsc));
             }
         }
 
-        private void FilterSlips(bool selectedSortingDateAsc, string selectedStatus)
+        private async Task FetchNewSlips()
         {
-            _sortingDateAsc = selectedSortingDateAsc;
-            _currentStatusFilter = selectedStatus;
-            _betSlips = _slipFilter.FilterBetSlips(selectedStatus, selectedSortingDateAsc);
+            int lastId = _betSlips.Any() ? _betSlips.Max(s => s.SlipID) : 0;
+            MyList <BetHistorySlip> newSlips = await _dbManager.FetchBetHistoryAsync(_currentUser.UserID, lastId);
+
+            if (!newSlips.IsEmpty())
+            {
+                newSlips.AddRange(_betSlips);
+                _betSlips = newSlips;
+            }
         }
 
         public async Task ReInitialisePage()
@@ -227,10 +234,11 @@ namespace BettingSystem.Forms
             _currentStatusFilter = "All";
             _sortingDateAsc = false;
 
+            await FetchNewSlips();
             await FetchNewGameResults();
 
             applyFilterBtn_Click(null, null);
-            DisplaySlips();
+            DisplaySlips(_betSlips);
         }
 
         private async Task FetchNewGameResults()
