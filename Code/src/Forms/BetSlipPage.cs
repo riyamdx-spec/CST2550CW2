@@ -156,6 +156,15 @@ namespace BettingSystem.Forms
                 return;
             }
 
+            var startedBets = UserSlip.Bets.Where(b => b.Date <= DateTime.Now).ToList();
+
+            // check if match has already started before confirming bet slip
+            if (startedBets.Any())
+            {
+                new Notification("Cannot place bet. One or more matches have already started.", NotificationType.Error, this);
+                return;
+            }
+
             // validate stake
             if (!decimal.TryParse(txtStake.Text, out decimal stake) || stake <= 0)
             {
