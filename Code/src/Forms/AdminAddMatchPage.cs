@@ -14,8 +14,6 @@ namespace BettingSystem.Forms
         private League[] Leagues;
         private MyDictionary<int, Team> TeamsDict;
         private MyDictionary<int, MyList<Player>> Players;
-        private MyDictionary<int, GameResult> GameResults;
-        private FootballMatchCollection MatchesCollection;
 
         private int CurrentLeagueID = -1;
         private SessionManager CurrentSession;
@@ -31,8 +29,6 @@ namespace BettingSystem.Forms
             Leagues = CurrentSession.Leagues;
             TeamsDict = CurrentSession.TeamsDict;
             Players = CurrentSession.Players;
-            GameResults = CurrentSession.GameResults;
-            MatchesCollection = CurrentSession.MatchesCollection;
 
             adminNavBar1.SetAdmin(admin);
 
@@ -81,9 +77,9 @@ namespace BettingSystem.Forms
         }
 
 
-        private void AdminNavBar1_SearchMatchesPageClicked(object? sender, EventArgs e)
+        private async void AdminNavBar1_SearchMatchesPageClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenAdminMatchPage(this);
+            await CurrentSession.OpenAdminMatchPage(this);
         }
 
         private void AdminNavBar1_UsersPageClicked(object? sender, EventArgs e)
@@ -119,19 +115,12 @@ namespace BettingSystem.Forms
         {
             LeagueTeams = await DbManager.FetchLeagueTeamAsync();
             DisplayLeagueNames();
-            SetDateTimePicker();
+            selectedMatchDate.MinDate = DateTime.Now.AddMinutes(5);
             leagueComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             homeTeamComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             awayTeamComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         }
 
-        private void SetDateTimePicker()
-        {
-            selectedMatchDate.Format = DateTimePickerFormat.Custom;
-            selectedMatchDate.CustomFormat = "dd/MM/yyyy HH:mm";
-            selectedMatchDate.ShowUpDown = false;
-            selectedMatchDate.MinDate = DateTime.Now.AddMinutes(5);
-        }
         public void DisplayLeagueNames()
         {
             foreach (League league in Leagues)
@@ -182,7 +171,8 @@ namespace BettingSystem.Forms
                 return;
             }
 
-            (bool valid, string? message) = Validator.CheckMatchEntries(selectedHomeTeam.ID, selectedAwayTeam.ID);
+            DateTime matchDate = selectedMatchDate.Value;
+            (bool valid, string? message) = Validator.CheckMatchEntries(selectedHomeTeam.ID, selectedAwayTeam.ID, matchDate);
             if (!valid)
             {
                 new Notification(message, NotificationType.Warning, this);
@@ -190,10 +180,10 @@ namespace BettingSystem.Forms
             }
 
             AddMatchComboItems selectedLeague = leagueComboBox.SelectedItem as AddMatchComboItems;
-            DateTime matchDate = selectedMatchDate.Value;
 
             FootballMatch newMatch = new FootballMatch(0, selectedLeague.ID, selectedHomeTeam.ID, selectedAwayTeam.ID, matchDate);
             AddNewMatchService addNewMatch = new AddNewMatchService(newMatch, Players[selectedHomeTeam.ID], Players[selectedAwayTeam.ID], CurrentSession);
+
             (valid, message, GameResult generatedResult) = await addNewMatch.AddMatchToDatabase();
             if (!valid)
             {

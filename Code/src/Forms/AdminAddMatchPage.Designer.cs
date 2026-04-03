@@ -201,6 +201,9 @@
             selectedMatchDate.Name = "selectedMatchDate";
             selectedMatchDate.Size = new Size(214, 23);
             selectedMatchDate.TabIndex = 7;
+            selectedMatchDate.Format = DateTimePickerFormat.Custom;
+            selectedMatchDate.CustomFormat = "dd/MM/yyyy HH:mm";
+            selectedMatchDate.ShowUpDown = false;
             // 
             // ConfirmationBtntableLayoutPanel
             // 

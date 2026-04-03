@@ -57,8 +57,15 @@ namespace BettingSystem.Forms
                 this.BeginInvoke(new Action(AppSimulator_HistoryUpdated));
                 return;
             }
-            FilterSlips(SortingDateAsc, CurrentStatusFilter);
-            DisplaySlips();
+
+            //update slips
+            foreach (Control ctr in slipsFlowLayoutPanel.Controls)
+            {
+                if (ctr is BetSlipPanel slipPanel && ctr.Tag is BetHistorySlip slip)
+                {
+                    slipPanel.UpdateStatusDisplayed();
+                }
+            }
         }
 
         private void HistoryPage_FormClosing(object? sender, FormClosingEventArgs e)

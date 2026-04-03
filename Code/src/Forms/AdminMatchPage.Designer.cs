@@ -28,6 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
+            DataGridViewCellStyle dataGridViewCellStyle1 = new DataGridViewCellStyle();
+            DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             bgPanel = new Panel();
             matchPanel = new Panel();
             matchDataGridView = new DataGridView();
@@ -98,41 +100,45 @@
             matchDataGridView.AllowUserToAddRows = false;
             matchDataGridView.AllowUserToDeleteRows = false;
             matchDataGridView.AllowUserToOrderColumns = true;
+            matchDataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             matchDataGridView.BackgroundColor = Color.FromArgb(36, 36, 36);
             matchDataGridView.BorderStyle = BorderStyle.None;
+            matchDataGridView.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            matchDataGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            dataGridViewCellStyle1.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle1.BackColor = Color.FromArgb(68, 123, 60);
+            dataGridViewCellStyle1.Font = new Font("Segoe UI", 15F, FontStyle.Bold);
+            dataGridViewCellStyle1.ForeColor = SystemColors.WindowText;
+            dataGridViewCellStyle1.Padding = new Padding(8, 6, 8, 6);
+            dataGridViewCellStyle1.SelectionBackColor = SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = DataGridViewTriState.True;
+            matchDataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             matchDataGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridViewCellStyle2.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = SystemColors.Window;
+            dataGridViewCellStyle2.Font = new Font("Segoe UI", 9F);
+            dataGridViewCellStyle2.ForeColor = Color.FromArgb(241, 241, 241);
+            dataGridViewCellStyle2.Padding = new Padding(8, 6, 8, 6);
+            dataGridViewCellStyle2.SelectionBackColor = Color.FromArgb(31, 31, 31);
+            dataGridViewCellStyle2.SelectionForeColor = Color.FromArgb(241, 241, 241);
+            dataGridViewCellStyle2.WrapMode = DataGridViewTriState.False;
+            matchDataGridView.DefaultCellStyle = dataGridViewCellStyle2;
             matchDataGridView.Dock = DockStyle.Fill;
             matchDataGridView.EnableHeadersVisualStyles = false;
+            matchDataGridView.GridColor = Color.FromArgb(60, 60, 60);
             matchDataGridView.Location = new Point(50, 20);
             matchDataGridView.Name = "matchDataGridView";
             matchDataGridView.ReadOnly = true;
+            matchDataGridView.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            matchDataGridView.RowHeadersVisible = false;
+            matchDataGridView.RowTemplate.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            matchDataGridView.RowTemplate.DefaultCellStyle.BackColor = Color.FromArgb(31, 31, 31);
+            matchDataGridView.RowTemplate.DefaultCellStyle.Font = new Font("Segoe UI", 11F);
+            matchDataGridView.RowTemplate.Height = 90;
             matchDataGridView.Size = new Size(1068, 318);
             matchDataGridView.TabIndex = 7;
             matchDataGridView.Visible = false;
-
-            matchDataGridView.AutoGenerateColumns = false;
-            matchDataGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            matchDataGridView.DefaultCellStyle.ForeColor = Color.FromArgb(241, 241, 241);
-            matchDataGridView.RowTemplate.Height = 90;
-            matchDataGridView.ColumnHeadersHeight = 95;
-
-            matchDataGridView.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            matchDataGridView.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
-            matchDataGridView.DefaultCellStyle.SelectionBackColor = Color.FromArgb(31, 31, 31);
-            matchDataGridView.DefaultCellStyle.SelectionForeColor = Color.FromArgb(241, 241, 241);
-            matchDataGridView.DefaultCellStyle.Padding = new Padding(8, 6, 8, 6);
-            matchDataGridView.ColumnHeadersDefaultCellStyle.Padding = new Padding(8, 6, 8, 6);
-            matchDataGridView.RowHeadersVisible = false;
-            matchDataGridView.GridColor = Color.FromArgb(60, 60, 60);
-            matchDataGridView.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
-
-            matchDataGridView.RowTemplate.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            matchDataGridView.RowTemplate.DefaultCellStyle.Font = new Font("Segoe UI", 11, FontStyle.Regular);
-            matchDataGridView.RowTemplate.DefaultCellStyle.BackColor = Color.FromArgb(31, 31, 31);
-
-            matchDataGridView.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            matchDataGridView.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 15, FontStyle.Bold);
-            matchDataGridView.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(68, 123, 60);
             // 
             // noMatchLbl
             // 
@@ -363,6 +369,7 @@
             clearSearchIcon.SizeMode = PictureBoxSizeMode.CenterImage;
             clearSearchIcon.TabIndex = 5;
             clearSearchIcon.TabStop = false;
+            clearSearchIcon.Click += clearSearchIcon_Click;
             // 
             // searchbarTextBox
             // 

@@ -163,13 +163,19 @@ namespace BettingSystem.Services
         }
 
         //check new match detail entered by admin
-        public (bool valid, string? message) CheckMatchEntries(int homeId, int awayId)
+        public (bool valid, string? message) CheckMatchEntries(int homeId, int awayId, DateTime matchDate)
         {
+            //check if home and away team are the same
             if (homeId == awayId)
             {
                 return (false, "Home and Away Teams cannot be the same");
             }
 
+            // check if match is not starting in less than 5 minutes
+            if (matchDate < DateTime.Now.AddMinutes(5))
+            {
+                return (false, "Please select a start time at least 5 minutes from now");
+            }
             return (true, null);
 
         }

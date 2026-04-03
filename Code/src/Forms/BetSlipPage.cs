@@ -32,17 +32,57 @@ namespace BettingSystem.Forms
             navBar1.SetCurrentUser(CurrentUser);
             navBar1.MatchesClicked += NavBar1_MatchesClicked;
             navBar1.AccountClicked += NavBar1_AccountClicked;
+            navBar1.LogoutClicked += NavBar1_LogoutClicked;
 
             this.Load += BetSlipPage_Load;
+            this.FormClosing += BetSlipPage_FormClosing;
+
+            CurrentSession.AppSimulator.BetSlipUpdated += AppSimulator_BetSlipUpdated;
+        }
+
+        private void AppSimulator_BetSlipUpdated()
+        {
+            //checks if it is on UI thread
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(AppSimulator_BetSlipUpdated));
+                return;
+            }
+
+            ReloadSlip();
+        }
+
+        private void BetSlipPage_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            {
+                logOutPopup closingPopup = new logOutPopup(false, true);
+                if (closingPopup.ShowDialog() == DialogResult.No)
+                {
+                    e.Cancel = true;
+                }
+                else
+                {
+                    CurrentSession.IsExiting = true;
+                    Application.Exit();
+                }
+            }
+        }
+
+        private void NavBar1_LogoutClicked(object? sender, EventArgs e)
+        {
+            if (!CurrentSession.IsLoggingOut)
+            {
+                logOutPopup closingPopup = new logOutPopup(true);
+                if (closingPopup.ShowDialog() == DialogResult.Yes)
+                    CurrentSession.LogOut(this);
+            }
         }
 
         private async void BetSlipPage_Load(object sender, EventArgs e)
         {
             BetTypeNames = await DBManager.FetchBetTypesAsync();
             CaptureBaseLayout();
-            CentreHorizontally(pnlSummary);
-            CenterStakeTextBox();
-            CenterPlaceBetButton();
             LoadBetSlips();
         }
 
@@ -53,38 +93,20 @@ namespace BettingSystem.Forms
             UpdateSummary();
         }
 
-        protected override void AfterScaling()
-        {
-            CentreHorizontally(pnlSummary);
-            CenterStakeTextBox();
-            CenterPlaceBetButton();
-        }
-
-        private void CenterStakeTextBox()
-        {
-            txtStake.Top = (pnlStake.Height - txtStake.Height) / 2;
-        }
-
-        private void CenterPlaceBetButton()
-        {
-            btnPlaceBet.Left = (pnlPlaceBet.Width - btnPlaceBet.Width) / 2;
-            btnPlaceBet.Top = (pnlPlaceBet.Height - btnPlaceBet.Height) / 2;
-        }
-
         private void LoadBetSlips()
         {
             pnlSlipList.Controls.Clear();
-
             if (!UserSlip.Bets.Any())
             {
                 Label emptyLbl = new Label();
                 emptyLbl.Text = "Your bet slip is empty.";
-                emptyLbl.Font = new Font("Times New Roman", 16F, FontStyle.Bold);
-                emptyLbl.ForeColor = Color.FromArgb(180, 180, 180);
+                emptyLbl.Font = new Font("Times New Roman", 22, FontStyle.Bold);
+                emptyLbl.ForeColor = Color.FromArgb(241, 241, 241);
+                emptyLbl.Height = 300;
                 emptyLbl.TextAlign = ContentAlignment.MiddleCenter;
                 emptyLbl.Dock = DockStyle.Fill;
                 pnlSlipList.Controls.Add(emptyLbl);
-                UpdateSummary();
+                pnlSummaryContainer.Hide();
                 return;
 
             }
@@ -109,13 +131,11 @@ namespace BettingSystem.Forms
                     bet.OddValue.ToString("F2"),
                     match.GameDate
                 );
-                //card.Margin = new Padding(10, 8, 10, 30);
                 card.OnRemove += () =>
                 {
                     UserSlip.RemoveBet(bet);
                     pnlSlipList.Controls.Remove(card);
                     card.Dispose();
-                    UpdateSummary();
 
                     // show empty message if no bets left
                     if (!UserSlip.Bets.Any())
@@ -131,6 +151,7 @@ namespace BettingSystem.Forms
         {
             lblTotalOdds.Text = UserSlip.TotalOdds.ToString("F2");
             lblPayout.Text = $"${UserSlip.CalculatePayout():F2}";
+            pnlSummaryContainer.Show();
         }
 
         private void txtStake_TextChanged(object sender, EventArgs e)
@@ -214,9 +235,7 @@ namespace BettingSystem.Forms
             navBar1.DisplayInfo();
 
             // reset slip
-            //UserSlip.Bets.Clear(); // might bypass total odds
-            foreach (Bet bet in UserSlip.Bets.ToList())
-                UserSlip.RemoveBet(bet);
+            UserSlip.Bets.Clear();
             UserSlip.Stake = 0;
 
             // show confirmation
@@ -253,6 +272,5 @@ namespace BettingSystem.Forms
         {
             CurrentSession.OpenProfilePage(this);
         }
-
     }
 }

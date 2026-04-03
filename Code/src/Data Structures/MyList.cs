@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BettingSystem.Models;
+using System;
 using System.Collections;
 
 namespace BettingSystem.Data_Structures
@@ -121,25 +122,6 @@ namespace BettingSystem.Data_Structures
             _count --;
         }
 
-        // insertion sort
-        // sort in descending order of date
-        public void InsertionSort(Func<T, DateTime> getDate)
-        {
-            for (int i = 1; i < _count; ++i)
-            {
-                T key = _items[i];
-                DateTime keyDate = getDate(key);
-                int j = i - 1;
-
-                while (j >= 0 && getDate(_items[j]).CompareTo(keyDate) < 0)
-                {
-                    _items[j + 1] = _items[j];
-                    j--;
-                }
-                _items[j + 1] = key;
-            }
-        }
-
         // reverse list
         public void Reverse()
         {
@@ -155,6 +137,25 @@ namespace BettingSystem.Data_Structures
                 startIndex++;
                 maxIndex--;
             }
+        }
+
+        //insert match at correct position
+        public void InsertMatch(FootballMatch newMatch)
+        {
+            if (_count + 1 >= _capacity)
+                Resize();
+
+            DateTime itemDate = newMatch.GameDate;
+            int i = _count - 1;
+            while (i >= 0 && (_items[i]) is FootballMatch match && match.GameDate < itemDate)
+            {
+                //right shift
+                _items[i + 1] = _items[i];
+                i--;
+            }
+            //insert match at correct position
+            _items[i + 1] = (T)(object)newMatch;
+            _count++;
         }
 
         // return index of a value

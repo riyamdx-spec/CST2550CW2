@@ -5,14 +5,17 @@ using BettingSystem.Services;
 namespace BettingSystem.Forms
 {
     public enum ViewPanel { Login, SignUp }
+
     public partial class RegisterLoginForm : BaseForm
     {
         private Validation validator = new Validation();
         private DatabaseManager db = new DatabaseManager();
         public bool NavigatingBack = false;
+        private Simulator _simulator;
 
-        public RegisterLoginForm(ViewPanel view = ViewPanel.SignUp)
+        public RegisterLoginForm(Simulator appSimulator, ViewPanel view = ViewPanel.SignUp)
         {
+            _simulator = appSimulator;
             InitializeComponent();
             this.DoubleBuffered = true;
             SetupForm(view);
@@ -180,7 +183,7 @@ namespace BettingSystem.Forms
             landingPage? appLandingPage = Application.OpenForms.OfType<landingPage>().FirstOrDefault();
             if (appLandingPage is null)
             {
-                appLandingPage = new landingPage();
+                appLandingPage = new landingPage(_simulator);
             }
             appLandingPage.Size = this.Size;
             appLandingPage.Location = this.Location;
@@ -290,7 +293,9 @@ namespace BettingSystem.Forms
 
         private async Task OpenMainPage(AppUser user)
         {
-            SessionManager currentSession = new SessionManager(user);
+            SessionManager currentSession = new SessionManager(user, _simulator);
+            currentSession.AppSimulator = _simulator;
+            _simulator.SetSession(currentSession);
 
             if (user.Role == "admin")
             {

@@ -7,7 +7,7 @@ namespace BettingSystem.Services
 {
     public class SessionManager
     {
-        private readonly DatabaseManager DbManager = new DatabaseManager();
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
 
         public FootballMatchCollection MatchesCollection { set; get; }
 
@@ -16,45 +16,51 @@ namespace BettingSystem.Services
         public MyList<BetHistorySlip> HistoryBetSlips { set; get; }
         public BetSlip UserSlip { set; get;}
 
-        private AppUser CurrentUser { set; get; }
+        private AppUser _currentUser { set; get; }
 
         public League[] Leagues { set; get; }
         public MyDictionary<int, Team> TeamsDict { set; get; }
         public MyDictionary<int, MyList<Player>> Players { set; get; }
         public bool IsLoggingOut { get; private set; }
         public bool IsExiting { get; set; }
+        public bool IsAdmin { get; set; }
 
         public Simulator AppSimulator;
 
-        public SessionManager(AppUser currentUser)
+        public SessionManager(AppUser currentUser, Simulator appSimulator)
         {
-            CurrentUser = currentUser;
+            _currentUser = currentUser;
             IsLoggingOut = false;
             IsExiting = false;
-
-            if (CurrentUser.Role == "user")
+            AppSimulator = appSimulator;
+            if (_currentUser.Role == "user")
             {
                 UserSlip = new BetSlip(currentUser.UserID);
                 GameResults = new MyDictionary<int, GameResult>();
+                IsAdmin = false;
+                return;
             }
-            //start timer for simulator
-            AppSimulator = new Simulator(CurrentUser, this);
+            IsAdmin = true;
         }
         
+        //load data for uer's side
         public async Task FetchUserData()
         {
-            MatchesCollection = await DbManager.FetchMatchesAsync();
-            HistoryBetSlips = await DbManager.FetchBetHistoryAsync(CurrentUser.UserID);
-            Players = await DbManager.FetchPlayersAsync();
+            Leagues = await _dbManager.FetchLeaguesAsync();
+            MatchesCollection = await _dbManager.FetchMatchesAsync();
+            HistoryBetSlips = await _dbManager.FetchBetHistoryAsync(_currentUser.UserID);
+            Players = await _dbManager.FetchPlayersAsync();
+            TeamsDict = await _dbManager.FetchTeamsAsync();
         }
 
+        //load data for admin panel
         public async Task FetchAdminData()
         {
-            MatchesCollection = await DbManager.FetchMatchesAsync(true);
-            GameResults = await DbManager.FetchGameResultsAsync(null, true);
-            Leagues = await DbManager.FetchLeaguesAsync();
-            TeamsDict = await DbManager.FetchTeamsAsync(true);
-            Players = await DbManager.FetchPlayersAsync();
+            MatchesCollection = await _dbManager.FetchMatchesAsync(true);
+            GameResults = await _dbManager.FetchGameResultsAsync(null, true);
+            Leagues = await _dbManager.FetchLeaguesAsync();
+            TeamsDict = await _dbManager.FetchTeamsAsync(true);
+            Players = await _dbManager.FetchPlayersAsync();
         }
 
         public void OpenProfilePage(Form currentForm)
@@ -63,7 +69,7 @@ namespace BettingSystem.Services
             //check if profile page is already opened
             if (profilePage is null)
             {
-                profilePage = new AccountPage(CurrentUser, this);
+                profilePage = new AccountPage(_currentUser, this);
             }
             else
             {
@@ -84,7 +90,7 @@ namespace BettingSystem.Services
             //check if main page is already opened
             if (mainPage is null)
             {
-                mainPage = new MainPage(CurrentUser, this);
+                mainPage = new MainPage(_currentUser, this);
             }
             else
             {
@@ -105,7 +111,7 @@ namespace BettingSystem.Services
             //check if histoty page is already opened
             if (betHistoryPage is null)
             {
-                betHistoryPage = new HistoryPage(CurrentUser, this);
+                betHistoryPage = new HistoryPage(_currentUser, this);
             }
             else
             {
@@ -125,7 +131,7 @@ namespace BettingSystem.Services
             BetSlipPage? betSlipPage = Application.OpenForms.OfType<BetSlipPage>().FirstOrDefault();
             if (betSlipPage is null)
             {
-                betSlipPage = new BetSlipPage(CurrentUser, this);
+                betSlipPage = new BetSlipPage(_currentUser, this);
             }
             else
             {
@@ -146,9 +152,8 @@ namespace BettingSystem.Services
             AdminUsersPage? usersPage = Application.OpenForms.OfType<AdminUsersPage>().FirstOrDefault();
             if (usersPage is null)
             {
-                usersPage = new AdminUsersPage(CurrentUser, this);
+                usersPage = new AdminUsersPage(_currentUser, this);
             }
-
             else
             {
                 // reinitialise content on page
@@ -167,7 +172,7 @@ namespace BettingSystem.Services
 
             if (matchPage is null)
             {
-                matchPage = new AdminMatchPage(CurrentUser, this);
+                matchPage = new AdminMatchPage(_currentUser, this);
             }
             else
             {
@@ -187,7 +192,7 @@ namespace BettingSystem.Services
 
             if (addMatchPage is null)
             {
-                addMatchPage = new AdminAddMatchPage(CurrentUser, this);
+                addMatchPage = new AdminAddMatchPage(_currentUser, this);
             }
             else
             {
@@ -207,7 +212,7 @@ namespace BettingSystem.Services
             AdminFinancialPage? financialPage = Application.OpenForms.OfType<AdminFinancialPage>().FirstOrDefault();
             if (financialPage is null)
             {
-                financialPage = new AdminFinancialPage(CurrentUser, this);
+                financialPage = new AdminFinancialPage(_currentUser, this);
             }
             else
             {
@@ -221,7 +226,7 @@ namespace BettingSystem.Services
             currentForm.Hide();
             financialPage.Show();
         }
-        public async Task LogOut(Form currentForm)
+        public void LogOut(Form currentForm)
         {
             IsLoggingOut = true;
             var openForms = Application.OpenForms.Cast<Form>().ToList();
@@ -231,14 +236,11 @@ namespace BettingSystem.Services
                     activeForm.Close();
             }
 
-            //stop timer for simulation
-            await AppSimulator.DisposeAsync();
-
             IsLoggingOut = false;
             landingPage? appLandingPage = Application.OpenForms.OfType<landingPage>().FirstOrDefault();
             if (appLandingPage is null)
             {
-                appLandingPage = new landingPage();
+                appLandingPage = new landingPage(AppSimulator);
             }
             appLandingPage.Size = currentForm.Size;
             appLandingPage.Location = currentForm.Location;
