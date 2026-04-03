@@ -33,7 +33,7 @@ namespace BettingSystem.Forms.CustomControls
             // preview of bet from slip
             HistoryBet betPreview = CurrentSlip.Bets[0];
             previewedLeagueLbl.Text = betPreview.LeagueName;
-            previewMatchDateLbl.Text = betPreview.MatchDate.ToString("dd/MM/yyyy") + betPreview.MatchDate.ToString("HH:mm");
+            previewMatchDateLbl.Text = betPreview.MatchDate.ToString("dd/MM/yyyy") + " - " + betPreview.MatchDate.ToString("HH:mm");
             homeTeamLbl.Text = betPreview.HomeTeam;
             awayTeamLbl.Text = betPreview.AwayTeam;
         }
@@ -47,6 +47,7 @@ namespace BettingSystem.Forms.CustomControls
                 claimBtn.Enabled = true;
                 claimBtn.Text = "Claim Now";
                 claimBtn.Click += ClaimBtn_Click;
+                claimBtn.BackColor = Color.FromArgb(93, 185, 64);
                 return;
             }
             claimBtn.Enabled = false;
@@ -58,6 +59,7 @@ namespace BettingSystem.Forms.CustomControls
             }
 
             claimBtn.BackColor = Color.FromArgb(169, 169, 169);
+            claimBtn.ForeColor = Color.FromArgb(36, 36, 36);
             claimBtn.Text = "Cannot Claim";
         }
 
