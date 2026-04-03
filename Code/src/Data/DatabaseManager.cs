@@ -778,20 +778,34 @@ namespace BettingSystem.Data
             return null;
         }
 
-        public async Task<MyList<BetHistorySlip>> FetchBetHistoryAsync(int userID)
+        public async Task<MyList<BetHistorySlip>> FetchBetHistoryAsync(int userID, int? lastID = null)
         {
             MyList<BetHistorySlip> history = new MyList<BetHistorySlip>();
-
+            string slipQuery;
             // fetch completed slips by most recent
-            string slipQuery = @"SELECT slip_id, app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed
+            if (lastID is null)
+            {
+                slipQuery = @"SELECT slip_id, app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed
                          FROM BetSlip 
                          WHERE app_user_id = @userID
                          ORDER BY bet_date DESC";
+            }
+            else
+            {
+                // fetch slips that are missing from memory
+                slipQuery = @"SELECT slip_id, app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed
+                         FROM BetSlip 
+                         WHERE app_user_id = @userID
+                         AND slip_id > @lastId
+                         ORDER BY bet_date DESC";
+            }
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
             using (SqlCommand command = new SqlCommand(slipQuery, connection))
             {
                 command.Parameters.AddWithValue("@userID", userID);
+                if (lastID is not null)
+                    command.Parameters.AddWithValue("@lastId", lastID);
 
                 try
                 {
@@ -819,16 +833,17 @@ namespace BettingSystem.Data
                     {
                         // fetch bets for each slip
                         string betQuery = @"SELECT b.bet_id, b.result, o.selection, o.odd_value, bt.bet_type_id, bt.bet_type_name,
-                                                ht.team_name AS home_team, at.team_name AS away_team, 
-                                                g.game_date, l.league_name, g.game_id
-                                            FROM Bet b
-                                            INNER JOIN Odd o ON b.odd_id = o.odd_id
-                                            INNER JOIN BetType bt ON o.bet_type_id = bt.bet_type_id
-                                            INNER JOIN Game g ON o.game_id = g.game_id
-                                            INNER JOIN Team ht ON g.home_team_id = ht.team_id
-                                            INNER JOIN Team at ON g.away_team_id = at.team_id
-                                            INNER JOIN League l ON g.league_id = l.league_id
-                                            WHERE b.slip_id = @slipID";
+                                    ht.team_name AS home_team, at.team_name AS away_team, 
+                                    ht.team_id AS home_team_id, at.team_id AS away_team_id,
+                                    g.game_date, l.league_name, g.game_id
+                                FROM Bet b
+                                INNER JOIN Odd o ON b.odd_id = o.odd_id
+                                INNER JOIN BetType bt ON o.bet_type_id = bt.bet_type_id
+                                INNER JOIN Game g ON o.game_id = g.game_id
+                                INNER JOIN Team ht ON g.home_team_id = ht.team_id
+                                INNER JOIN Team at ON g.away_team_id = at.team_id
+                                INNER JOIN League l ON g.league_id = l.league_id
+                                WHERE b.slip_id = @slipID";
 
                         using (SqlConnection betConnection = new SqlConnection(_connectionString))
                         {
@@ -856,7 +871,9 @@ namespace BettingSystem.Data
                                                 betReader["away_team"].ToString()!,
                                                 Convert.ToDateTime(betReader["game_date"]),
                                                 betReader["league_name"].ToString()!,
-                                                Convert.ToInt32(betReader["game_id"])
+                                                Convert.ToInt32(betReader["game_id"]),
+                                                Convert.ToInt32(betReader["home_team_id"]),
+                                                Convert.ToInt32(betReader["away_team_id"])
                                             );
 
                                             slip.Bets.Add(bet);
