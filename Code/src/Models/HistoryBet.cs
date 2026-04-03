@@ -13,8 +13,10 @@ namespace BettingSystem.Models
         public DateTime MatchDate { get; set; }
         public string LeagueName { get; set; }
         public int GameId { get; set; }
+        public int HomeTeamId { get; set; }
+        public int AwayTeamId { get; set; }
 
-        public HistoryBet(int id, string selection, decimal oddValue, int betTypeId, string betTypeName, string result, string homeTeam, string awayTeam, DateTime matchDate, string leagueName, int gameId)
+        public HistoryBet(int id, string selection, decimal oddValue, int betTypeId, string betTypeName, string result, string homeTeam, string awayTeam, DateTime matchDate, string leagueName, int gameId, int homeId, int awayId)
         {
             BetId = id;
             Selection = selection;
@@ -27,6 +29,8 @@ namespace BettingSystem.Models
             MatchDate = matchDate;
             LeagueName = leagueName;
             GameId = gameId;
+            HomeTeamId = homeId;
+            AwayTeamId = awayId;
         }
     }
 }
