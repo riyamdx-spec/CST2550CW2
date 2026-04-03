@@ -566,7 +566,7 @@ namespace BettingSystem.Forms
             noMatchSelectedPanel.Show();
             MatchSelectedBetsPanel.Hide();
             AllMatchesClicked(null, null);
-            _currentLeague = 0;
+            _currentLeague = -1;
             _currentMatchId = -1;
         }
 
