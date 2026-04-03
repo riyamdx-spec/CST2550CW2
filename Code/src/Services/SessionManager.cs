@@ -37,6 +37,7 @@ namespace BettingSystem.Services
             {
                 UserSlip = new BetSlip(currentUser.UserID);
                 GameResults = new MyDictionary<int, GameResult>();
+                HistoryBetSlips = new MyList<BetHistorySlip>();
                 IsAdmin = false;
                 return;
             }
