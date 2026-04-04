@@ -92,6 +92,18 @@ namespace BettingSystem.Forms
             DisplayRemovedBets();
         }
 
+        public void OnShow()
+        {
+            //subscribe to simulator event
+            _currentSession.AppSimulator.BetSlipUpdated += AppSimulator_BetSlipUpdated;
+            ReloadSlip();
+        }
+        public void OnHide()
+        {
+            //unsubscribe to simulator event
+            _currentSession.AppSimulator.BetSlipUpdated -= AppSimulator_BetSlipUpdated;
+        }
+
         private void ReloadSlip()
         {
             _userSlip = _currentSession.UserSlip;
@@ -312,11 +324,13 @@ namespace BettingSystem.Forms
 
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
         {
+            OnHide();
             _currentSession.OpenMainPage(this);
         }
 
         private void NavBar1_AccountClicked(object? sender, EventArgs e)
         {
+            OnHide();
             _currentSession.OpenProfilePage(this);
         }
     }
