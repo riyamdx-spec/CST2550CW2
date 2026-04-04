@@ -11,7 +11,6 @@ namespace BettingSystem.Forms
         private AppUser _currentUser;
         private readonly DatabaseManager _dbManager = new DatabaseManager();
         private SessionManager _currentSession;
-        private Simulator _appSimulator;
 
         private MyList<BetHistorySlip> _betSlips;
         private BetSlipFilter _slipFilter = new BetSlipFilter();
@@ -24,7 +23,6 @@ namespace BettingSystem.Forms
             _currentUser = loggedInUser;
             _currentSession = sessionManager;
             _betSlips = _currentSession.HistoryBetSlips;
-            _appSimulator = _currentSession.AppSimulator;
 
             InitializeComponent();
 
@@ -40,7 +38,7 @@ namespace BettingSystem.Forms
             navBar1.LogoutClicked += NavBar1_LogoutClicked;
 
             //memory updated event
-            _appSimulator.HistoryUpdated += AppSimulator_HistoryUpdated;
+            _currentSession.AppSimulator.HistoryUpdated += AppSimulator_HistoryUpdated;
 
             //resize bet slips panels
             slipsFlowLayoutPanel.SizeChanged += UpdateSlipPanel;
@@ -65,6 +63,18 @@ namespace BettingSystem.Forms
                     slipPanel.UpdateStatusDisplayed();
                 }
             }
+        }
+
+        public async Task OnShow()
+        {
+            //subscribe to simulator event
+            _currentSession.AppSimulator.HistoryUpdated += AppSimulator_HistoryUpdated;
+            await ReInitialisePage();
+        }
+        public void OnHide()
+        {
+            //unsubscribe to simulator event
+            _currentSession.AppSimulator.HistoryUpdated -= AppSimulator_HistoryUpdated;
         }
 
         private void HistoryPage_FormClosing(object? sender, FormClosingEventArgs e)
@@ -226,7 +236,7 @@ namespace BettingSystem.Forms
             }
         }
 
-        public async Task ReInitialisePage()
+        private async Task ReInitialisePage()
         {
             newestRadioBtn.Checked = true;
             allRadioBtn.Checked = true;
@@ -269,14 +279,17 @@ namespace BettingSystem.Forms
         //change pages
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
         {
+            OnHide();
             _currentSession.OpenMainPage(this);
         }
         private void NavBar1_BetSlipClicked(object? sender, EventArgs e)
         {
+            OnHide();
             _currentSession.OpenBetSlipPage(this);
         }
         private void NavBar1_AccountClicked(object? sender, EventArgs e)
         {
+            OnHide();
             _currentSession.OpenMainPage(this);
         }
     }
