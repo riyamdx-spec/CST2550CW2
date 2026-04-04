@@ -9,24 +9,23 @@ IF OBJECT_ID('tempdb..#TempPlayer') IS NOT NULL DROP TABLE #TempPlayer;
 IF OBJECT_ID('tempdb..#TempGame') IS NOT NULL DROP TABLE #TempGame;
 
 -- reset identity counter
-DBCC CHECKIDENT ('BetType', RESEED, 0);
 DBCC CHECKIDENT ('League', RESEED, 0);
 DBCC CHECKIDENT ('Team', RESEED, 0);
 DBCC CHECKIDENT ('Player', RESEED, 0);
 DBCC CHECKIDENT ('Game', RESEED, 0);
 
 -- Populate table BetType
-INSERT INTO BetType(bet_type_name)
+INSERT INTO BetType(bet_type_id, bet_type_name)
 VALUES
-('Match Outcome'),
-('Double Chance'),
-('Correct Score'),
-('Over/Under'),
-('Both Teams to Score'),
-('First Goal Scorer'),
-('Total Corners'),
-('Yellow Cards'),
-('Red Cards');
+(1, 'Match Outcome'),
+(2, 'Double Chance'),
+(3, 'Correct Score'),
+(4, 'Over/Under'),
+(5, 'Both Teams to Score'),
+(6, 'First Goal Scorer'),
+(7, 'Total Corners'),
+(8, 'Yellow Cards'),
+(9, 'Red Cards');
 
 -- League
 CREATE TABLE #TempLeague (
