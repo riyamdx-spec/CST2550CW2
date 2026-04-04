@@ -89,12 +89,24 @@ namespace BettingSystem.Forms
             _betTypeNames = await _dbManager.FetchBetTypesAsync();
             CaptureBaseLayout();
             LoadBetSlips();
+            DisplayRemovedBets();
         }
 
-        public void ReloadSlip()
+        private void ReloadSlip()
         {
             _userSlip = _currentSession.UserSlip;
             LoadBetSlips();
+            DisplayRemovedBets();
+        }
+
+        //display number of bets removed from slip by Simulator
+        private void DisplayRemovedBets()
+        {
+            if (_currentSession.RemovedBetCounter > 0)
+            {
+                new Notification($"{_currentSession.RemovedBetCounter} bet(s) were removed as their match(es) started", NotificationType.Warning, this);
+                _currentSession.RemovedBetCounter = 0;
+            }
         }
 
         private void LoadBetSlips()
