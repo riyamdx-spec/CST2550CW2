@@ -25,7 +25,7 @@ namespace BettingSystem.Forms
         private SessionManager _currentSession;
 
         private BetSlip _userSlip;
-        private int _currentMatchId;
+        private FootballMatch? _currentMatch;
         private int _currentLeague;
         private string _currentSearchTerm="";
 
@@ -278,10 +278,10 @@ namespace BettingSystem.Forms
         private async void SeeBetsBtnClicked(MatchDisplayInfo MatchDetails)
         {
             //avoid reloading if user is already viewing bets of the match selected
-            if (_currentMatchId == MatchDetails.CurrentMatch.GameID)
+            if (_currentMatch is not null && (_currentMatch == MatchDetails.CurrentMatch))
                 return;
 
-            _currentMatchId = MatchDetails.CurrentMatch.GameID;
+            _currentMatch = MatchDetails.CurrentMatch;
             noMatchSelectedPanel.Hide();
             await DisplayBetSelections(MatchDetails);
         }
@@ -289,7 +289,13 @@ namespace BettingSystem.Forms
         //display panel with the bets that can be placed
         private async Task DisplayBetSelections(MatchDisplayInfo MatchDetails)
         {
-            if (!await EnsureOddsLoadedForMatch(_currentMatchId))
+            if (_currentMatch is null)
+            {
+                new Notification("Please select a match first", NotificationType.Warning, this);
+                return;
+            }
+
+            if (!await EnsureOddsLoadedForMatch(_currentMatch.GameID))
             {
                 new Notification("Odds are not available for this match yet. Please refresh shortly.", NotificationType.Warning, this);
                 MatchSelectedBetsPanel.Visible = false;
@@ -473,7 +479,11 @@ namespace BettingSystem.Forms
 
         private void AddToBetSlip(Odd oddObj)
         {
-            FootballMatch match = _matchesCollection.AllMatches.First(m => m.GameID == _currentMatchId);
+            if (_currentMatch is null)
+            {
+                new Notification("Please select a match first", NotificationType.Warning, this);
+                return;
+            }
 
             //create bet instance
             Bet newBet = new Bet(
@@ -481,8 +491,8 @@ namespace BettingSystem.Forms
                 oddObj.Selection,
                 oddObj.OddValue,
                 oddObj.BetTypeID,
-                _currentMatchId,
-                match.GameDate
+                _currentMatch.GameID,
+                _currentMatch.GameDate
             );
 
             //add to bet slip
@@ -503,16 +513,20 @@ namespace BettingSystem.Forms
         //find odd
         private Odd FindOddInstance(int betTypeId, string selection)
         {
+            if (_currentMatch is null)
+                throw new InvalidOperationException("No match selected");
+
             return FindOddInstanceOrNull(betTypeId, selection)
-                   ?? throw new InvalidOperationException($"No odd found for match {_currentMatchId}, bet type {betTypeId}, selection '{selection}'.");
+                ?? throw new InvalidOperationException($"No odd found for match {_currentMatch.GameID}, bet type {betTypeId}, selection '{selection}'.");
         }
 
         private Odd? FindOddInstanceOrNull(int betTypeId, string selection)
         {
-            if (!_odds.TryGetValue(_currentMatchId, out var matchOdds))
-            {
+            if (_currentMatch is null)
                 return null;
-            }
+
+            if (!_odds.TryGetValue(_currentMatch.GameID, out var matchOdds))
+                return null;
 
             return matchOdds.FirstOrDefault(o => o.BetTypeID == betTypeId && o.Selection == selection);
         }
@@ -556,7 +570,7 @@ namespace BettingSystem.Forms
             matchesFlowLayoutPanel.Controls.Clear();
             MatchSelectedBetsPanel.Hide();
             noMatchSelectedPanel.Show();
-            _currentMatchId = -1;
+            _currentMatch = null;
         }
 
         //fetch from database to refresh matches info
@@ -580,7 +594,7 @@ namespace BettingSystem.Forms
             MatchSelectedBetsPanel.Hide();
             AllMatchesClicked(null, null);
             _currentLeague = -1;
-            _currentMatchId = -1;
+            _currentMatch = null;
         }
 
         private async void confirmScoreBet_Click(object sender, EventArgs e)
@@ -601,20 +615,9 @@ namespace BettingSystem.Forms
             (bool valid, string? message) = _validator.CheckScores(homeScore, awayScore);
             if (valid) 
             {
-                if (_currentMatchId <= 0)
+                if (_currentMatch is null)
                 {
                     scoreOddLbl.Text = "Please select a match before adding a score bet";
-                    scoreOddLbl.ForeColor = Color.Firebrick;
-                    scoreOddLbl.Visible = true;
-                    return;
-                }
-
-                FootballMatch? selectedMatch = _matchesCollection.AllMatches
-                    .FirstOrDefault(match => match.GameID == _currentMatchId);
-
-                if (selectedMatch is null)
-                {
-                    scoreOddLbl.Text = "Selected match details could not be found";
                     scoreOddLbl.ForeColor = Color.Firebrick;
                     scoreOddLbl.Visible = true;
                     return;
@@ -624,12 +627,12 @@ namespace BettingSystem.Forms
                 int awayGoals = int.Parse(awayScore);
 
                 Odd? scoreOdd = await _dbManager.GetOrCreateCorrectScoreOddAsync(
-                    _currentMatchId,
+                    _currentMatch.GameID,
                     homeGoals,
                     awayGoals,
-                    selectedMatch.HomeTeamID,
-                    selectedMatch.AwayTeamID,
-                    selectedMatch.LeagueID);
+                    _currentMatch.HomeTeamID,
+                    _currentMatch.AwayTeamID,
+                    _currentMatch.LeagueID);
 
                 if (scoreOdd is null)
                 {
@@ -639,10 +642,10 @@ namespace BettingSystem.Forms
                     return;
                 }
 
-                if (!_odds.TryGetValue(_currentMatchId, out var matchOdds))
+                if (!_odds.TryGetValue(_currentMatch.GameID, out var matchOdds))
                 {
                     matchOdds = new MyList<Odd>();
-                    _odds[_currentMatchId] = matchOdds;
+                    _odds[_currentMatch.GameID] = matchOdds;
                 }
 
                 matchOdds.RemoveAll(odd => odd.BetTypeID == scoreOdd.BetTypeID && odd.Selection == scoreOdd.Selection);
