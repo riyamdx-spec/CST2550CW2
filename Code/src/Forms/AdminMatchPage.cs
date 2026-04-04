@@ -10,12 +10,11 @@ namespace BettingSystem.Forms
         private readonly ImageLoader ImgLoader = new ImageLoader();
         private readonly DatabaseManager DbManager = new DatabaseManager();
         private MatchManager MatchFilter;
-        private SessionManager CurrentSession;
+        private SessionManager _currentSession;
         public League[] Leagues;
         public FootballMatchCollection MatchesCollection;
         public MyDictionary<int, Team> TeamsDict;
         public MyDictionary<int, GameResult> GameResults;
-        private Simulator _appSimulator;
 
         private int CurrentLeague = 0;
         private string CurrentSearchTerm = "";
@@ -24,12 +23,11 @@ namespace BettingSystem.Forms
         {
             InitializeComponent();
 
-            CurrentSession = currentSession;
-            _appSimulator = currentSession.AppSimulator;
-            Leagues = CurrentSession.Leagues;
-            MatchesCollection = CurrentSession.MatchesCollection;
-            TeamsDict = CurrentSession.TeamsDict;
-            GameResults = currentSession.GameResults;
+            _currentSession = currentSession;
+            Leagues = _currentSession.Leagues;
+            MatchesCollection = _currentSession.MatchesCollection;
+            TeamsDict = _currentSession.TeamsDict;
+            GameResults = _currentSession.GameResults;
 
             MatchFilter = new MatchManager(MatchesCollection, TeamsDict);
 
@@ -46,7 +44,7 @@ namespace BettingSystem.Forms
             matchDataGridView.CellClick += MatchDataGridView_CellClick;
 
             //update status displayed
-            _appSimulator.MatchStatusUpdated += _appSimulator_MatchStatusUpdated;
+            _currentSession.AppSimulator.MatchStatusUpdated += _appSimulator_MatchStatusUpdated;
 
             searchbarTextBox.KeyDown += Searchbar_KeyDown;
         }
@@ -68,6 +66,18 @@ namespace BettingSystem.Forms
                     row.Cells[6].Value = match.GameStatus;
                 }
             }
+        }
+
+        public async Task OnShow()
+        {
+            //subscribe to simulator event
+            _currentSession.AppSimulator.MatchStatusUpdated += _appSimulator_MatchStatusUpdated;
+            await Reset();
+        }
+        public void OnHide()
+        {
+            //unsubscribe to simulator event
+            _currentSession.AppSimulator.MatchStatusUpdated -= _appSimulator_MatchStatusUpdated;
         }
 
         private void MatchDataGridView_CellClick(object? sender, DataGridViewCellEventArgs e)
@@ -209,7 +219,7 @@ namespace BettingSystem.Forms
 
         private void AdminMatchPage_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false, true);
                 if (closingPopup.ShowDialog() == DialogResult.No)
@@ -218,7 +228,7 @@ namespace BettingSystem.Forms
                 }
                 else
                 {
-                    CurrentSession.IsExiting = true;
+                    _currentSession.IsExiting = true;
                     Application.Exit();
                 }
             }
@@ -226,31 +236,34 @@ namespace BettingSystem.Forms
 
         private void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut)
+            if (!_currentSession.IsLoggingOut)
             {
                 logOutPopup closingPopup = new logOutPopup(true, true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
-                    CurrentSession.LogOut(this);
+                    _currentSession.LogOut(this);
             }
         }
 
         //to open other pages
         private void AdminNavBar1_FinancialPageClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenAdminFinancialPage(this);
+            OnHide();
+            _currentSession.OpenAdminFinancialPage(this);
         }
 
         private void AdminNavBar1_AddMatchPageClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenAdminAddMatchPage(this);
+            OnHide();
+            _currentSession.OpenAdminAddMatchPage(this);
         }
 
         private void AdminNavBar1_UsersPageClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenAdminViewUsersPage(this);
+            OnHide();
+            _currentSession.OpenAdminViewUsersPage(this);
         }
 
-        public async Task Reset()
+        private async Task Reset()
         {
             CurrentSearchTerm = "";
             CurrentLeague = 0;
