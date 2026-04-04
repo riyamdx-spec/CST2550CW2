@@ -4,6 +4,7 @@ using BettingSystem.Services;
 using Microsoft.Data.SqlClient;
 using Microsoft.VisualBasic.ApplicationServices;
 using System.Configuration;
+using System.Diagnostics;
 using System.Security.Cryptography;
 
 namespace BettingSystem.Data
@@ -29,7 +30,7 @@ namespace BettingSystem.Data
         public async Task<(AppUser? userObj, string message)> LoginAsync(string email, string password)
         {
             //fetch user's data
-            string query = "SELECT app_user_id, first_name, last_name, email, dob, wallet_balance, password_hash, user_role, user_status, registration_date FROM AppUser WHERE email = @email";
+            string query = "SELECT app_user_id, first_name, last_name, email, dob, wallet_balance, password_hash, user_role, registration_date, user_status FROM AppUser WHERE email = @email";
             using (SqlConnection connection = new SqlConnection(_connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
@@ -54,6 +55,7 @@ namespace BettingSystem.Data
 
                         //check status
                         string status = reader["user_status"].ToString()!;
+                        Debug.WriteLine($"User status: {status}");
                         if (status != "Active")
                         {
                             return (null, $"Your account has been {status}. Please contact admin@gmail.com for support.");
@@ -68,6 +70,7 @@ namespace BettingSystem.Data
                            reader["email"].ToString()!,
                            Convert.ToDecimal(reader["wallet_balance"]),
                            reader["user_role"].ToString()!,
+                           Convert.ToDateTime(reader["registration_date"]),
                            reader["user_status"].ToString()!
                         );
 
@@ -132,7 +135,7 @@ namespace BettingSystem.Data
 
                 //get app_user_id
                 userId = (int)await command.ExecuteScalarAsync();
-                return new AppUser(userId, firstName, lastName, dob, email, 0, "user", "active");
+                return new AppUser(userId, firstName, lastName, dob, email, 0, "user", DateTime.Now, "Active");
             }
         }
 
@@ -1483,6 +1486,31 @@ namespace BettingSystem.Data
                 command.Parameters.AddWithValue("@teamId", teamId);
                 command.Parameters.AddWithValue("@leagueId", leagueId);
 
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            return new TeamRatings(
+                                Convert.ToInt32(reader["attack_rating"]),
+                                Convert.ToInt32(reader["defense_rating"]),
+                                Convert.ToInt32(reader["discipline_rating"]),
+                                Convert.ToDecimal(reader["avg_corners_per_game"]));
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error retrieving team ratings: {e.Message}");
+                }
+
+                // Default ratings if team not found
+                return new TeamRatings(60, 60, 60, 5.0m);
+            }
+        }
+
         // fetch all users for admin page
         public async Task<List<AppUser>> FetchAllUsersAsync()
         {
@@ -1526,6 +1554,40 @@ namespace BettingSystem.Data
                 {
                     Console.WriteLine($"Error: {e.Message}");
                     return new List<AppUser>();
+                }
+            }
+        }
+
+        // fetch bet types for bet slip details
+        public async Task<Dictionary<int, string>> FetchBetTypesAsync()
+        {
+            Dictionary<int, string> betTypes = new Dictionary<int, string>();
+            string query = "SELECT bet_type_id, bet_type_name FROM BetType";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            betTypes[Convert.ToInt32(reader["bet_type_id"])] = reader["bet_type_name"].ToString()!;
+                        }
+                    }
+                    return betTypes;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new Dictionary<int, string>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new Dictionary<int, string>();
                 }
             }
         }
@@ -1575,7 +1637,7 @@ namespace BettingSystem.Data
                             WHERE transaction_type = 'payout') AS total_revenue,
                             (SELECT COUNT(*) 
                             FROM AppUser 
-                            WHERE user_status = 'active' AND user_role = 'user') AS active_users,
+                            WHERE user_status = 'Active' AND user_role = 'user') AS active_users,
                             (SELECT COUNT(*) FROM BetSlip) AS total_bets,
                             (SELECT ISNULL(SUM(amount), 0) 
                             FROM SystemTransaction 
@@ -1593,22 +1655,131 @@ namespace BettingSystem.Data
                     {
                         if (await reader.ReadAsync())
                         {
-                            return new TeamRatings(
-                                Convert.ToInt32(reader["attack_rating"]),
-                                Convert.ToInt32(reader["defense_rating"]),
-                                Convert.ToInt32(reader["discipline_rating"]),
-                                Convert.ToDecimal(reader["avg_corners_per_game"]));
+                            summary.TotalRevenue = Convert.ToDecimal(reader["total_revenue"]);
+                            summary.TotalActiveUsers = Convert.ToInt32(reader["active_users"]);
+                            summary.TotalBetsPlaced = Convert.ToInt32(reader["total_bets"]);
+                            summary.TotalDeposits = Convert.ToDecimal(reader["total_deposits"]);
+                            summary.TotalWithdrawals = Convert.ToDecimal(reader["total_withdrawals"]);
                         }
                     }
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error retrieving team ratings: {e.Message}");
+                    Console.WriteLine($"Error: {e.Message}");
                 }
-
-                // Default ratings if team not found
-                return new TeamRatings(60, 60, 60, 5.0m);
             }
+            return summary;
+        }
+
+        public async Task<List<MonthlyProfitLoss>> FetchMonthlyProfitLossAsync()
+        {
+            var result = new List<MonthlyProfitLoss>();
+            string query = @"SELECT 
+                                FORMAT(transaction_timestamp, 'MMM yy') AS month,
+                                ISNULL(SUM(CASE WHEN transaction_type = 'bet' THEN amount ELSE 0 END), 0) AS revenue,
+                                ISNULL(SUM(CASE WHEN transaction_type = 'payout' THEN amount ELSE 0 END), 0) AS payouts
+                            FROM SystemTransaction
+                            WHERE transaction_timestamp >= DATEADD(MONTH, -11, GETDATE())
+                            GROUP BY FORMAT(transaction_timestamp, 'MMM yy'), YEAR(transaction_timestamp), MONTH(transaction_timestamp)
+                            ORDER BY YEAR(transaction_timestamp), MONTH(transaction_timestamp)";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            result.Add(new MonthlyProfitLoss
+                            {
+                                Month = reader["month"].ToString()!,
+                                Revenue = Convert.ToDecimal(reader["revenue"]),
+                                Payouts = Convert.ToDecimal(reader["payouts"])
+                            });
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                }
+            }
+            return result;
+        }
+
+        public async Task<List<MonthlyTransactionVolume>> FetchMonthlyTransactionVolumeAsync()
+        {
+            var result = new List<MonthlyTransactionVolume>();
+            string query = @"SELECT 
+                                FORMAT(transaction_timestamp, 'MMM yy') AS month,
+                                transaction_type,
+                                ISNULL(SUM(amount), 0) AS total_amount
+                            FROM SystemTransaction
+                            WHERE transaction_timestamp >= DATEADD(MONTH, -11, GETDATE())
+                            GROUP BY FORMAT(transaction_timestamp, 'MMM yy'), transaction_type, YEAR(transaction_timestamp), MONTH(transaction_timestamp)
+                            ORDER BY YEAR(transaction_timestamp), MONTH(transaction_timestamp)";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            result.Add(new MonthlyTransactionVolume
+                            {
+                                Month = reader["month"].ToString()!,
+                                Type = reader["transaction_type"].ToString()!,
+                                Amount = Convert.ToDecimal(reader["total_amount"])
+                            });
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                }
+            }
+            return result;
+        }
+
+        public async Task<List<BetStatusCount>> FetchBetStatusBreakdownAsync()
+        {
+            var result = new List<BetStatusCount>();
+            string query = @"SELECT bet_status, COUNT(*) AS count
+                            FROM BetSlip
+                            GROUP BY bet_status";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            result.Add(new BetStatusCount
+                            {
+                                Status = reader["bet_status"].ToString()!,
+                                Count = Convert.ToInt32(reader["count"])
+                            });
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                }
+            }
+            return result;
         }
 
         //Get player information and ratings from database
