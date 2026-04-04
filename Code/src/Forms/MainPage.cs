@@ -486,8 +486,18 @@ namespace BettingSystem.Forms
             );
 
             //add to bet slip
-            string message = _userSlip.AddBet(newBet);
-            new Notification(message, NotificationType.Success, this);
+            (bool success, string message) = _userSlip.AddBet(newBet);
+            NotificationType notif;
+            if (success)
+            {
+                notif = NotificationType.Success;
+            }
+            else
+            {
+                notif = NotificationType.Warning;
+            }
+            new Notification(message, notif, this);
+
         }
 
         //find odd
