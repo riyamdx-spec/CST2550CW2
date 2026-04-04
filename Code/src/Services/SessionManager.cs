@@ -119,7 +119,7 @@ namespace BettingSystem.Services
             else
             {
                 // reinitialise content on page
-                await betHistoryPage.ReInitialisePage();
+                await betHistoryPage.OnShow();
             }
 
             betHistoryPage.Size = currentForm.Size;
@@ -139,7 +139,7 @@ namespace BettingSystem.Services
             else
             {
                 // reinitialise content on page
-                betSlipPage.ReloadSlip();
+                betSlipPage.OnShow();
             }
 
             betSlipPage.Size = currentForm.Size;
@@ -180,7 +180,7 @@ namespace BettingSystem.Services
             else
             {
                 // reinitialise content on page
-                await matchPage.Reset();
+                await matchPage.OnShow();
             }
 
             matchPage.Size = currentForm.Size;
