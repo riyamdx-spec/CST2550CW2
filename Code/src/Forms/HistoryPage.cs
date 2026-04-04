@@ -115,7 +115,7 @@ namespace BettingSystem.Forms
                 .Select(bet => bet.GameId)
                 .Distinct();
 
-            var gameIdsList = (MyList<int>)gameIds;
+            var gameIdsList = new MyList<int>(gameIds);
 
             //fetch game results
             _gameResults = await _dbManager.FetchGameResultsAsync(gameIdsList);
