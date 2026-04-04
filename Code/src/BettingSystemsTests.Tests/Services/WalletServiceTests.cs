@@ -4,9 +4,13 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BettingSystemsTests;
 
+/// <summary>
+/// Tests WalletService validation paths and balance boundary behavior.
+/// </summary>
 [TestClass]
 public class WalletServiceTests
 {
+    // Helper produces a consistent user object with a configurable starting balance.
     private static AppUser CreateUser(decimal walletBalance = 100m)
     {
         return new AppUser(
@@ -19,6 +23,9 @@ public class WalletServiceTests
             userRole: "customer");
     }
 
+    /// <summary>
+    /// Deposit and payout reject zero amount before any persistence call.
+    /// </summary>
     [TestMethod]
     public async Task DepositOrPayoutAsync_AmountZero_ReturnsFalseAndMessage()
     {
@@ -32,6 +39,9 @@ public class WalletServiceTests
         Assert.AreEqual(100m, user.WalletBalance);
     }
 
+    /// <summary>
+    /// Deposit and payout reject negative amount before any persistence call.
+    /// </summary>
     [TestMethod]
     public async Task DepositOrPayoutAsync_AmountNegative_ReturnsFalseAndMessage()
     {
@@ -45,6 +55,9 @@ public class WalletServiceTests
         Assert.AreEqual(100m, user.WalletBalance);
     }
 
+    /// <summary>
+    /// Withdrawal and bet placement reject zero amount.
+    /// </summary>
     [TestMethod]
     public async Task WithdrawalOrPlaceBetAsync_AmountZero_ReturnsFalseAndMessage()
     {
@@ -58,6 +71,9 @@ public class WalletServiceTests
         Assert.AreEqual(100m, user.WalletBalance);
     }
 
+    /// <summary>
+    /// Withdrawal and bet placement reject negative amount.
+    /// </summary>
     [TestMethod]
     public async Task WithdrawalOrPlaceBetAsync_AmountNegative_ReturnsFalseAndMessage()
     {
@@ -71,6 +87,9 @@ public class WalletServiceTests
         Assert.AreEqual(100m, user.WalletBalance);
     }
 
+    /// <summary>
+    /// Withdrawal fails when requested amount is greater than available balance.
+    /// </summary>
     [TestMethod]
     public async Task WithdrawalOrPlaceBetAsync_InsufficientBalance_ReturnsFalseAndMessage()
     {
@@ -84,6 +103,9 @@ public class WalletServiceTests
         Assert.AreEqual(50m, user.WalletBalance);
     }
 
+    /// <summary>
+    /// Payout requests must include a slip id to be considered valid.
+    /// </summary>
     [TestMethod]
     public async Task DepositOrPayoutAsync_PayoutWithoutSlipId_ReturnsFalseAndMessage()
     {
@@ -97,6 +119,9 @@ public class WalletServiceTests
         Assert.AreEqual(100m, user.WalletBalance);
     }
 
+    /// <summary>
+    /// Verifies the exact-balance boundary is allowed by validation (amount > balance check).
+    /// </summary>
     [TestMethod]
     public async Task WithdrawalOrPlaceBetAsync_ExactBalance_ReturnsFalseWhenExceeds()
     {
@@ -115,6 +140,9 @@ public class WalletServiceTests
         Assert.AreNotEqual("Withdrawal Failed: Insufficient wallet balance", message);
     }
 
+    /// <summary>
+    /// Verifies values just above the balance are rejected.
+    /// </summary>
     [TestMethod]
     public async Task WithdrawalOrPlaceBetAsync_AmountExceedsBalance_ReturnsFalseAndMessage()
     {
