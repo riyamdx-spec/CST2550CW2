@@ -25,7 +25,8 @@ namespace BettingSystem.Services
         public bool IsExiting { get; set; }
         public bool IsAdmin { get; set; }
 
-        public Simulator AppSimulator;
+        public Simulator AppSimulator { get; set; }
+        public int RemovedBetCounter { get; set; }
 
         public SessionManager(AppUser currentUser, Simulator appSimulator)
         {
@@ -35,6 +36,7 @@ namespace BettingSystem.Services
             AppSimulator = appSimulator;
             if (_currentUser.Role == "user")
             {
+                RemovedBetCounter = 0;
                 UserSlip = new BetSlip(currentUser.UserID);
                 GameResults = new MyDictionary<int, GameResult>();
                 HistoryBetSlips = new MyList<BetHistorySlip>();
