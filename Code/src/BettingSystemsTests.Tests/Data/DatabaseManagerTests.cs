@@ -1,4 +1,5 @@
 using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Models;
 using BettingSystem.Services;
 using Microsoft.Data.SqlClient;
@@ -638,24 +639,16 @@ public class DatabaseManagerTests
     }
 
     [TestMethod]
-    public void CreateOddsAutoGeneratorService_ReturnsServiceInstance()
-    {
-        OddsAutoGeneratorService service = _db.CreateOddsAutoGeneratorService();
-
-        Assert.IsNotNull(service);
-    }
-
-    [TestMethod]
     public async Task FetchOddsAsync_ReturnsOnlyScheduledGames()
     {
-        Dictionary<int, List<Odd>> odds = await _db.FetchOddsAsync();
+        MyDictionary<int, MyList<Odd>> odds = await _db.FetchOddsAsync();
 
         if (odds.Count == 0)
         {
             Assert.Inconclusive("No scheduled odds in seed database to validate FetchOddsAsync.");
         }
 
-        foreach ((int gameId, List<Odd> gameOdds) in odds)
+        foreach ((int gameId, MyList<Odd> gameOdds) in odds)
         {
             Assert.IsTrue(gameOdds.Count > 0);
             Assert.IsTrue(await IsGameScheduledAsync(gameId));
@@ -974,7 +967,7 @@ public class DatabaseManagerTests
     [TestMethod]
     public async Task FetchTeamsAsync_ScheduledOnly_ReturnsTeamsInScheduledGames()
     {
-        Dictionary<int, Team> teams = await _db.FetchTeamsAsync(all: false);
+        MyDictionary<int, Team> teams = await _db.FetchTeamsAsync(all: false);
 
         if (teams.Count == 0)
         {
@@ -991,8 +984,8 @@ public class DatabaseManagerTests
     [TestMethod]
     public async Task FetchTeamsAsync_AllTeams_ReturnsAtLeastAsManyAsScheduledOnly()
     {
-        Dictionary<int, Team> scheduled = await _db.FetchTeamsAsync(all: false);
-        Dictionary<int, Team> all = await _db.FetchTeamsAsync(all: true);
+        MyDictionary<int, Team> scheduled = await _db.FetchTeamsAsync(all: false);
+        MyDictionary<int, Team> all = await _db.FetchTeamsAsync(all: true);
 
         if (all.Count == 0)
         {
@@ -1060,7 +1053,7 @@ public class DatabaseManagerTests
             var reg = await _db.RegisterAsync("History", "Empty", new DateTime(2000, 1, 1), email, password);
             Assert.IsNotNull(reg.userObj);
 
-            List<BetHistorySlip> history = await _db.FetchBetHistoryAsync(reg.userObj!.UserID);
+            MyList<BetHistorySlip> history = await _db.FetchBetHistoryAsync(reg.userObj!.UserID);
 
             Assert.IsNotNull(history);
             Assert.AreEqual(0, history.Count);
@@ -1095,7 +1088,7 @@ public class DatabaseManagerTests
             slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID));
             await _db.SaveBetSlipAsync(slip);
 
-            List<BetHistorySlip> history = await _db.FetchBetHistoryAsync(userId);
+            MyList<BetHistorySlip> history = await _db.FetchBetHistoryAsync(userId);
 
             Assert.IsNotNull(history);
             Assert.AreEqual(1, history.Count);
@@ -1117,7 +1110,7 @@ public class DatabaseManagerTests
     [TestMethod]
     public async Task FetchGameResultsAsync_NullList_ReturnsEmptyDictionary()
     {
-        Dictionary<int, GameResult> results = await _db.FetchGameResultsAsync(null);
+        MyDictionary<int, GameResult> results = await _db.FetchGameResultsAsync(null);
         Assert.IsNotNull(results);
         Assert.AreEqual(0, results.Count);
     }
@@ -1125,7 +1118,7 @@ public class DatabaseManagerTests
     [TestMethod]
     public async Task FetchGameResultsAsync_EmptyList_ReturnsEmptyDictionary()
     {
-        Dictionary<int, GameResult> results = await _db.FetchGameResultsAsync(new List<int>());
+        MyDictionary<int, GameResult> results = await _db.FetchGameResultsAsync(new MyList<int>());
         Assert.IsNotNull(results);
         Assert.AreEqual(0, results.Count);
     }
@@ -1133,13 +1126,13 @@ public class DatabaseManagerTests
     [TestMethod]
     public async Task FetchGameResultsAsync_ValidGameIds_ReturnsMatchedResults()
     {
-        List<int> completedGameIds = await GetCompletedGameIdsAsync(5);
+        MyList<int> completedGameIds = await GetCompletedGameIdsAsync(5);
         if (completedGameIds.Count == 0)
         {
             Assert.Inconclusive("No completed games with results in seed database.");
         }
 
-        Dictionary<int, GameResult> results = await _db.FetchGameResultsAsync(completedGameIds);
+        MyDictionary<int, GameResult> results = await _db.FetchGameResultsAsync(completedGameIds);
 
         Assert.IsTrue(results.Count > 0);
         foreach ((int id, GameResult gr) in results)
@@ -1154,14 +1147,14 @@ public class DatabaseManagerTests
     [TestMethod]
     public async Task FetchGameResultsAsync_AllTrue_IgnoresProvidedFilterAndReturnsAllResults()
     {
-        List<int> completedGameIds = await GetCompletedGameIdsAsync(1);
+        MyList<int> completedGameIds = await GetCompletedGameIdsAsync(1);
         if (completedGameIds.Count == 0)
         {
             Assert.Inconclusive("No completed games with results in seed database.");
         }
 
-        Dictionary<int, GameResult> filtered = await _db.FetchGameResultsAsync(completedGameIds, all: false);
-        Dictionary<int, GameResult> allResults = await _db.FetchGameResultsAsync(completedGameIds, all: true);
+        MyDictionary<int, GameResult> filtered = await _db.FetchGameResultsAsync(completedGameIds, all: false);
+        MyDictionary<int, GameResult> allResults = await _db.FetchGameResultsAsync(completedGameIds, all: true);
         int totalResults = await GetGameResultCountAsync();
 
         Assert.IsTrue(filtered.Count > 0);
@@ -1180,7 +1173,7 @@ public class DatabaseManagerTests
     [TestMethod]
     public async Task FetchPlayersAsync_ReturnsPlayersGroupedByTeam()
     {
-        Dictionary<int, List<Player>> players = await _db.FetchPlayersAsync();
+        MyDictionary<int, MyList<Player>> players = await _db.FetchPlayersAsync();
 
         if (players.Count == 0)
         {
@@ -1189,7 +1182,7 @@ public class DatabaseManagerTests
 
         string[] validPositions = { "ATT", "MID", "DEF", "GK" };
 
-        foreach ((int teamId, List<Player> teamPlayers) in players)
+        foreach ((int teamId, MyList<Player> teamPlayers) in players)
         {
             Assert.IsTrue(teamPlayers.Count > 0);
             foreach (Player player in teamPlayers)
@@ -1209,14 +1202,14 @@ public class DatabaseManagerTests
     [TestMethod]
     public async Task FetchLeagueTeamAsync_ReturnsLeagueTeamMappings()
     {
-        Dictionary<int, List<int>> leagueTeams = await _db.FetchLeagueTeamAsync();
+        MyDictionary<int, MyList<int>> leagueTeams = await _db.FetchLeagueTeamAsync();
 
         if (leagueTeams.Count == 0)
         {
             Assert.Inconclusive("No LeagueTeam data in seed database.");
         }
 
-        foreach ((int leagueId, List<int> teamIds) in leagueTeams)
+        foreach ((int leagueId, MyList<int> teamIds) in leagueTeams)
         {
             Assert.IsTrue(leagueId > 0);
             Assert.IsTrue(teamIds.Count > 0);
@@ -1238,7 +1231,7 @@ public class DatabaseManagerTests
         }
 
         int leagueId = leagueTeams.Keys.First();
-        List<int> teams = leagueTeams[leagueId];
+        MyList<int> teams = leagueTeams[leagueId];
         if (teams.Count < 2)
         {
             Assert.Inconclusive("Not enough teams in league for AddNewMatchAsync test.");
@@ -1331,10 +1324,10 @@ public class DatabaseManagerTests
         return Convert.ToBoolean(await command.ExecuteScalarAsync());
     }
 
-    private static async Task<List<int>> GetCompletedGameIdsAsync(int top)
+    private static async Task<MyList<int>> GetCompletedGameIdsAsync(int top)
     {
         string query = $"SELECT TOP {top} gr.game_id FROM GameResult gr INNER JOIN Game g ON g.game_id = gr.game_id WHERE g.game_status = 'Completed'";
-        List<int> ids = new List<int>();
+        MyList<int> ids = new MyList<int>();
 
         await using SqlConnection connection = new SqlConnection(GetConnectionString());
         await using SqlCommand command = new SqlCommand(query, connection);
@@ -1392,5 +1385,229 @@ public class DatabaseManagerTests
             await tx.RollbackAsync();
             throw;
         }
+    }
+
+    [TestMethod]
+    public async Task GetMatchesWithoutOdds_WithTemporaryGame_IncludesInsertedGame()
+    {
+        var leagueTeams = await GetLeagueWithTwoRatedTeamsAsync();
+        if (leagueTeams == null)
+        {
+            Assert.Inconclusive("No two rated teams from the same league were found for GetMatchesWithoutOdds test.");
+        }
+
+        int gameId = await InsertTemporaryGameAsync(leagueTeams!.Value.LeagueId, leagueTeams.Value.HomeTeamId, leagueTeams.Value.AwayTeamId);
+        try
+        {
+            List<GameInfo> matchesWithoutOdds = await _db.GetMatchesWithoutOdds();
+            GameInfo? insertedGame = matchesWithoutOdds.FirstOrDefault(x => x.GameId == gameId);
+
+            Assert.IsNotNull(insertedGame);
+            Assert.AreEqual(leagueTeams.Value.HomeTeamId, insertedGame!.HomeTeamId);
+            Assert.AreEqual(leagueTeams.Value.AwayTeamId, insertedGame.AwayTeamId);
+            Assert.AreEqual(leagueTeams.Value.LeagueId, insertedGame.LeagueId);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(insertedGame.HomeTeamName));
+            Assert.IsFalse(string.IsNullOrWhiteSpace(insertedGame.AwayTeamName));
+        }
+        finally
+        {
+            await DeleteMatchByIdAsync(gameId);
+        }
+    }
+
+    [TestMethod]
+    public async Task SaveOddsAsync_WithSharedConnection_UpsertsSingleSelection()
+    {
+        var leagueTeams = await GetLeagueWithTwoRatedTeamsAsync();
+        if (leagueTeams == null)
+        {
+            Assert.Inconclusive("No two rated teams from the same league were found for SaveOddsAsync test.");
+        }
+
+        int gameId = await InsertTemporaryGameAsync(leagueTeams!.Value.LeagueId, leagueTeams.Value.HomeTeamId, leagueTeams.Value.AwayTeamId);
+        const int betTypeId = 1;
+        const string selection = "Home Win";
+
+        try
+        {
+            await using SqlConnection connection = new SqlConnection(GetConnectionString());
+            await connection.OpenAsync();
+            await using SqlTransaction tx = connection.BeginTransaction();
+
+            await _db.SaveOddsAsync(new[] { new GeneratedOdd(gameId, betTypeId, selection, 1.75m) }, connection, tx);
+            await _db.SaveOddsAsync(new[] { new GeneratedOdd(gameId, betTypeId, selection, 2.35m) }, connection, tx);
+
+            await tx.CommitAsync();
+
+            int rows = await GetOddsCountByGameBetTypeAndSelectionAsync(gameId, betTypeId, selection);
+            decimal? latestValue = await GetOddValueAsync(gameId, betTypeId, selection);
+
+            Assert.AreEqual(1, rows);
+            Assert.AreEqual(2.35m, latestValue);
+        }
+        finally
+        {
+            await DeleteMatchByIdAsync(gameId);
+        }
+    }
+
+    [TestMethod]
+    public async Task GenerateAndSaveCorrectScoreOddAsync_PersistsExpectedCorrectScoreSelection()
+    {
+        var leagueTeams = await GetLeagueWithTwoRatedTeamsAsync();
+        if (leagueTeams == null)
+        {
+            Assert.Inconclusive("No two rated teams from the same league were found for GenerateAndSaveCorrectScoreOddAsync test.");
+        }
+
+        int gameId = await InsertTemporaryGameAsync(leagueTeams!.Value.LeagueId, leagueTeams.Value.HomeTeamId, leagueTeams.Value.AwayTeamId);
+        const int homeGoals = 2;
+        const int awayGoals = 1;
+        string selection = $"{homeGoals}-{awayGoals}";
+
+        try
+        {
+            decimal generatedOdd = await _db.GenerateAndSaveCorrectScoreOddAsync(
+                gameId,
+                homeGoals,
+                awayGoals,
+                leagueTeams.Value.HomeTeamId,
+                leagueTeams.Value.AwayTeamId,
+                leagueTeams.Value.LeagueId);
+
+            decimal? savedOdd = await GetOddValueAsync(gameId, 3, selection);
+
+            Assert.IsTrue(generatedOdd > 0m);
+            Assert.IsNotNull(savedOdd);
+            Assert.AreEqual(generatedOdd, savedOdd!.Value);
+        }
+        finally
+        {
+            await DeleteMatchByIdAsync(gameId);
+        }
+    }
+
+    [TestMethod]
+    public async Task GenerateAndSaveAllOddsAsync_PersistsReturnedOddsForNewGame()
+    {
+        var leagueTeams = await GetLeagueWithTwoRatedTeamsAsync();
+        if (leagueTeams == null)
+        {
+            Assert.Inconclusive("No two rated teams from the same league were found for GenerateAndSaveAllOddsAsync test.");
+        }
+
+        int gameId = await InsertTemporaryGameAsync(leagueTeams!.Value.LeagueId, leagueTeams.Value.HomeTeamId, leagueTeams.Value.AwayTeamId);
+
+        try
+        {
+            IReadOnlyList<GeneratedOdd> generated = await _db.GenerateAndSaveAllOddsAsync(
+                gameId,
+                leagueTeams.Value.HomeTeamId,
+                leagueTeams.Value.AwayTeamId,
+                leagueTeams.Value.LeagueId);
+
+            int persistedRows = await GetOddsCountByGameIdAsync(gameId);
+            int distinctSelections = generated.Select(x => (x.BetTypeId, x.Selection)).Distinct().Count();
+
+            Assert.IsTrue(generated.Count > 0);
+            Assert.IsTrue(generated.All(x => x.GameId == gameId));
+            Assert.AreEqual(distinctSelections, persistedRows);
+        }
+        finally
+        {
+            await DeleteMatchByIdAsync(gameId);
+        }
+    }
+
+    [TestMethod]
+    public async Task GetPlayersAsync_ReturnsNormalizedPlayerPositions()
+    {
+        MyDictionary<int, MyList<PlayerInfo>> players = await _db.GetPlayersAsync();
+
+        if (players.Count == 0)
+        {
+            Assert.Inconclusive("No Player/PlayerRating data in seed database.");
+        }
+
+        string[] validPositions = { "ATT", "MID", "DEF", "GK" };
+
+        foreach ((int teamId, MyList<PlayerInfo> teamPlayers) in players)
+        {
+            Assert.IsTrue(teamPlayers.Count > 0);
+            foreach (PlayerInfo player in teamPlayers)
+            {
+                Assert.AreEqual(teamId, player.TeamId);
+                Assert.IsFalse(string.IsNullOrWhiteSpace(player.PlayerName));
+                Assert.IsTrue(validPositions.Contains(player.Position),
+                    $"Unexpected normalized position '{player.Position}' for player '{player.PlayerName}'");
+            }
+        }
+    }
+
+    private static async Task<int> GetOddsCountByGameBetTypeAndSelectionAsync(int gameId, int betTypeId, string selection)
+    {
+        const string query = "SELECT COUNT(*) FROM Odd WHERE game_id = @gameId AND bet_type_id = @betTypeId AND selection = @selection";
+        await using SqlConnection connection = new SqlConnection(GetConnectionString());
+        await using SqlCommand command = new SqlCommand(query, connection);
+        command.Parameters.AddWithValue("@gameId", gameId);
+        command.Parameters.AddWithValue("@betTypeId", betTypeId);
+        command.Parameters.AddWithValue("@selection", selection);
+
+        await connection.OpenAsync();
+        return Convert.ToInt32(await command.ExecuteScalarAsync());
+    }
+
+    private static async Task<decimal?> GetOddValueAsync(int gameId, int betTypeId, string selection)
+    {
+        const string query = "SELECT TOP 1 odd_value FROM Odd WHERE game_id = @gameId AND bet_type_id = @betTypeId AND selection = @selection";
+        await using SqlConnection connection = new SqlConnection(GetConnectionString());
+        await using SqlCommand command = new SqlCommand(query, connection);
+        command.Parameters.AddWithValue("@gameId", gameId);
+        command.Parameters.AddWithValue("@betTypeId", betTypeId);
+        command.Parameters.AddWithValue("@selection", selection);
+
+        await connection.OpenAsync();
+        object? value = await command.ExecuteScalarAsync();
+        return value == null ? null : Convert.ToDecimal(value);
+    }
+
+    private static async Task<(int LeagueId, int HomeTeamId, int AwayTeamId)?> GetLeagueWithTwoRatedTeamsAsync()
+    {
+        const string query = @"SELECT TOP 1 tr1.league_id AS league_id, tr1.team_id AS home_team_id, tr2.team_id AS away_team_id
+                               FROM TeamRating tr1
+                               INNER JOIN TeamRating tr2 ON tr1.league_id = tr2.league_id AND tr1.team_id < tr2.team_id
+                               ORDER BY tr1.league_id, tr1.team_id, tr2.team_id";
+
+        await using SqlConnection connection = new SqlConnection(GetConnectionString());
+        await using SqlCommand command = new SqlCommand(query, connection);
+
+        await connection.OpenAsync();
+        await using SqlDataReader reader = await command.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+        {
+            return null;
+        }
+
+        return (
+            Convert.ToInt32(reader["league_id"]),
+            Convert.ToInt32(reader["home_team_id"]),
+            Convert.ToInt32(reader["away_team_id"])
+        );
+    }
+
+    private static async Task<int> InsertTemporaryGameAsync(int leagueId, int homeTeamId, int awayTeamId)
+    {
+        const string query = @"INSERT INTO Game (league_id, home_team_id, away_team_id, game_date)
+                               OUTPUT INSERTED.game_id
+                               VALUES (@leagueId, @homeTeamId, @awayTeamId, @gameDate)";
+        await using SqlConnection connection = new SqlConnection(GetConnectionString());
+        await using SqlCommand command = new SqlCommand(query, connection);
+        command.Parameters.AddWithValue("@leagueId", leagueId);
+        command.Parameters.AddWithValue("@homeTeamId", homeTeamId);
+        command.Parameters.AddWithValue("@awayTeamId", awayTeamId);
+        command.Parameters.AddWithValue("@gameDate", DateTime.UtcNow.AddDays(14));
+
+        await connection.OpenAsync();
+        return Convert.ToInt32(await command.ExecuteScalarAsync());
     }
 }
