@@ -473,13 +473,16 @@ namespace BettingSystem.Forms
 
         private void AddToBetSlip(Odd oddObj)
         {
+            FootballMatch match = MatchesCollection.AllMatches.First(m => m.GameID == CurrentMatchId);
+
             //create bet instance
             Bet newBet = new Bet(
                 oddObj.OddID,
                 oddObj.Selection,
                 oddObj.OddValue,
                 oddObj.BetTypeID,
-                CurrentMatchId
+                CurrentMatchId,
+                match.GameDate
             );
 
             //add to bet slip
