@@ -34,6 +34,9 @@ namespace BettingSystem.Forms
             navBar1.AccountClicked += NavBar1_AccountClicked;
             navBar1.LogoutClicked += NavBar1_LogoutClicked;
 
+            txtStake.TextChanged += txtStake_TextChanged;
+            btnPlaceBet.Click += btnPlaceBet_Click;
+
             this.Load += BetSlipPage_Load;
             this.FormClosing += BetSlipPage_FormClosing;
 
