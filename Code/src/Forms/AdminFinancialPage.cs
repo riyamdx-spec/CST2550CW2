@@ -1,32 +1,23 @@
 ﻿using BettingSystem.Data;
 using BettingSystem.Models;
 using BettingSystem.Services;
+using Google.GenAI;
 using ScottPlot;
 using ScottPlot.WinForms;
-
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
 using System.Configuration;
-
-using System.Threading.Tasks;
-using Google.GenAI;
-using Google.GenAI.Types;
-using Microsoft.Extensions.AI;
 
 namespace BettingSystem.Forms
 {
     public partial class AdminFinancialPage : BaseForm
     {
-        private AppUser CurrentAdmin;
-        private SessionManager CurrentSession;
-        private readonly DatabaseManager DBManager = new DatabaseManager();
+        private AppUser _currentAdmin;
+        private SessionManager _currentSession;
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
 
         // state for AI panel
         private bool _aiPanelExpanded = false;
-        private const int AiPanelCollapsedHeight = 46;
-        private const int AiPanelExpandedHeight = 250;
+        private const int _aiPanelCollapsedHeight = 46;
+        private const int _aiPanelExpandedHeight = 250;
 
         // state for dragging AI panel
         private bool _isDragging = false;
@@ -34,15 +25,15 @@ namespace BettingSystem.Forms
         private int _dragStartHeight;
 
         // colours
-        private readonly ScottPlot.Color SpGreen = new ScottPlot.Color(93, 185, 64);
-        private readonly ScottPlot.Color SpRed = new ScottPlot.Color(220, 53, 53);
-        private readonly ScottPlot.Color SpOrange = new ScottPlot.Color(255, 165, 0);
-        private readonly ScottPlot.Color SpBlue = new ScottPlot.Color(55, 138, 221);
-        private readonly ScottPlot.Color SpBg = new ScottPlot.Color(31, 31, 31);
-        private readonly ScottPlot.Color SpCard = new ScottPlot.Color(40, 40, 40);
-        private readonly ScottPlot.Color SpGrid = new ScottPlot.Color(50, 50, 50);
-        private readonly ScottPlot.Color SpLabel = new ScottPlot.Color(180, 180, 180);
-        private readonly ScottPlot.Color SpText = new ScottPlot.Color(241, 241, 241);
+        private readonly ScottPlot.Color _spGreen = new ScottPlot.Color(93, 185, 64);
+        private readonly ScottPlot.Color _spRed = new ScottPlot.Color(220, 53, 53);
+        private readonly ScottPlot.Color _spOrange = new ScottPlot.Color(255, 165, 0);
+        private readonly ScottPlot.Color _spBlue = new ScottPlot.Color(55, 138, 221);
+        private readonly ScottPlot.Color _spBg = new ScottPlot.Color(31, 31, 31);
+        private readonly ScottPlot.Color _spCard = new ScottPlot.Color(40, 40, 40);
+        private readonly ScottPlot.Color _spGrid = new ScottPlot.Color(50, 50, 50);
+        private readonly ScottPlot.Color _spLabel = new ScottPlot.Color(180, 180, 180);
+        private readonly ScottPlot.Color _spText = new ScottPlot.Color(241, 241, 241);
 
         private static readonly HttpClient HttpClient = new HttpClient();
         private FinancialSummary _lastSummary;
@@ -52,15 +43,15 @@ namespace BettingSystem.Forms
         public AdminFinancialPage(AppUser admin, SessionManager session)
         {
             InitializeComponent();
-            CurrentAdmin = admin;
-            CurrentSession = session;
+            _currentAdmin = admin;
+            _currentSession = session;
 
-            adminNavBar1.SetAdmin(CurrentAdmin);
-            adminNavBar1.UsersPageClicked += async (s, e) => await CurrentSession.OpenAdminViewUsersPage(this);
-            adminNavBar1.SearchMatchesPageClicked += async (s, e) => await CurrentSession.OpenAdminMatchPage(this);
-            adminNavBar1.AddMatchesPageClicked += (s, e) => CurrentSession.OpenAdminAddMatchPage(this);
-            adminNavBar1.FinancialPageClicked += async (s, e) => await CurrentSession.OpenAdminFinancialPage(this);
-            adminNavBar1.LogoutClicked += (s, e) => CurrentSession.LogOut(this);
+            adminNavBar1.SetAdmin(_currentAdmin);
+            adminNavBar1.UsersPageClicked += async (s, e) => await _currentSession.OpenAdminViewUsersPage(this);
+            adminNavBar1.SearchMatchesPageClicked += async (s, e) => await _currentSession.OpenAdminMatchPage(this);
+            adminNavBar1.AddMatchesPageClicked += (s, e) => _currentSession.OpenAdminAddMatchPage(this);
+            adminNavBar1.FinancialPageClicked += async (s, e) => await _currentSession.OpenAdminFinancialPage(this);
+            adminNavBar1.LogoutClicked += (s, e) => _currentSession.LogOut(this);
 
             this.Load += AdminFinancialPage_Load;
             this.FormClosing += AdminFinancialPage_FormClosing;
@@ -94,10 +85,10 @@ namespace BettingSystem.Forms
 
         private async Task LoadAllData()
         {
-            _lastSummary = await DBManager.FetchFinancialSummaryAsync();
-            _lastProfitLoss = await DBManager.FetchMonthlyProfitLossAsync();
-            _lastTransactionVolume = await DBManager.FetchMonthlyTransactionVolumeAsync();
-            _lastBetStatus = await DBManager.FetchBetStatusBreakdownAsync();
+            _lastSummary = await _dbManager.FetchFinancialSummaryAsync();
+            _lastProfitLoss = await _dbManager.FetchMonthlyProfitLossAsync();
+            _lastTransactionVolume = await _dbManager.FetchMonthlyTransactionVolumeAsync();
+            _lastBetStatus = await _dbManager.FetchBetStatusBreakdownAsync();
 
             UpdateSummaryCards(_lastSummary);
             BuildProfitLossChart(_lastProfitLoss);
@@ -107,7 +98,7 @@ namespace BettingSystem.Forms
 
         private void AdminFinancialPage_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false, true);
                 if (closingPopup.ShowDialog() == DialogResult.No)
@@ -116,7 +107,7 @@ namespace BettingSystem.Forms
                 }
                 else
                 {
-                    CurrentSession.IsExiting = true;
+                    _currentSession.IsExiting = true;
                     Application.Exit();
                 }
             }
@@ -169,14 +160,14 @@ namespace BettingSystem.Forms
 
         private void ApplyDarkTheme(FormsPlot plot)
         {
-            plot.Plot.FigureBackground.Color = SpBg;
-            plot.Plot.DataBackground.Color = SpCard;
-            plot.Plot.Axes.Color(SpLabel);
-            plot.Plot.Grid.MajorLineColor = SpGrid;
+            plot.Plot.FigureBackground.Color = _spBg;
+            plot.Plot.DataBackground.Color = _spCard;
+            plot.Plot.Axes.Color(_spLabel);
+            plot.Plot.Grid.MajorLineColor = _spGrid;
             plot.Plot.Grid.MajorLineWidth = 0.5f;
-            plot.Plot.Legend.BackgroundColor = SpCard;
-            plot.Plot.Legend.FontColor = SpLabel;
-            plot.Plot.Legend.OutlineColor = SpGrid;
+            plot.Plot.Legend.BackgroundColor = _spCard;
+            plot.Plot.Legend.FontColor = _spLabel;
+            plot.Plot.Legend.OutlineColor = _spGrid;
             plot.BackColor = System.Drawing.Color.FromArgb(31, 31, 31);
         }
 
@@ -200,14 +191,14 @@ namespace BettingSystem.Forms
 
             // revenue line
             var revLine = chartProfitLoss.Plot.Add.Scatter(xs, revenue);
-            revLine.Color = SpGreen;
+            revLine.Color = _spGreen;
             revLine.LineWidth = 2.5f;
             revLine.MarkerSize = 7;
             revLine.LegendText = "Revenue";
 
             // payouts line
             var payLine = chartProfitLoss.Plot.Add.Scatter(xs, payouts);
-            payLine.Color = SpRed;
+            payLine.Color = _spRed;
             payLine.LineWidth = 2.5f;
             payLine.MarkerSize = 7;
             payLine.LegendText = "Payouts";
@@ -246,7 +237,7 @@ namespace BettingSystem.Forms
 
             var months = data.Select(d => d.Month).Distinct().OrderBy(m => DateTime.ParseExact(m, "MMM yy", null)).ToList();
             var types = new[] { "deposit", "withdrawal", "bet", "payout" };
-            var colors = new[] { SpGreen, SpOrange, SpBlue, SpRed };
+            var colors = new[] { _spGreen, _spOrange, _spBlue, _spRed };
             var names = new[] { "Deposits", "Withdrawals", "Bets", "Payouts" };
 
             double barWidth = 0.8;
@@ -303,28 +294,28 @@ namespace BettingSystem.Forms
 
             var statusColors = new Dictionary<string, ScottPlot.Color>
             {
-                { "Won", SpGreen },
-                { "Lost", SpRed },
-                { "Pending", SpOrange }
+                { "Won", _spGreen },
+                { "Lost", _spRed },
+                { "Pending", _spOrange }
             };
 
             double[] values = data.Select(d => (double)d.Count).ToArray();
             string[] labels = data.Select(d => d.Status).ToArray();
             ScottPlot.Color[] colors = data.Select(d =>
-                statusColors.TryGetValue(d.Status, out var c) ? c : SpLabel
+                statusColors.TryGetValue(d.Status, out var c) ? c : _spLabel
             ).ToArray();
 
             var pie = chartBetStatus.Plot.Add.Pie(values);
             pie.Radius = 1.2;
 
-            pie.LineColor = SpBg;
+            pie.LineColor = _spBg;
             pie.LineWidth = 2;
 
             for (int i = 0; i < pie.Slices.Count; i++)
             {
                 pie.Slices[i].FillColor = colors[i];
                 pie.Slices[i].Label = $"{labels[i]}\n{values[i]:N0}";
-                pie.Slices[i].LabelFontColor = SpText;
+                pie.Slices[i].LabelFontColor = _spText;
                 pie.Slices[i].LabelFontSize = 10;
                 pie.Slices[i].LegendText = $"{labels[i]} ({values[i]:N0})";
             }
@@ -338,7 +329,7 @@ namespace BettingSystem.Forms
             int total = data.Sum(d => d.Count);
             var centerText = chartBetStatus.Plot.Add.Text($"{total:N0}\ntotal", 0, 0);
             centerText.LabelFontSize = 13;
-            centerText.LabelFontColor = SpText;
+            centerText.LabelFontColor = _spText;
             centerText.LabelBold = true;
             centerText.Alignment = Alignment.MiddleCenter;
 
@@ -362,7 +353,7 @@ namespace BettingSystem.Forms
             {
                 // expand panel
                 _aiPanelExpanded = true;
-                pnlAiReport.Height = AiPanelExpandedHeight;
+                pnlAiReport.Height = _aiPanelExpandedHeight;
                 btnGenerateReport.Text = "Generating...";
                 btnGenerateReport.Enabled = false;
                 rtbAiReport.Text = "";
@@ -383,7 +374,7 @@ namespace BettingSystem.Forms
                     lblAiReportStatus.Text = $"Error: {ex.Message}";
                     btnGenerateReport.Text = "Generate Report";
                     _aiPanelExpanded = false;
-                    pnlAiReport.Height = AiPanelCollapsedHeight;
+                    pnlAiReport.Height = _aiPanelCollapsedHeight;
                 }
                 finally
                 {
@@ -394,7 +385,7 @@ namespace BettingSystem.Forms
             {
                 // collapse panel
                 _aiPanelExpanded = false;
-                pnlAiReport.Height = AiPanelCollapsedHeight;
+                pnlAiReport.Height = _aiPanelCollapsedHeight;
                 btnGenerateReport.Text = "Generate Report";
                 lblAiReportStatus.Visible = false;
             }
@@ -498,7 +489,7 @@ namespace BettingSystem.Forms
             if (!_isDragging) return;
 
             int delta = _dragStartY - System.Windows.Forms.Cursor.Position.Y;
-            int newHeight = Math.Max(AiPanelCollapsedHeight + 50, _dragStartHeight + delta);
+            int newHeight = Math.Max(_aiPanelCollapsedHeight + 50, _dragStartHeight + delta);
             pnlAiReport.Height = newHeight;
         }
 

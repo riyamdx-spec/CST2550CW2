@@ -7,14 +7,14 @@ namespace BettingSystem.Forms
 {
     public partial class AdminMatchPage : Form
     {
-        private readonly ImageLoader ImgLoader = new ImageLoader();
-        private readonly DatabaseManager DbManager = new DatabaseManager();
-        private MatchManager MatchFilter;
+        private readonly ImageLoader _imgLoader = new ImageLoader();
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
+        private MatchManager _matchFilter;
         private SessionManager _currentSession;
-        public League[] Leagues;
-        public FootballMatchCollection MatchesCollection;
-        public MyDictionary<int, Team> TeamsDict;
-        public MyDictionary<int, GameResult> GameResults;
+        private League[] _leagues;
+        private FootballMatchCollection _matchesCollection;
+        private MyDictionary<int, Team> _teamsDict;
+        private MyDictionary<int, GameResult> _gameResults;
 
         private int CurrentLeague = 0;
         private string CurrentSearchTerm = "";
@@ -24,12 +24,12 @@ namespace BettingSystem.Forms
             InitializeComponent();
 
             _currentSession = currentSession;
-            Leagues = _currentSession.Leagues;
-            MatchesCollection = _currentSession.MatchesCollection;
-            TeamsDict = _currentSession.TeamsDict;
-            GameResults = _currentSession.GameResults;
+            _leagues = _currentSession.Leagues;
+            _matchesCollection = _currentSession.MatchesCollection;
+            _teamsDict = _currentSession.TeamsDict;
+            _gameResults = _currentSession.GameResults;
 
-            MatchFilter = new MatchManager(MatchesCollection, TeamsDict);
+            _matchFilter = new MatchManager(_matchesCollection, _teamsDict);
 
             adminNavBar1.SetAdmin(admin);
 
@@ -93,10 +93,10 @@ namespace BettingSystem.Forms
                 new Notification("Results will be available after match is completed", NotificationType.Info, this);
                 return;
             }
-            if (GameResults.TryGetValue(selectedMatch.GameID, out var gameResults))
+            if (_gameResults.TryGetValue(selectedMatch.GameID, out var gameResults))
             {
                 //open popup with match outcomes
-                MatchResultPopup resultPopup = new MatchResultPopup(gameResults, TeamsDict[selectedMatch.HomeTeamID].TeamName, TeamsDict[selectedMatch.AwayTeamID].TeamName);
+                MatchResultPopup resultPopup = new MatchResultPopup(gameResults, _teamsDict[selectedMatch.HomeTeamID].TeamName, _teamsDict[selectedMatch.AwayTeamID].TeamName);
                 resultPopup.ShowDialog();
             }
             else
@@ -110,7 +110,7 @@ namespace BettingSystem.Forms
             SetLeaguesRadioBtnTag();
             allRadioBtn.Checked = true;
             AddColumnHeaders();
-            await DisplayMatches(MatchesCollection.AllMatches);
+            await DisplayMatches(_matchesCollection.AllMatches);
         }
 
         private void AddColumnHeaders()
@@ -188,13 +188,13 @@ namespace BettingSystem.Forms
 
             foreach (FootballMatch game in footballMatches)
             {
-                Team homeTeam = TeamsDict[game.HomeTeamID];
-                Team awayTeam = TeamsDict[game.AwayTeamID];
-                var league = Leagues.FirstOrDefault(l => l.LeagueId == game.LeagueID);
+                Team homeTeam = _teamsDict[game.HomeTeamID];
+                Team awayTeam = _teamsDict[game.AwayTeamID];
+                var league = _leagues.FirstOrDefault(l => l.LeagueId == game.LeagueID);
                 string leagueName = league?.Name ?? "Unknown";
 
-                var homeTask = ImgLoader.GetImageAsync(homeTeam.LogoPath);
-                var awayTask = ImgLoader.GetImageAsync(awayTeam.LogoPath);
+                var homeTask = _imgLoader.GetImageAsync(homeTeam.LogoPath);
+                var awayTask = _imgLoader.GetImageAsync(awayTeam.LogoPath);
 
                 await Task.WhenAll(homeTask, awayTask);
 
@@ -269,16 +269,16 @@ namespace BettingSystem.Forms
             CurrentLeague = 0;
             allRadioBtn.Checked = true;
             searchbarTextBox.Clear();
-            await DisplayMatches(MatchesCollection.AllMatches);
+            await DisplayMatches(_matchesCollection.AllMatches);
         }
 
         private async Task RefetchData()
         {
-            MatchesCollection = await DbManager.FetchMatchesAsync(true);
-            GameResults = await DbManager.FetchGameResultsAsync(null, true);
-            Leagues = await DbManager.FetchLeaguesAsync();
-            TeamsDict = await DbManager.FetchTeamsAsync(true);
-            MatchFilter = new MatchManager(MatchesCollection, TeamsDict);
+            _matchesCollection = await _dbManager.FetchMatchesAsync(true);
+            _gameResults = await _dbManager.FetchGameResultsAsync(null, true);
+            _leagues = await _dbManager.FetchLeaguesAsync();
+            _teamsDict = await _dbManager.FetchTeamsAsync(true);
+            _matchFilter = new MatchManager(_matchesCollection, _teamsDict);
         }
 
         private async void refreshIcon_Click(object sender, EventArgs e)
@@ -316,11 +316,11 @@ namespace BettingSystem.Forms
 
             CurrentLeague = selectedLeagueId;
             CurrentSearchTerm = searchedTerm;
-            MyList<FootballMatch> leageMatches = CurrentLeague == 0 ? MatchesCollection.AllMatches : MatchFilter.FilterMatchByLeague(CurrentLeague);
+            MyList<FootballMatch> leageMatches = CurrentLeague == 0 ? _matchesCollection.AllMatches : _matchFilter.FilterMatchByLeague(CurrentLeague);
 
             if (!String.IsNullOrEmpty(CurrentSearchTerm))
             {
-                MyList<FootballMatch>  matchDisplayed = MatchFilter.FilterMatchByTeams(searchedTerm, leageMatches);
+                MyList<FootballMatch>  matchDisplayed = _matchFilter.FilterMatchByTeams(searchedTerm, leageMatches);
                 await DisplayMatches(matchDisplayed);
             }
             else
@@ -336,11 +336,11 @@ namespace BettingSystem.Forms
             CurrentSearchTerm = "";
             if (CurrentLeague == 0)
             {
-                await DisplayMatches(MatchesCollection.AllMatches);
+                await DisplayMatches(_matchesCollection.AllMatches);
             }
             else
             {
-                await DisplayMatches(MatchFilter.FilterMatchByLeague(CurrentLeague));
+                await DisplayMatches(_matchFilter.FilterMatchByLeague(CurrentLeague));
             }
         }
 

@@ -6,27 +6,25 @@ namespace BettingSystem.Forms
 {
     public partial class AdminUsersPage : BaseForm
     {
-        private AppUser CurrentAdmin;
-        private SessionManager CurrentSession;
-        private readonly DatabaseManager DBManager = new DatabaseManager();
-        private List<AppUser> Users = new List<AppUser>();
+        private AppUser _currentAdmin;
+        private SessionManager _currentSession;
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
+        private List<AppUser> _users = new List<AppUser>();
 
         public AdminUsersPage(AppUser admin, SessionManager session)
         {
             InitializeComponent();
             dgvUsers.ReadOnly = false; // added to show dropdown
 
-            //dgvUsers.DataError += (s, e) => e.ThrowException = false;
+            _currentAdmin = admin;
+            _currentSession = session;
 
-            CurrentAdmin = admin;
-            CurrentSession = session;
-
-            adminNavBar1.SetAdmin(CurrentAdmin);
-            adminNavBar1.UsersPageClicked += (s, e) => CurrentSession.OpenAdminViewUsersPage(this);
-            adminNavBar1.SearchMatchesPageClicked += (s, e) => CurrentSession.OpenAdminMatchPage(this);
-            adminNavBar1.AddMatchesPageClicked += (s, e) => CurrentSession.OpenAdminAddMatchPage(this);
-            adminNavBar1.FinancialPageClicked += (s, e) => CurrentSession.OpenAdminFinancialPage(this);
-            adminNavBar1.LogoutClicked += (s, e) => CurrentSession.LogOut(this);
+            adminNavBar1.SetAdmin(_currentAdmin);
+            adminNavBar1.UsersPageClicked += (s, e) => _currentSession.OpenAdminViewUsersPage(this);
+            adminNavBar1.SearchMatchesPageClicked += (s, e) => _currentSession.OpenAdminMatchPage(this);
+            adminNavBar1.AddMatchesPageClicked += (s, e) => _currentSession.OpenAdminAddMatchPage(this);
+            adminNavBar1.FinancialPageClicked += (s, e) => _currentSession.OpenAdminFinancialPage(this);
+            adminNavBar1.LogoutClicked += (s, e) => _currentSession.LogOut(this);
 
             this.Load += AdminUsersPage_Load;
             this.FormClosing += AdminUsersPage_FormClosing;
@@ -45,7 +43,7 @@ namespace BettingSystem.Forms
 
         private async Task LoadUsers()
         {
-            Users = await DBManager.FetchAllUsersAsync();
+            _users = await _dbManager.FetchAllUsersAsync();
             PopulateGrid();
         }
 
@@ -56,7 +54,7 @@ namespace BettingSystem.Forms
 
         private void AdminUsersPage_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false, true);
                 if (closingPopup.ShowDialog() == DialogResult.No)
@@ -65,7 +63,7 @@ namespace BettingSystem.Forms
                 }
                 else
                 {
-                    CurrentSession.IsExiting = true;
+                    _currentSession.IsExiting = true;
                     Application.Exit();
                 }
             }
@@ -73,11 +71,11 @@ namespace BettingSystem.Forms
 
         private void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut)
+            if (!_currentSession.IsLoggingOut)
             {
                 logOutPopup closingPopup = new logOutPopup(true, true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
-                    CurrentSession.LogOut(this);
+                    _currentSession.LogOut(this);
             }
         }
 
@@ -91,7 +89,6 @@ namespace BettingSystem.Forms
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colBalance", HeaderText = "Balance", FillWeight = 70 });
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRole", HeaderText = "Role", FillWeight = 60 });
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRegistration", HeaderText = "Registered", FillWeight = 90 });
-            //dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colStatus", HeaderText = "Status", FillWeight = 70 });
 
             var statusCol = new DataGridViewComboBoxColumn
             {
@@ -111,7 +108,7 @@ namespace BettingSystem.Forms
         {
             dgvUsers.Rows.Clear();
 
-            foreach (AppUser user in Users)
+            foreach (AppUser user in _users)
             {
                 int rowIndex = dgvUsers.Rows.Add(
                     user.UserID,
@@ -136,18 +133,13 @@ namespace BettingSystem.Forms
             if (dgvUsers.Columns[e.ColumnIndex].Name == "colStatus")
             {
                 int userId = Convert.ToInt32(dgvUsers.Rows[e.RowIndex].Cells["colId"].Value);
-                AppUser selectedUser = Users.First(u => u.UserID == userId);
+                AppUser selectedUser = _users.First(u => u.UserID == userId);
 
                 // if status is banned, prevent editing
                 if (selectedUser.Status == "Banned")
                 {
                     e.Cancel = true;
                     new Notification("Cannot modify banned users", NotificationType.Warning, this);
-                    //BeginInvoke(() =>
-                    //{
-                    //    dgvUsers.CancelEdit();
-                    //    new Notification("Cannot modify banned users.", NotificationType.Warning, this);
-                    //});
                 }
             }
         }
@@ -171,15 +163,6 @@ namespace BettingSystem.Forms
             if (dgvUsers.IsCurrentCellDirty)
                 dgvUsers.CommitEdit(DataGridViewDataErrorContexts.Commit);
         }
-        //private void DgvUsers_CurrentCellDirtyStateChanged(object sender, EventArgs e)
-        //{
-        //    if (dgvUsers.CurrentCell != null &&
-        //        dgvUsers.Columns[dgvUsers.CurrentCell.ColumnIndex].Name == "colStatus" &&
-        //        dgvUsers.IsCurrentCellDirty)
-        //    {
-        //        dgvUsers.CommitEdit(DataGridViewDataErrorContexts.Commit);
-        //    }
-        //}
 
         // handle status change when dropdown value changes
         private async void DgvUsers_CellValueChanged(object sender, DataGridViewCellEventArgs e)
@@ -188,19 +171,18 @@ namespace BettingSystem.Forms
             if (dgvUsers.Columns[e.ColumnIndex].Name != "colStatus") return;
 
             int userId = Convert.ToInt32(dgvUsers.Rows[e.RowIndex].Cells["colId"].Value);
-            AppUser selectedUser = Users.First(u => u.UserID == userId);
+            AppUser selectedUser = _users.First(u => u.UserID == userId);
             string newStatus = dgvUsers.Rows[e.RowIndex].Cells["colStatus"].Value.ToString()!;
 
             if (newStatus == selectedUser.Status) return;
 
             await UpdateUserStatus(selectedUser, newStatus);
             StyleStatusCell(dgvUsers.Rows[e.RowIndex], newStatus);
-            //this.Invoke(() => StyleStatusCell(dgvUsers.Rows[e.RowIndex], newStatus));
         }
 
         private async Task UpdateUserStatus(AppUser user, string newStatus)
         {
-            (bool success, string message) = await DBManager.UpdateUserStatusAsync(user.UserID, newStatus);
+            (bool success, string message) = await _dbManager.UpdateUserStatusAsync(user.UserID, newStatus);
 
             if (success)
             {
