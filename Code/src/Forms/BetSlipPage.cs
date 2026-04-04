@@ -13,6 +13,7 @@ namespace BettingSystem.Forms
         private BetSlip _userSlip;
         private FootballMatchCollection _matchesCollection;
         private MyDictionary<int, Team> _teamsDict;
+        private MyDictionary<int, MyList<Player>> _players;
         private League[] _leagues;
 
         private readonly DatabaseManager _dbManager = new DatabaseManager();
@@ -27,6 +28,7 @@ namespace BettingSystem.Forms
             _userSlip = session.UserSlip;
             _matchesCollection = session.MatchesCollection;
             _teamsDict = session.TeamsDict;
+            _players = session.Players;
             _leagues = session.Leagues;
 
             navBar1.SetCurrentUser(_currentUser);
@@ -93,12 +95,15 @@ namespace BettingSystem.Forms
         {
             _userSlip = _currentSession.UserSlip;
             LoadBetSlips();
-            UpdateSummary();
         }
 
         private void LoadBetSlips()
         {
+            //clear stake
+            txtStake.Clear();
             pnlSlipList.Controls.Clear();
+            pnlSummaryContainer.Hide();
+
             if (!_userSlip.Bets.Any())
             {
                 Label emptyLbl = new Label();
@@ -109,28 +114,42 @@ namespace BettingSystem.Forms
                 emptyLbl.TextAlign = ContentAlignment.MiddleCenter;
                 emptyLbl.Dock = DockStyle.Fill;
                 pnlSlipList.Controls.Add(emptyLbl);
-                pnlSummaryContainer.Hide();
                 return;
-
             }
 
             foreach (Bet bet in _userSlip.Bets)
             {
-                FootballMatch match = _matchesCollection.AllMatches
-                    .First(m => m.GameID == bet.GameID);
+                FootballMatch? match = _matchesCollection.AllMatches
+                    .FirstOrDefault(m => m.GameID == bet.GameID);
+
+                if (match is null)
+                {
+                    continue;
+                }
 
                 Team homeTeam = _teamsDict[match.HomeTeamID];
                 Team awayTeam = _teamsDict[match.AwayTeamID];
                 string leagueName = _leagues.First(l => l.LeagueId == match.LeagueID).Name;
                 string betTypeName = _betTypeNames.TryGetValue(bet.BetTypeID, out string? name) ? name : "Unknown";
+                string userSelection;
 
+                // get player's name
+                if (bet.BetTypeID == 6)
+                {
+                    MyList<Player> playerList = GetPlayers(homeTeam.TeamId, awayTeam.TeamId);
+                    userSelection = playerList.FirstOrDefault(p => p.PlayerId == int.Parse(bet.Selection))?.Name ?? "Unknown";
+                }
+                else
+                {
+                    userSelection = bet.Selection;
+                }
                 var card = new BetCard();
                 card.SetData(
                     leagueName,
                     homeTeam.TeamName,
                     awayTeam.TeamName,
                     betTypeName,
-                    bet.Selection,
+                    userSelection,
                     bet.OddValue.ToString("F2"),
                     match.GameDate
                 );
@@ -150,6 +169,20 @@ namespace BettingSystem.Forms
             UpdateSummary();
         }
 
+        private MyList<Player> GetPlayers(int homeId, int awayId)
+        {
+            MyList<Player> gamePlayers = new MyList<Player>();
+
+            if (_players.TryGetValue(homeId, out var homePlayers))
+            {
+                gamePlayers.AddRange(homePlayers);
+            }
+            if (_players.TryGetValue(awayId, out var awayPlayers))
+            {
+                gamePlayers.AddRange(awayPlayers);
+            }
+            return gamePlayers;
+        }
         private void UpdateSummary()
         {
             lblTotalOdds.Text = _userSlip.TotalOdds.ToString("F2");
@@ -180,7 +213,7 @@ namespace BettingSystem.Forms
                 return;
             }
 
-            var startedBets = UserSlip.Bets.Where(b => b.Date <= DateTime.Now).ToList();
+            var startedBets = _userSlip.Bets.Where(b => b.Date <= DateTime.Now).ToList();
 
             // check if match has already started before confirming bet slip
             if (startedBets.Any())
@@ -261,9 +294,8 @@ namespace BettingSystem.Forms
             spacer.Height = 15;
             spacer.BackColor = Color.Transparent;
 
-            // add spacer first, then card 
-            pnlSlipList.Controls.Add(spacer);
             pnlSlipList.Controls.Add(card);
+            pnlSlipList.Controls.Add(spacer);
         }
 
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
