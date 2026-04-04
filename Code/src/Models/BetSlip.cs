@@ -76,26 +76,26 @@ namespace BettingSystem.Models
         }
 
         // remove bets using game id
-        public bool RemoveBetsByGameIds(List<int> gameIds)
+        public int RemoveBetsByGameIds(List<int> gameIds)
         {
             var currentNode = Bets.First;
             int removedBets = 0;
-            int initialBetsNum = Bets.Count;
 
             while (currentNode != null)
             {
+                var next = currentNode.Next;
                 if (gameIds.Contains(currentNode.Value.GameID))
                 {
                     Bets.Remove(currentNode);
                     currentNode.Value.Node = null;
                     removedBets++;
                 }
-                currentNode = currentNode.Next;
+                currentNode = next;
             }
             if (removedBets > 0)
                 CalculateTotalOdds();
 
-            return initialBetsNum != Bets.Count;
+            return removedBets;
         }
     }
 }
