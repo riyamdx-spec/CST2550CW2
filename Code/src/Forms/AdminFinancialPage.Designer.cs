@@ -245,6 +245,7 @@ namespace BettingSystem.Forms
             pnlAiReportHeader.BackColor = Color.Transparent;
             pnlAiReportHeader.Name = "pnlAiReportHeader";
             pnlAiReportHeader.TabIndex = 0;
+            //pnlAiReportHeader.Controls.Add(lblAiReportStatus);
             pnlAiReportHeader.Controls.Add(lblAiReportTitle);
             pnlAiReportHeader.Controls.Add(btnGenerateReport);
 
@@ -275,7 +276,7 @@ namespace BettingSystem.Forms
             pnlAiReport.BackColor = Color.FromArgb(40, 40, 40);
             pnlAiReport.CornerRadius = 12;
             pnlAiReport.Dock = DockStyle.Bottom;
-            pnlAiReport.Height = 220;
+            pnlAiReport.Height = 46;
             pnlAiReport.Padding = new Padding(16, 10, 16, 12);
             pnlAiReport.Name = "pnlAiReport";
             pnlAiReport.TabIndex = 4;
@@ -287,8 +288,8 @@ namespace BettingSystem.Forms
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(26, 26, 26);
-            Controls.Add(pnlCharts);
             Controls.Add(pnlAiReport);
+            Controls.Add(pnlCharts);
             Controls.Add(pnlSummaryCards);
             Controls.Add(lblTitle);
             Controls.Add(adminNavBar1);

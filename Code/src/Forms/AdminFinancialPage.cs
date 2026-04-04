@@ -8,16 +8,12 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-
-//using OpenAI;
-//using OpenAI.Models;
 using System.Configuration;
 
 using System.Threading.Tasks;
 using Google.GenAI;
 using Google.GenAI.Types;
 using Microsoft.Extensions.AI;
-
 
 namespace BettingSystem.Forms
 {
@@ -26,6 +22,16 @@ namespace BettingSystem.Forms
         private AppUser CurrentAdmin;
         private SessionManager CurrentSession;
         private readonly DatabaseManager DBManager = new DatabaseManager();
+
+        // state for AI panel
+        private bool _aiPanelExpanded = false;
+        private const int AiPanelCollapsedHeight = 46;
+        private const int AiPanelExpandedHeight = 250;
+
+        // state for dragging AI panel
+        private bool _isDragging = false;
+        private int _dragStartY;
+        private int _dragStartHeight;
 
         // colours
         private readonly ScottPlot.Color SpGreen = new ScottPlot.Color(93, 185, 64);
@@ -68,6 +74,17 @@ namespace BettingSystem.Forms
             PositionGenerateButton();
             pnlAiReport.Resize += (s, ev) => PositionGenerateButton();
             await LoadAllData();
+
+            // for dragging
+            pnlAiReport.MouseDown += AiPanel_MouseDown;
+            pnlAiReport.MouseMove += AiPanel_MouseMove;
+            pnlAiReport.MouseUp += AiPanel_MouseUp;
+            pnlAiReportHeader.MouseDown += AiPanel_MouseDown;
+            pnlAiReportHeader.MouseMove += AiPanel_MouseMove;
+            pnlAiReportHeader.MouseUp += AiPanel_MouseUp;
+
+            lblAiReportStatus.Visible = false;
+
         }
 
         public async Task ReloadPage()
@@ -341,26 +358,45 @@ namespace BettingSystem.Forms
 
         private async void btnGenerateReport_Click(object sender, EventArgs e)
         {
-            btnGenerateReport.Enabled = false;
-            btnGenerateReport.Text = "Generating...";
-            rtbAiReport.Text = "";
-            lblAiReportStatus.Text = "Analysing financial data...";
+            if (!_aiPanelExpanded)
+            {
+                // expand panel
+                _aiPanelExpanded = true;
+                pnlAiReport.Height = AiPanelExpandedHeight;
+                btnGenerateReport.Text = "Generating...";
+                btnGenerateReport.Enabled = false;
+                rtbAiReport.Text = "";
+                lblAiReportStatus.Visible = true;
+                lblAiReportStatus.Text = "Analysing financial data...";
 
-            try
-            {
-                string report = await GenerateFinancialReport();
-                rtbAiReport.Text = report;
-                lblAiReportStatus.Text = $"Report generated : {DateTime.Now:dd/MM/yyyy HH:mm}";
+                try
+                {
+                    string report = await GenerateFinancialReport();
+                    //rtbAiReport.Text = report;
+                    FormatAiReport(report);
+                    lblAiReportStatus.Text = $"Report generated · {DateTime.Now:dd/MM/yyyy HH:mm}";
+                    btnGenerateReport.Text = "Hide Report";
+                }
+                catch (Exception ex)
+                {
+                    rtbAiReport.Text = "Failed to generate report. Please try again.";
+                    lblAiReportStatus.Text = $"Error: {ex.Message}";
+                    btnGenerateReport.Text = "Generate Report";
+                    _aiPanelExpanded = false;
+                    pnlAiReport.Height = AiPanelCollapsedHeight;
+                }
+                finally
+                {
+                    btnGenerateReport.Enabled = true;
+                }
             }
-            catch (Exception ex)
+            else
             {
-                rtbAiReport.Text = "Failed to generate report. Please try again.";
-                lblAiReportStatus.Text = $"Error: {ex.Message}";
-            }
-            finally
-            {
-                btnGenerateReport.Enabled = true;
+                // collapse panel
+                _aiPanelExpanded = false;
+                pnlAiReport.Height = AiPanelCollapsedHeight;
                 btnGenerateReport.Text = "Generate Report";
+                lblAiReportStatus.Visible = false;
             }
         }
 
@@ -370,54 +406,169 @@ namespace BettingSystem.Forms
             if (string.IsNullOrWhiteSpace(apiKey))
                 throw new Exception("OpenAI API key not set in app.config.");
 
-            var client = new Client(apiKey: apiKey);
+        var client = new Client(apiKey: apiKey);
 
-            // build context from current data
-            var profitLossSummary = string.Join(", ",
-                _lastProfitLoss.Select(p => $"{p.Month}: Revenue ${p.Revenue:F0} / Payouts ${p.Payouts:F0}")
-            );
+        // build context from current data
+        var profitLossSummary = string.Join(", ",
+            _lastProfitLoss.Select(p => $"{p.Month}: Revenue ${p.Revenue:F0} / Payouts ${p.Payouts:F0}")
+        );
 
-            var betStatusSummary = string.Join(", ",
-                _lastBetStatus.Select(b => $"{b.Status}: {b.Count}")
-            );
+        var betStatusSummary = string.Join(", ",
+            _lastBetStatus.Select(b => $"{b.Status}: {b.Count}")
+        );
 
-            int totalBets = _lastBetStatus.Sum(b => b.Count);
-            double winRate = totalBets > 0
-                ? (_lastBetStatus.FirstOrDefault(b => b.Status == "Won")?.Count ?? 0) * 100.0 / totalBets
-                : 0;
+        int totalBets = _lastBetStatus.Sum(b => b.Count);
+        double winRate = totalBets > 0
+            ? (_lastBetStatus.FirstOrDefault(b => b.Status == "Won")?.Count ?? 0) * 100.0 / totalBets
+            : 0;
 
             string prompt = $"""
-                            You are a financial analyst for a football betting platform called Pitch Bet.
-                            Analyse the following financial data and write a concise executive summary for business stakeholders. (3-4 paragraphs).
-                            Focus on revenue trends, profitability, user activity, and key risks or opportunities.
-                            Provide insights and highlight any anomalies or areas for improvement.
-                            Write in a professional but clear tone. Do not use markdown formatting.
+                                You are a financial analyst preparing an executive briefing for the board of 
+                                Pitch Bet, a football betting platform.
 
-                            Financial Summary:
-                            - Total Revenue: ${_lastSummary.TotalRevenue:F2}
-                            - Total Active Users: {_lastSummary.TotalActiveUsers:N0}
-                            - Total Bets Placed: {_lastSummary.TotalBetsPlaced:N0}
-                            - Total Deposits: ${_lastSummary.TotalDeposits:F2}
-                            - Total Withdrawals: ${_lastSummary.TotalWithdrawals:F2}
+                                Using the financial data below, write a polished executive summary. Structure it with 
+                                these four clearly labelled sections:
 
-                            Monthly Profit & Loss (last 6 months):
-                            {profitLossSummary}
+                                PERFORMANCE OVERVIEW
+                                A high-level summary of the platform's financial health and key metrics.
 
-                            Bet Outcomes:
-                            {betStatusSummary}
-                            Win rate: {winRate:F1}%
-                            """;
+                                REVENUE & PROFITABILITY
+                                Analysis of revenue trends, payout ratios, and profit margins across the reported months.
 
+                                USER ACTIVITY & ENGAGEMENT
+                                Insights on active users, betting volume, and what the bet outcome distribution reveals.
+
+                                OUTLOOK & RECOMMENDATIONS
+                                Key risks, opportunities, and strategic recommendations for the next quarter.
+
+                                Write in a formal, executive tone. Each section should be 2-3 sentences. 
+                                Do not use bullet points, markdown, asterisks, or any special formatting characters.
+                                Use plain text only with the section headers in capitals as shown above.
+
+                                Financial Summary:
+                                - Total Revenue: ${_lastSummary.TotalRevenue:N2}
+                                - Total Active Users: {_lastSummary.TotalActiveUsers:N0}
+                                - Total Bets Placed: {_lastSummary.TotalBetsPlaced:N0}
+                                - Total Deposits: ${_lastSummary.TotalDeposits:N2}
+                                - Total Withdrawals: ${_lastSummary.TotalWithdrawals:N2}
+
+                                Monthly Profit & Loss:
+                                {profitLossSummary}
+
+                                Bet Outcomes:
+                                {betStatusSummary}
+                                Platform win rate: {winRate:F1}%
+                                """;
+            
             var response = await client.Models.GenerateContentAsync(
-                model: "gemini-3-flash-preview", contents: prompt);
+            model: "gemini-3-flash-preview", contents: prompt);
 
             return response.Candidates[0].Content.Parts[0].Text;
+        }
+
+
+        private void AiPanel_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (!_aiPanelExpanded) return;
+            if (e.Y > 8) return; // only drag from top edge 
+            _isDragging = true;
+            _dragStartY = System.Windows.Forms.Cursor.Position.Y;
+            _dragStartHeight = pnlAiReport.Height;
+            Cursor = Cursors.SizeNS;
+
+            chartProfitLoss.Visible = false;
+            chartTransactionVolume.Visible = false;
+            chartBetStatus.Visible = false;
+        }
+
+        private void AiPanel_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!_aiPanelExpanded)
+            {
+                Cursor = Cursors.Default;
+                return;
+            }
+
+            // show resize Cursor when near top edge
+            if (e.Y <= 8)
+                Cursor = Cursors.SizeNS;
+            else
+                Cursor = Cursors.Default;
+
+            if (!_isDragging) return;
+
+            int delta = _dragStartY - System.Windows.Forms.Cursor.Position.Y;
+            int newHeight = Math.Max(AiPanelCollapsedHeight + 50, _dragStartHeight + delta);
+            pnlAiReport.Height = newHeight;
+        }
+
+        private void AiPanel_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (_isDragging)
+            {
+                // restore charts after drag
+                chartProfitLoss.Visible = true;
+                chartTransactionVolume.Visible = true;
+                chartBetStatus.Visible = true;
+            }
+            _isDragging = false;
+            Cursor = Cursors.Default;
         }
 
         protected override void AfterScaling()
         {
             PositionSummaryCards();
             SetChartPanelWidths();
+            
+        }
+
+        private void FormatAiReport(string report)
+        {
+            rtbAiReport.Clear();
+
+            var sectionHeaders = new[]
+            {
+                "PERFORMANCE OVERVIEW",
+                "REVENUE & PROFITABILITY",
+                "USER ACTIVITY & ENGAGEMENT",
+                "OUTLOOK & RECOMMENDATIONS"
+            };
+
+            string[] lines = report.Split('\n');
+
+            foreach (string line in lines)
+            {
+                string trimmed = line.Trim();
+                bool isHeader = sectionHeaders.Any(h => trimmed.StartsWith(h));
+
+                if (isHeader)
+                {
+                    // add spacing before header 
+                    if (rtbAiReport.TextLength > 0)
+                    {
+                        rtbAiReport.SelectionStart = rtbAiReport.TextLength;
+                        rtbAiReport.SelectionLength = 0;
+                        rtbAiReport.SelectionColor = System.Drawing.Color.FromArgb(210, 210, 210);
+                        rtbAiReport.AppendText(System.Environment.NewLine);
+                    }
+
+                    // header styling
+                    rtbAiReport.SelectionStart = rtbAiReport.TextLength;
+                    rtbAiReport.SelectionLength = 0;
+                    rtbAiReport.SelectionColor = System.Drawing.Color.FromArgb(93, 185, 64);
+                    rtbAiReport.SelectionFont = new System.Drawing.Font("Times New Roman", 10F, System.Drawing.FontStyle.Bold);
+                    rtbAiReport.AppendText(trimmed + System.Environment.NewLine);
+                }
+                else if (!string.IsNullOrWhiteSpace(trimmed))
+                {
+                    // body text styling
+                    rtbAiReport.SelectionStart = rtbAiReport.TextLength;
+                    rtbAiReport.SelectionLength = 0;
+                    rtbAiReport.SelectionColor = System.Drawing.Color.FromArgb(210, 210, 210);
+                    rtbAiReport.SelectionFont = new System.Drawing.Font("Times New Roman", 10F, System.Drawing.FontStyle.Regular);
+                    rtbAiReport.AppendText(trimmed + System.Environment.NewLine);
+                }
+            }
         }
     }
 }
