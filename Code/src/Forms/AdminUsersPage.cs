@@ -15,6 +15,9 @@ namespace BettingSystem.Forms
         {
             InitializeComponent();
             dgvUsers.ReadOnly = false; // added to show dropdown
+
+            //dgvUsers.DataError += (s, e) => e.ThrowException = false;
+
             CurrentAdmin = admin;
             CurrentSession = session;
 
@@ -85,9 +88,10 @@ namespace BettingSystem.Forms
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colLastName", HeaderText = "Last Name", FillWeight = 80 });
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDob", HeaderText = "Date of Birth", FillWeight = 80 });
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEmail", HeaderText = "Email", FillWeight = 140 });
-            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRegistration", HeaderText = "Registered", FillWeight = 90 });
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colBalance", HeaderText = "Balance", FillWeight = 70 });
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRole", HeaderText = "Role", FillWeight = 60 });
+            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRegistration", HeaderText = "Registered", FillWeight = 90 });
+            //dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colStatus", HeaderText = "Status", FillWeight = 70 });
 
             var statusCol = new DataGridViewComboBoxColumn
             {
@@ -96,9 +100,10 @@ namespace BettingSystem.Forms
                 FillWeight = 70,
                 FlatStyle = FlatStyle.Flat,
                 DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox,
-                ReadOnly = false
+                ReadOnly = false,
+                AutoComplete = false
             };
-            statusCol.Items.AddRange("active", "suspended", "banned");
+            statusCol.Items.AddRange("Active", "Suspended", "Banned");
             dgvUsers.Columns.Add(statusCol);
         }
 
@@ -114,9 +119,9 @@ namespace BettingSystem.Forms
                     user.LastName,
                     user.Dob.ToString("dd/MM/yyyy"),
                     user.Email,
-                    user.RegistrationDate.ToString("dd/MM/yyyy"),
                     $"${user.WalletBalance:F2}",
                     user.Role,
+                    user.RegistrationDate.ToString("dd/MM/yyyy"),
                     user.Status
                 );
 
@@ -134,10 +139,15 @@ namespace BettingSystem.Forms
                 AppUser selectedUser = Users.First(u => u.UserID == userId);
 
                 // if status is banned, prevent editing
-                if (selectedUser.Status == "banned")
+                if (selectedUser.Status == "Banned")
                 {
                     e.Cancel = true;
                     new Notification("Cannot modify banned users", NotificationType.Warning, this);
+                    //BeginInvoke(() =>
+                    //{
+                    //    dgvUsers.CancelEdit();
+                    //    new Notification("Cannot modify banned users.", NotificationType.Warning, this);
+                    //});
                 }
             }
         }
@@ -147,9 +157,9 @@ namespace BettingSystem.Forms
             var cell = row.Cells["colStatus"];
             cell.Style.ForeColor = status switch
             {
-                "active" => Color.FromArgb(93, 185, 64),
-                "suspended" => Color.FromArgb(255, 165, 0),
-                "banned" => Color.FromArgb(220, 53, 53),
+                "Active" => Color.FromArgb(93, 185, 64),
+                "Suspended" => Color.FromArgb(255, 165, 0),
+                "Banned" => Color.FromArgb(220, 53, 53),
                 _ => Color.FromArgb(241, 241, 241)
             };
             cell.Style.Font = new Font("Times New Roman", 10F, FontStyle.Bold);
@@ -161,6 +171,15 @@ namespace BettingSystem.Forms
             if (dgvUsers.IsCurrentCellDirty)
                 dgvUsers.CommitEdit(DataGridViewDataErrorContexts.Commit);
         }
+        //private void DgvUsers_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        //{
+        //    if (dgvUsers.CurrentCell != null &&
+        //        dgvUsers.Columns[dgvUsers.CurrentCell.ColumnIndex].Name == "colStatus" &&
+        //        dgvUsers.IsCurrentCellDirty)
+        //    {
+        //        dgvUsers.CommitEdit(DataGridViewDataErrorContexts.Commit);
+        //    }
+        //}
 
         // handle status change when dropdown value changes
         private async void DgvUsers_CellValueChanged(object sender, DataGridViewCellEventArgs e)
@@ -176,6 +195,7 @@ namespace BettingSystem.Forms
 
             await UpdateUserStatus(selectedUser, newStatus);
             StyleStatusCell(dgvUsers.Rows[e.RowIndex], newStatus);
+            //this.Invoke(() => StyleStatusCell(dgvUsers.Rows[e.RowIndex], newStatus));
         }
 
         private async Task UpdateUserStatus(AppUser user, string newStatus)

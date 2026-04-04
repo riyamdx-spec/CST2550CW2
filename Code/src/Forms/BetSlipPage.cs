@@ -34,6 +34,9 @@ namespace BettingSystem.Forms
             navBar1.AccountClicked += NavBar1_AccountClicked;
             navBar1.LogoutClicked += NavBar1_LogoutClicked;
 
+            txtStake.TextChanged += txtStake_TextChanged;
+            btnPlaceBet.Click += btnPlaceBet_Click;
+
             this.Load += BetSlipPage_Load;
             this.FormClosing += BetSlipPage_FormClosing;
 
@@ -174,6 +177,15 @@ namespace BettingSystem.Forms
             if (!_userSlip.Bets.Any())
             {
                 new Notification("Your bet slip is empty.", NotificationType.Error, this);
+                return;
+            }
+
+            var startedBets = UserSlip.Bets.Where(b => b.Date <= DateTime.Now).ToList();
+
+            // check if match has already started before confirming bet slip
+            if (startedBets.Any())
+            {
+                new Notification("Cannot place bet. One or more matches have already started.", NotificationType.Error, this);
                 return;
             }
 

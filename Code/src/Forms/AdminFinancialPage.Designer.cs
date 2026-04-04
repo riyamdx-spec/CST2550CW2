@@ -45,6 +45,12 @@ namespace BettingSystem.Forms
             chartBetStatus = new FormsPlot();
             lblBetStatusTitle = new Label();
             lblBetStatusDesc = new Label();
+            pnlAiReport = new RoundedPanel();
+            pnlAiReportHeader = new Panel();
+            lblAiReportTitle = new Label();
+            btnGenerateReport = new RoundedButton();
+            rtbAiReport = new RichTextBox();
+            lblAiReportStatus = new Label();
 
             adminNavBar1.SuspendLayout();
             pnlSummaryCards.SuspendLayout();
@@ -52,6 +58,8 @@ namespace BettingSystem.Forms
             pnlProfitLoss.SuspendLayout();
             pnlTransactionVolume.SuspendLayout();
             pnlBetStatus.SuspendLayout();
+            pnlAiReport.SuspendLayout();
+            pnlAiReportHeader.SuspendLayout();
             SuspendLayout();
 
             // adminNavBar1
@@ -205,10 +213,82 @@ namespace BettingSystem.Forms
             lblBetStatusDesc.Name = "lblBetStatusDesc";
             lblBetStatusDesc.TabIndex = 1;
 
+            // lblAiReportTitle
+            lblAiReportTitle.AutoSize = false;
+            lblAiReportTitle.Dock = DockStyle.Fill;
+            lblAiReportTitle.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
+            lblAiReportTitle.ForeColor = Color.FromArgb(241, 241, 241);
+            lblAiReportTitle.Text = "AI Financial Report";
+            lblAiReportTitle.TextAlign = ContentAlignment.MiddleLeft;
+            lblAiReportTitle.Name = "lblAiReportTitle";
+            lblAiReportTitle.TabIndex = 0;
+
+            // btnGenerateReport
+            btnGenerateReport.BackColor = Color.FromArgb(93, 185, 64);
+            btnGenerateReport.CornerRadius = 10;
+            btnGenerateReport.Cursor = Cursors.Hand;
+            btnGenerateReport.FlatStyle = FlatStyle.Flat;
+            btnGenerateReport.FlatAppearance.BorderSize = 0;
+            btnGenerateReport.Font = new Font("Times New Roman", 10F, FontStyle.Bold);
+            btnGenerateReport.ForeColor = Color.FromArgb(241, 241, 241);
+            btnGenerateReport.Name = "btnGenerateReport";
+            btnGenerateReport.Size = new Size(150, 30);
+            btnGenerateReport.Text = "Generate Report";
+            btnGenerateReport.UseVisualStyleBackColor = false;
+            btnGenerateReport.Dock = DockStyle.Right;
+            btnGenerateReport.TabIndex = 1;
+            btnGenerateReport.Click += btnGenerateReport_Click;
+
+            // pnlAiReportHeader
+            pnlAiReportHeader.Dock = DockStyle.Top;
+            pnlAiReportHeader.Height = 36;
+            pnlAiReportHeader.BackColor = Color.Transparent;
+            pnlAiReportHeader.Name = "pnlAiReportHeader";
+            pnlAiReportHeader.TabIndex = 0;
+            //pnlAiReportHeader.Controls.Add(lblAiReportStatus);
+            pnlAiReportHeader.Controls.Add(lblAiReportTitle);
+            pnlAiReportHeader.Controls.Add(btnGenerateReport);
+
+            // lblAiReportStatus
+            lblAiReportStatus.AutoSize = false;
+            lblAiReportStatus.Dock = DockStyle.Bottom;
+            lblAiReportStatus.Height = 20;
+            lblAiReportStatus.Font = new Font("Times New Roman", 9F, FontStyle.Italic);
+            lblAiReportStatus.ForeColor = Color.FromArgb(100, 100, 100);
+            lblAiReportStatus.Text = "Click Generate Report to analyse current financial data";
+            lblAiReportStatus.TextAlign = ContentAlignment.MiddleRight;
+            lblAiReportStatus.Name = "lblAiReportStatus";
+            lblAiReportStatus.TabIndex = 3;
+
+            // rtbAiReport
+            rtbAiReport.BackColor = Color.FromArgb(31, 31, 31);
+            rtbAiReport.ForeColor = Color.FromArgb(210, 210, 210);
+            rtbAiReport.Font = new Font("Times New Roman", 10F);
+            rtbAiReport.Dock = DockStyle.Fill;
+            rtbAiReport.ReadOnly = true;
+            rtbAiReport.BorderStyle = BorderStyle.None;
+            rtbAiReport.ScrollBars = RichTextBoxScrollBars.Vertical;
+            rtbAiReport.Name = "rtbAiReport";
+            rtbAiReport.TabIndex = 2;
+            rtbAiReport.Text = "";
+
+            // pnlAiReport
+            pnlAiReport.BackColor = Color.FromArgb(40, 40, 40);
+            pnlAiReport.CornerRadius = 12;
+            pnlAiReport.Dock = DockStyle.Bottom;
+            pnlAiReport.Height = 46;
+            pnlAiReport.Padding = new Padding(16, 10, 16, 12);
+            pnlAiReport.Name = "pnlAiReport";
+            pnlAiReport.TabIndex = 4;
+            pnlAiReport.Controls.Add(rtbAiReport);
+            pnlAiReport.Controls.Add(lblAiReportStatus);
+            pnlAiReport.Controls.Add(pnlAiReportHeader);
+
             // AdminFinancialPage
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(26, 26, 26);
+            Controls.Add(pnlAiReport);
             Controls.Add(pnlCharts);
             Controls.Add(pnlSummaryCards);
             Controls.Add(lblTitle);
@@ -223,6 +303,8 @@ namespace BettingSystem.Forms
             pnlProfitLoss.ResumeLayout(false);
             pnlTransactionVolume.ResumeLayout(false);
             pnlBetStatus.ResumeLayout(false);
+            pnlAiReportHeader.ResumeLayout(false);
+            pnlAiReport.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -282,5 +364,11 @@ namespace BettingSystem.Forms
         private FormsPlot chartBetStatus;
         private Label lblBetStatusTitle;
         private Label lblBetStatusDesc;
+        private RoundedPanel pnlAiReport;
+        private Panel pnlAiReportHeader;
+        private Label lblAiReportTitle;
+        private RoundedButton btnGenerateReport;
+        private RichTextBox rtbAiReport;
+        private Label lblAiReportStatus;
     }
 }
