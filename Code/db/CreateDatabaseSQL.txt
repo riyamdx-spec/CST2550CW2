@@ -93,7 +93,7 @@ CREATE TABLE GameResult(
 
 -- store the different types of bet that can be placed
 CREATE TABLE BetType(
-	bet_type_id INT PRIMARY KEY IDENTITY(1,1),
+	bet_type_id INT PRIMARY KEY,
 	bet_type_name VARCHAR(50) NOT NULL UNIQUE
 );
 
