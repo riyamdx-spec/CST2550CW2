@@ -418,7 +418,7 @@
             matchPageLbl.Padding = new Padding(0, 10, 0, 0);
             matchPageLbl.Size = new Size(1168, 76);
             matchPageLbl.TabIndex = 6;
-            matchPageLbl.Text = "Search for Matches";
+            matchPageLbl.Text = "Matches";
             matchPageLbl.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // adminNavBar1
