@@ -38,7 +38,12 @@ namespace BettingSystem.Forms.CustomControls
         private void EditProfile_Click(object sender, EventArgs e)
         {
             EditFormPopup editFormPopup = new EditFormPopup(ConnectedAdmin);
-            editFormPopup.ShowDialog();
+
+            //update details displayed when admin edit details
+            if (editFormPopup.ShowDialog() == DialogResult.OK)
+            {
+                DisplayInfo();
+            }
         }
 
         private void LogOut_Click(object sender, EventArgs e)

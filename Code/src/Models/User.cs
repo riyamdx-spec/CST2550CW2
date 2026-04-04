@@ -10,8 +10,9 @@
         public string Email { get; set; }
         public decimal WalletBalance { get; set; }
         public string Role { get; set; }
-
-        public AppUser(int id, string fName, string lName, DateTime DOB, string mail, decimal balance, string userRole  )
+        public string Status { get; set; }
+        public DateTime RegistrationDate { get; set; }
+        public AppUser(int id, string fName, string lName, DateTime DOB, string mail, decimal balance, string userRole, DateTime registrationDate, string status)
         {
             UserID = id;
             FirstName = fName;
@@ -20,6 +21,8 @@
             Email = mail;
             WalletBalance = balance;
             Role = userRole;
+            RegistrationDate = registrationDate;
+            Status = status;
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace BettingSystem.Models
+﻿using BettingSystem.Data_Structures;
+
+namespace BettingSystem.Models
 {
     public class BetHistorySlip
     {
@@ -10,7 +12,7 @@
         public decimal Payout { get; set; }
         public string Status { get; set; }
         public bool Claimed { get; set; }
-        public List<HistoryBet> Bets { get; set; }
+        public MyList<HistoryBet> Bets { get; set; }
 
         public BetHistorySlip(int slipID, int userID, DateTime betDate, decimal stake, decimal totalOdds, decimal payout, string status, bool claimed)
         {
@@ -22,7 +24,7 @@
             Payout = payout;
             Status = status;
             Claimed = claimed;
-            Bets = new List<HistoryBet>();
+            Bets = new MyList<HistoryBet>();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Forms.CustomControls;
 using BettingSystem.Models;
 using BettingSystem.Services;
@@ -12,12 +13,11 @@ namespace BettingSystem.Forms
         private SessionManager CurrentSession;
         private Simulator AppSimulator;
 
-        private List<BetHistorySlip> BetSlips;
+        private MyList<BetHistorySlip> BetSlips;
         private BetSlipFilter SlipFilter;
-        private Dictionary<int, GameResult> GameResults;
+        private MyDictionary<int, GameResult> GameResults;
         private string CurrentStatusFilter = "All";
         private bool SortingDateAsc = false;
-
 
         public HistoryPage(AppUser loggedInUser, SessionManager sessionManager)
         {
@@ -26,8 +26,6 @@ namespace BettingSystem.Forms
             BetSlips = CurrentSession.HistoryBetSlips;
             SlipFilter = new BetSlipFilter(BetSlips);
             AppSimulator = CurrentSession.AppSimulator;
-
-            //GameResults = sessionManager.GameResults;
 
             InitializeComponent();
 
@@ -59,8 +57,15 @@ namespace BettingSystem.Forms
                 this.BeginInvoke(new Action(AppSimulator_HistoryUpdated));
                 return;
             }
-            FilterSlips(SortingDateAsc, CurrentStatusFilter);
-            DisplaySlips();
+
+            //update slips
+            foreach (Control ctr in slipsFlowLayoutPanel.Controls)
+            {
+                if (ctr is BetSlipPanel slipPanel && ctr.Tag is BetHistorySlip slip)
+                {
+                    slipPanel.UpdateStatusDisplayed();
+                }
+            }
         }
 
         private void HistoryPage_FormClosing(object? sender, FormClosingEventArgs e)
@@ -108,11 +113,12 @@ namespace BettingSystem.Forms
             var gameIds = BetSlips
                 .SelectMany(slip => slip.Bets)
                 .Select(bet => bet.GameId)
-                .Distinct()
-                .ToList();
+                .Distinct();
+
+            var gameIdsList = (MyList<int>)gameIds;
 
             //fetch game results
-            GameResults = await DbManager.FetchGameResultsAsync(gameIds);
+            GameResults = await DbManager.FetchGameResultsAsync(gameIdsList);
         }
 
         public async Task LoadPage()
@@ -232,18 +238,18 @@ namespace BettingSystem.Forms
             var gameIds = BetSlips
                .SelectMany(slip => slip.Bets)
                .Select(bet => bet.GameId)
-               .Distinct()
-               .ToList();
+               .Distinct();
 
             var missingIds = gameIds
-                .Where(id => !GameResults.ContainsKey(id))
-                .ToList();
+                .Where(id => !GameResults.ContainsKey(id));
 
-            if (missingIds.Count == 0)
+            if (missingIds.Count() == 0)
                 return;
 
+            var missingList = (MyList<int>)missingIds;
+
             //fetch game results
-            var newResults = await DbManager.FetchGameResultsAsync(missingIds);
+            var newResults = await DbManager.FetchGameResultsAsync(missingList);
 
             //merge wih Game Resuls
             foreach (var result in newResults)

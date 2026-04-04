@@ -1,5 +1,3 @@
-using System;
-using System.Windows.Forms;
 using BettingSystem.Data;
 using BettingSystem.Forms;
 using BettingSystem.Services;
@@ -8,33 +6,41 @@ namespace BettingSystem
 {
     internal static class Program
     {
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
         [STAThread]
-        static void Main()
+        static async Task Main()
         {
             Application.SetHighDpiMode(HighDpiMode.DpiUnaware);
             ApplicationConfiguration.Initialize();
 
-            OddsAutoGeneratorService? oddsAutoGenerator = null;
             try
             {
-                var dbManager = new DatabaseManager();
-                oddsAutoGenerator = dbManager.CreateOddsAutoGeneratorService();
+                //start match simulator to update database
+                Simulator appSimulator = new Simulator();
 
-                var initialRun = oddsAutoGenerator.RunOnce();
-                Console.WriteLine($"Odds bootstrap complete. Games processed: {initialRun.ProcessedGames}, odds generated: {initialRun.GeneratedOdds}.");
+                var oddsService = new OddsAutoGeneratorService();
 
-                oddsAutoGenerator.Start();
-                Application.ApplicationExit += (_, _) => oddsAutoGenerator?.Dispose();
+                //generate odds for matches
+                await oddsService.RunOnce();
+
+                Application.ApplicationExit += (_, _) =>
+                {
+                    if (appSimulator != null)
+                    {
+                        appSimulator.Cancel();
+                        appSimulator.DisposeAsync().AsTask().GetAwaiter().GetResult();
+                    }
+                };
+
+                var landingPage = new landingPage(appSimulator);
+                appSimulator.Start();
+                Application.Run(landingPage);
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Odds auto-generator could not start: {ex.Message}");
             }
 
-            Application.Run(new landingPage());
         }
     }
 }

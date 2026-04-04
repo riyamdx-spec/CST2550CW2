@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Models;
 using BettingSystem.Services;
 
@@ -12,8 +13,9 @@ namespace BettingSystem.Forms
         private SessionManager CurrentSession;
         public League[] Leagues;
         public FootballMatchCollection MatchesCollection;
-        public Dictionary<int, Team> TeamsDict;
-        public Dictionary<int, GameResult> GameResults;
+        public MyDictionary<int, Team> TeamsDict;
+        public MyDictionary<int, GameResult> GameResults;
+        private Simulator _appSimulator;
 
         private int CurrentLeague = 0;
         private string CurrentSearchTerm = "";
@@ -23,6 +25,7 @@ namespace BettingSystem.Forms
             InitializeComponent();
 
             CurrentSession = currentSession;
+            _appSimulator = currentSession.AppSimulator;
             Leagues = CurrentSession.Leagues;
             MatchesCollection = CurrentSession.MatchesCollection;
             TeamsDict = CurrentSession.TeamsDict;
@@ -42,7 +45,29 @@ namespace BettingSystem.Forms
             this.FormClosing += AdminMatchPage_FormClosing;
             matchDataGridView.CellClick += MatchDataGridView_CellClick;
 
+            //update status displayed
+            _appSimulator.MatchStatusUpdated += _appSimulator_MatchStatusUpdated;
+
             searchbarTextBox.KeyDown += Searchbar_KeyDown;
+        }
+
+        private void _appSimulator_MatchStatusUpdated()
+        {
+            //checks if it is on UI thread
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(_appSimulator_MatchStatusUpdated));
+                return;
+            }
+
+            //updates status displayed
+            foreach(DataGridViewRow row in matchDataGridView.Rows)
+            {
+                if (row.Tag is FootballMatch match)
+                {
+                    row.Cells[6].Value = match.GameStatus;
+                }
+            }
         }
 
         private void MatchDataGridView_CellClick(object? sender, DataGridViewCellEventArgs e)
@@ -55,7 +80,7 @@ namespace BettingSystem.Forms
 
             if (selectedMatch.GameStatus != "Completed")
             {
-                new Notification("Results will be available after match is completed", NotificationType.Info, this); 
+                new Notification("Results will be available after match is completed", NotificationType.Info, this);
                 return;
             }
             if (GameResults.TryGetValue(selectedMatch.GameID, out var gameResults))
@@ -137,7 +162,7 @@ namespace BettingSystem.Forms
         }
 
         //display matches on the DataGridView
-        private async Task DisplayMatches(SortedSet<FootballMatch> footballMatches)
+        private async Task DisplayMatches(MyList<FootballMatch> footballMatches)
         {
             matchDataGridView.Hide();
             matchDataGridView.Rows.Clear();
@@ -278,15 +303,17 @@ namespace BettingSystem.Forms
 
             CurrentLeague = selectedLeagueId;
             CurrentSearchTerm = searchedTerm;
-            SortedSet<FootballMatch> matchDisplayed = new SortedSet<FootballMatch>();
-            SortedSet<FootballMatch> leageMatches = CurrentLeague == 0 ? MatchesCollection.AllMatches : MatchFilter.FilterMatchByLeague(CurrentLeague);
+            MyList<FootballMatch> leageMatches = CurrentLeague == 0 ? MatchesCollection.AllMatches : MatchFilter.FilterMatchByLeague(CurrentLeague);
 
             if (!String.IsNullOrEmpty(CurrentSearchTerm))
             {
-                matchDisplayed = MatchFilter.FilterMatchByTeams(searchedTerm, leageMatches);
+                MyList<FootballMatch>  matchDisplayed = MatchFilter.FilterMatchByTeams(searchedTerm, leageMatches);
+                await DisplayMatches(matchDisplayed);
             }
-
-            await DisplayMatches(matchDisplayed);
+            else
+            {
+                await DisplayMatches(leageMatches);
+            }
         }
 
         //clear search and show all matches in selected league

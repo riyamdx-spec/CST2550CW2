@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Models;
 using BettingSystem.Services;
 using System.Data;
@@ -9,12 +10,10 @@ namespace BettingSystem.Forms
     {
         private readonly Validation Validator = new Validation();
         private readonly DatabaseManager DbManager = new DatabaseManager();
-        private Dictionary<int, List<int>> LeagueTeams;
+        private MyDictionary<int, MyList<int>> LeagueTeams;
         private League[] Leagues;
-        private Dictionary<int, Team> TeamsDict;
-        private Dictionary<int, List<Player>> Players;
-        private Dictionary<int, GameResult> GameResults;
-        private FootballMatchCollection MatchesCollection;
+        private MyDictionary<int, Team> TeamsDict;
+        private MyDictionary<int, MyList<Player>> Players;
 
         private int CurrentLeagueID = -1;
         private SessionManager CurrentSession;
@@ -30,8 +29,6 @@ namespace BettingSystem.Forms
             Leagues = CurrentSession.Leagues;
             TeamsDict = CurrentSession.TeamsDict;
             Players = CurrentSession.Players;
-            GameResults = CurrentSession.GameResults;
-            MatchesCollection = CurrentSession.MatchesCollection;
 
             adminNavBar1.SetAdmin(admin);
 
@@ -80,9 +77,9 @@ namespace BettingSystem.Forms
         }
 
 
-        private void AdminNavBar1_SearchMatchesPageClicked(object? sender, EventArgs e)
+        private async void AdminNavBar1_SearchMatchesPageClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenAdminMatchPage(this);
+            await CurrentSession.OpenAdminMatchPage(this);
         }
 
         private void AdminNavBar1_UsersPageClicked(object? sender, EventArgs e)
@@ -118,19 +115,12 @@ namespace BettingSystem.Forms
         {
             LeagueTeams = await DbManager.FetchLeagueTeamAsync();
             DisplayLeagueNames();
-            SetDateTimePicker();
+            selectedMatchDate.MinDate = DateTime.Now.AddMinutes(5);
             leagueComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             homeTeamComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             awayTeamComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         }
 
-        private void SetDateTimePicker()
-        {
-            selectedMatchDate.Format = DateTimePickerFormat.Custom;
-            selectedMatchDate.CustomFormat = "dd/MM/yyyy HH:mm";
-            selectedMatchDate.ShowUpDown = false;
-            selectedMatchDate.MinDate = DateTime.Now.AddMinutes(5);
-        }
         public void DisplayLeagueNames()
         {
             foreach (League league in Leagues)
@@ -181,7 +171,8 @@ namespace BettingSystem.Forms
                 return;
             }
 
-            (bool valid, string? message) = Validator.CheckMatchEntries(selectedHomeTeam.ID, selectedAwayTeam.ID);
+            DateTime matchDate = selectedMatchDate.Value;
+            (bool valid, string? message) = Validator.CheckMatchEntries(selectedHomeTeam.ID, selectedAwayTeam.ID, matchDate);
             if (!valid)
             {
                 new Notification(message, NotificationType.Warning, this);
@@ -189,10 +180,10 @@ namespace BettingSystem.Forms
             }
 
             AddMatchComboItems selectedLeague = leagueComboBox.SelectedItem as AddMatchComboItems;
-            DateTime matchDate = selectedMatchDate.Value;
 
             FootballMatch newMatch = new FootballMatch(0, selectedLeague.ID, selectedHomeTeam.ID, selectedAwayTeam.ID, matchDate);
-            AddNewMatchService addNewMatch = new AddNewMatchService(newMatch, Players[selectedHomeTeam.ID], Players[selectedAwayTeam.ID]);
+            AddNewMatchService addNewMatch = new AddNewMatchService(newMatch, Players[selectedHomeTeam.ID], Players[selectedAwayTeam.ID], CurrentSession);
+
             (valid, message, GameResult generatedResult) = await addNewMatch.AddMatchToDatabase();
             if (!valid)
             {
@@ -201,13 +192,6 @@ namespace BettingSystem.Forms
             }
             Reset();
             new Notification(message, NotificationType.Success, this);
-        }
-
-        public void AddNewMatchInMemory(FootballMatch newMatch, GameResult generatedResult)
-        {
-            GameResults[newMatch.GameID] = generatedResult;
-            MatchesCollection.AllMatches.Add(newMatch);
-            MatchesCollection.MatchesByLeague[newMatch.LeagueID].Add(newMatch);
         }
 
         public void Reset()

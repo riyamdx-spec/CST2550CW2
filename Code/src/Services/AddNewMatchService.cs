@@ -1,21 +1,24 @@
 ﻿using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Models;
 
 namespace BettingSystem.Services
 {
     public class AddNewMatchService
     {
-        private List<Player> HomeTeamPlayers;
-        private List<Player> AwayTeamPlayers;
+        private MyList<Player> HomeTeamPlayers;
+        private MyList<Player> AwayTeamPlayers;
         private readonly DatabaseManager DbManager = new DatabaseManager();
         private FootballMatch NewMatch;
+        private SessionManager _currentSession;
         Random Rdm = new Random();
 
-        public AddNewMatchService(FootballMatch newMatch, List<Player> homeTeamPlayers, List<Player> awayTeamPlayers)
+        public AddNewMatchService(FootballMatch newMatch, MyList<Player> homeTeamPlayers, MyList<Player> awayTeamPlayers, SessionManager currentSession)
         {
             NewMatch = newMatch;
             HomeTeamPlayers = homeTeamPlayers;
             AwayTeamPlayers = awayTeamPlayers;
+            _currentSession = currentSession;
         }
 
         //insert to database
@@ -25,9 +28,18 @@ namespace BettingSystem.Services
             bool valid = await DbManager.AddNewMatchAsync(NewMatch, generatedResult);
             if (valid)
             {
+                AddNewMatchInMemory(NewMatch, generatedResult);
                 return (true, "Match Successfully Added", generatedResult);
             }
-            return (false, "Failed to Add Match", generatedResult);
+            return (false, "Failed to Add Match", null);
+        }
+
+        //update games in memory
+        public void AddNewMatchInMemory(FootballMatch newMatch, GameResult generatedResult)
+        {
+            _currentSession.GameResults[newMatch.GameID] = generatedResult;
+            _currentSession.MatchesCollection.AllMatches.InsertMatch(newMatch);
+            _currentSession.MatchesCollection.MatchesByLeague[newMatch.LeagueID].InsertMatch(newMatch);
         }
 
         // generate random results for match
@@ -41,7 +53,7 @@ namespace BettingSystem.Services
             int? firstScorerId = null;
             Player? firstScorer = null;
 
-            List<Player> randomScorer = new List<Player>();
+            MyList<Player> randomScorer = new MyList<Player>();
             if (homeScore > 0)
             {
                 randomScorer.AddRange(HomeTeamPlayers);
@@ -57,7 +69,7 @@ namespace BettingSystem.Services
                 firstScorerId = firstScorer.PlayerId;
             }
 
-            //putting a temporary Game id
+            //assigning a temporary Game id of 0
             return new GameResult(0, homeScore, awayScore, corners, redCards, yellowCards, firstScorer?.Name, firstScorerId);
         }
     }

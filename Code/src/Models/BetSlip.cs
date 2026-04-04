@@ -1,15 +1,17 @@
-﻿namespace BettingSystem.Models
+﻿using BettingSystem.Data_Structures;
+
+namespace BettingSystem.Models
 {
     public class BetSlip
     {
         public int UserID { get; set; }
-        public LinkedList<Bet> Bets { get; set; }
+        public MyLinkedList<Bet> Bets { get; set; }
         public decimal Stake { get; set; }
         public decimal TotalOdds { get; protected set; }
         public BetSlip(int userID)
         {
             UserID = userID;
-            Bets = new LinkedList<Bet>();
+            Bets = new MyLinkedList<Bet>();
             TotalOdds = 1;
         }
 
@@ -31,7 +33,8 @@
             }
 
             // add new bet at head
-            LinkedListNode<Bet> node = Bets.AddFirst(bet);
+            MyLinkedList<Bet>.Node node = Bets.AddFirst(bet);
+
             // store node reference 
             bet.Node = node;
             CalculateTotalOdds();

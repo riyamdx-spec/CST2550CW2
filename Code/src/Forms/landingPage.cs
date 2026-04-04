@@ -1,11 +1,14 @@
+using BettingSystem.Services;
 using System.Drawing.Drawing2D;
 
 namespace BettingSystem.Forms
 {
     public partial class landingPage : BaseForm
     {
-        public landingPage()
+        private Simulator _simulator;
+        public landingPage(Simulator appSimulator)
         {
+            _simulator = appSimulator;
             InitializeComponent();
             this.Load += formLoad;
 
@@ -123,7 +126,7 @@ namespace BettingSystem.Forms
             RegisterLoginForm? form = Application.OpenForms.OfType<RegisterLoginForm>().FirstOrDefault();
             if (form is null)
             {
-                form = new RegisterLoginForm(ViewPanel.SignUp);
+                form = new RegisterLoginForm(_simulator, ViewPanel.SignUp);
             }
             else
             {
@@ -143,7 +146,7 @@ namespace BettingSystem.Forms
             RegisterLoginForm? form = Application.OpenForms.OfType<RegisterLoginForm>().FirstOrDefault();
             if (form is null)
             {
-                form = new RegisterLoginForm(ViewPanel.Login);
+                form = new RegisterLoginForm(_simulator, ViewPanel.Login);
             }
             else
             {

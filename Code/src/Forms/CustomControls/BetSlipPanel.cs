@@ -106,7 +106,6 @@ namespace BettingSystem.Forms.CustomControls
                 {
                     PropagateClickEvents(ctrl);
                 }
-                
             }
         }
 
@@ -114,6 +113,13 @@ namespace BettingSystem.Forms.CustomControls
         {
             this.Cursor = Cursors.Hand;
             this.OnClick(e);
+        }
+
+        //update bet status and claim button
+        public void UpdateStatusDisplayed()
+        {
+            statusLbl.Text = $"Status: {CurrentSlip.Status}";
+            SetClaimBtn();
         }
     }
 }
