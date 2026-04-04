@@ -138,8 +138,17 @@ namespace BettingSystem.Services
                 UpdateMatches(removedMatchesId);
 
                 // remove completed/started matches from in-memory bet slip
-                if (memoryBetSlip.Bets.Count > 0 && memoryBetSlip.RemoveBetsByGameIds(removedMatchesId))
-                    BetSlipUpdated?.Invoke();
+                if (memoryBetSlip.Bets.Count > 0)
+                {
+                    int removedBet = memoryBetSlip.RemoveBetsByGameIds(removedMatchesId);
+                    if (removedBet > 0)
+                    {
+                        //keep track of number of bets removed from bet slip
+                        _currentSession.RemovedBetCounter += removedBet;
+                        BetSlipUpdated?.Invoke();
+                    }
+                }
+                   
             }
 
             if (updatedBets.Count > 0 && UpdateHistoryBets(updatedBets, updatedSlips))
