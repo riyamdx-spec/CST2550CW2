@@ -17,11 +17,11 @@ namespace BettingSystem.Models
 
 
         // add bet or update
-        public string AddBet(Bet bet)
+        public (bool success, string message) AddBet(Bet bet)
         {
             if (bet.Date <= DateTime.Now)
             {
-                return "Cannot place bet. Game has already started.";
+                return (false, "Cannot place bet. Game has already started.");
             }
 
             // check if bet exists
@@ -34,7 +34,7 @@ namespace BettingSystem.Models
                     existingBet.Selection = bet.Selection;
                     existingBet.OddValue = bet.OddValue;
                     CalculateTotalOdds();
-                    return "Bet updated";
+                    return (true, "Bet updated");
                 }
             }
 
@@ -44,7 +44,7 @@ namespace BettingSystem.Models
             // store node reference 
             bet.Node = node;
             CalculateTotalOdds();
-            return "Bet added";
+            return (true, "Bet added");
         }
 
         // remove bet with node reference
