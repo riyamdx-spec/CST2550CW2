@@ -20,7 +20,9 @@ public class WalletServiceTests
             DOB: new DateTime(2000, 1, 1),
             mail: "test@example.com",
             balance: walletBalance,
-            userRole: "customer");
+            userRole: "customer",
+            registrationDate: new DateTime(2024, 1, 1),
+            status: "active");
     }
 
     /// <summary>
@@ -120,6 +122,38 @@ public class WalletServiceTests
     }
 
     /// <summary>
+    /// Payout with slip id passes validation and reaches processing branch.
+    /// </summary>
+    [TestMethod]
+    public async Task DepositOrPayoutAsync_PayoutWithSlipId_ReturnsProcessingFailureMessage()
+    {
+        var service = new WalletService();
+        var user = CreateUser(100m);
+
+        var (updated, message) = await service.DepositOrPayoutAsync(user, 50m, "payout", slipId: 10);
+
+        Assert.IsFalse(updated);
+        Assert.AreEqual("Failed to process your transaction. Please try again.", message);
+        Assert.AreEqual(100m, user.WalletBalance);
+    }
+
+    /// <summary>
+    /// Valid deposit amount reaches processing branch and keeps balance unchanged on failure.
+    /// </summary>
+    [TestMethod]
+    public async Task DepositOrPayoutAsync_DepositValidAmount_ReturnsProcessingFailureMessage()
+    {
+        var service = new WalletService();
+        var user = CreateUser(100m);
+
+        var (updated, message) = await service.DepositOrPayoutAsync(user, 25m, "deposit");
+
+        Assert.IsFalse(updated);
+        Assert.AreEqual("Failed to process your transaction. Please try again.", message);
+        Assert.AreEqual(100m, user.WalletBalance);
+    }
+
+    /// <summary>
     /// Verifies the exact-balance boundary is allowed by validation (amount > balance check).
     /// </summary>
     [TestMethod]
@@ -137,7 +171,9 @@ public class WalletServiceTests
         var (updated, message) = await service.WithdrawalOrPlaceBetAsync(user, 100m, "withdrawal");
 
         // The balance check passes; the only reason it could fail is the DB call
+        Assert.IsFalse(updated);
         Assert.AreNotEqual("Withdrawal Failed: Insufficient wallet balance", message);
+        Assert.AreEqual(100m, user.WalletBalance);
     }
 
     /// <summary>
@@ -154,5 +190,21 @@ public class WalletServiceTests
         Assert.IsFalse(updated);
         Assert.AreEqual("Withdrawal Failed: Insufficient wallet balance", message);
         Assert.AreEqual(30m, user.WalletBalance);
+    }
+
+    /// <summary>
+    /// Place-bet transaction type follows withdrawal validation path.
+    /// </summary>
+    [TestMethod]
+    public async Task WithdrawalOrPlaceBetAsync_PlaceBetValidAmount_ReturnsProcessingFailureMessage()
+    {
+        var service = new WalletService();
+        var user = CreateUser(100m);
+
+        var (updated, message) = await service.WithdrawalOrPlaceBetAsync(user, 20m, "placebet");
+
+        Assert.IsFalse(updated);
+        Assert.AreEqual("Failed to process your transaction. Please try again.", message);
+        Assert.AreEqual(100m, user.WalletBalance);
     }
 }
