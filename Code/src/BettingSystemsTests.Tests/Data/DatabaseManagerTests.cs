@@ -1452,6 +1452,34 @@ public class DatabaseManagerTests
     }
 
     [TestMethod]
+    public async Task SaveOddsAsync_EmptyCollection_DoesNotInsertRows()
+    {
+        var leagueTeams = await GetLeagueWithTwoRatedTeamsAsync();
+        if (leagueTeams == null)
+        {
+            Assert.Inconclusive("No two rated teams from the same league were found for SaveOddsAsync empty-input test.");
+        }
+
+        int gameId = await InsertTemporaryGameAsync(leagueTeams!.Value.LeagueId, leagueTeams.Value.HomeTeamId, leagueTeams.Value.AwayTeamId);
+
+        try
+        {
+            int before = await GetOddsCountByGameIdAsync(gameId);
+
+            await _db.SaveOddsAsync(Array.Empty<GeneratedOdd>());
+
+            int after = await GetOddsCountByGameIdAsync(gameId);
+
+            Assert.AreEqual(before, after);
+            Assert.AreEqual(0, after);
+        }
+        finally
+        {
+            await DeleteMatchByIdAsync(gameId);
+        }
+    }
+
+    [TestMethod]
     public async Task GenerateAndSaveCorrectScoreOddAsync_PersistsExpectedCorrectScoreSelection()
     {
         var leagueTeams = await GetLeagueWithTwoRatedTeamsAsync();
