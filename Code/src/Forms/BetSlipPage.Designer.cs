@@ -15,7 +15,7 @@
             navBar1 = new NavBar();
             betSlipTitleLbl = new Label();
             panelBg = new Panel();
-            pnlSlipList = new Panel();
+            pnlSlipList = new FlowLayoutPanel();
             pnlSummaryContainer = new Panel();
             pnlSummary = new RoundedPanel();
             tlpSummary = new TableLayoutPanel();
@@ -74,13 +74,14 @@
             // pnlSlipList
             // 
             pnlSlipList.AutoScroll = true;
-            pnlSlipList.BackColor = Color.FromArgb(36, 36, 36);
             pnlSlipList.Dock = DockStyle.Fill;
+            pnlSlipList.FlowDirection = FlowDirection.TopDown;
             pnlSlipList.Location = new Point(0, 60);
             pnlSlipList.Name = "pnlSlipList";
-            pnlSlipList.Padding = new Padding(200, 10, 200, 10);
+            pnlSlipList.Padding = new Padding(75, 10, 75, 10);
             pnlSlipList.Size = new Size(1184, 470);
-            pnlSlipList.TabIndex = 6;
+            pnlSlipList.TabIndex = 0;
+            pnlSlipList.WrapContents = false;
             // 
             // pnlSummaryContainer
             // 
@@ -280,7 +281,6 @@
         private NavBar navBar1;
         private Label betSlipTitleLbl;
         private Panel panelBg;
-        private Panel pnlSlipList;
         private Panel pnlSummaryContainer;
         private RoundedPanel pnlSummary;
         private TableLayoutPanel tlpSummary;
@@ -295,5 +295,6 @@
         private Label lblPayoutHdr;
         private Panel pnlPlaceBet;
         private RoundedButton btnPlaceBet;
+        private FlowLayoutPanel pnlSlipList;
     }
 }
