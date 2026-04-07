@@ -7,7 +7,9 @@ namespace BettingSystem
     internal static class Program
     {
         [STAThread]
-        static async Task Main()
+        //static async Task Main()
+        static void Main()
+
         {
             Application.SetHighDpiMode(HighDpiMode.DpiUnaware);
             ApplicationConfiguration.Initialize();
@@ -20,7 +22,7 @@ namespace BettingSystem
                 var oddsService = new OddsAutoGeneratorService();
 
                 //generate odds for matches
-                await oddsService.RunOnce();
+                oddsService.RunOnce().GetAwaiter().GetResult();
 
                 Application.ApplicationExit += (_, _) =>
                 {
