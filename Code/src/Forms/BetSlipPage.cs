@@ -41,6 +41,7 @@ namespace BettingSystem.Forms
 
             this.Load += BetSlipPage_Load;
             this.FormClosing += BetSlipPage_FormClosing;
+            pnlSlipList.SizeChanged += UpdateSlipPanel;
 
             _currentSession.AppSimulator.BetSlipUpdated += AppSimulator_BetSlipUpdated;
         }
@@ -55,6 +56,16 @@ namespace BettingSystem.Forms
             }
 
             ReloadSlip();
+        }
+
+        private void UpdateSlipPanel(object sender, EventArgs e)
+        {
+            pnlSlipList.SuspendLayout();
+            foreach (Control pnl in pnlSlipList.Controls)
+            {
+                pnl.Width = pnlSlipList.ClientSize.Width - pnlSlipList.Padding.Horizontal - 5;
+            }
+            pnlSlipList.ResumeLayout();
         }
 
         private void BetSlipPage_FormClosing(object? sender, FormClosingEventArgs e)
@@ -179,17 +190,20 @@ namespace BettingSystem.Forms
                 );
                 card.OnRemove += () =>
                 {
+                    pnlSlipList.SuspendLayout();
                     _userSlip.RemoveBet(bet);
                     pnlSlipList.Controls.Remove(card);
                     card.Dispose();
+                    pnlSlipList.ResumeLayout();
 
                     // show empty message if no bets left
                     if (!_userSlip.Bets.Any())
                         LoadBetSlips();
                 };
-                AddCard(card);
+                card.Margin = new Padding(0, 15, 0, 15);
+                pnlSlipList.Controls.Add(card);
             }
-
+            UpdateSlipPanel(null, null);
             UpdateSummary();
         }
 
@@ -305,21 +319,6 @@ namespace BettingSystem.Forms
             LoadBetSlips();
             txtStake.Clear();
             btnPlaceBet.Enabled = true;
-        }
-
-        private void AddCard(BetCard card)
-        {
-            card.Dock = DockStyle.Top;
-            card.Margin = new Padding(0);
-
-            // spacer panel for gap between cards
-            Panel spacer = new Panel();
-            spacer.Dock = DockStyle.Top;
-            spacer.Height = 15;
-            spacer.BackColor = Color.Transparent;
-
-            pnlSlipList.Controls.Add(card);
-            pnlSlipList.Controls.Add(spacer);
         }
 
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
