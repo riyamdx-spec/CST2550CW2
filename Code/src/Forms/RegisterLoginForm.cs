@@ -300,7 +300,7 @@ namespace BettingSystem.Forms
             if (user.Role == "admin")
             {
                 await currentSession.FetchAdminData();
-                await currentSession.OpenAdminMatchPage(this);
+                currentSession.OpenAdminViewUsersPage(this);
             }
             else
             {
