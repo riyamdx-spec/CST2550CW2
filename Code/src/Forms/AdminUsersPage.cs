@@ -9,7 +9,7 @@ namespace BettingSystem.Forms
         private AppUser _currentAdmin;
         private SessionManager _currentSession;
         private readonly DatabaseManager _dbManager = new DatabaseManager();
-        private List<AppUser> _users = new List<AppUser>();
+        private List<AppUser> _users;
 
         public AdminUsersPage(AppUser admin, SessionManager session)
         {
@@ -41,15 +41,17 @@ namespace BettingSystem.Forms
             dgvUsers.CellBeginEdit += OnCellBeginEdit;
         }
 
-        private async Task LoadUsers()
+        private Task LoadUsers()
         {
-            _users = await _dbManager.FetchAllUsersAsync();
+            _users = _currentSession.Users;
             PopulateGrid();
+            return Task.CompletedTask;
         }
 
-        public async Task ReloadPage()
+        public Task OnShow()
         {
-            await LoadUsers();
+            PopulateGrid();
+            return Task.CompletedTask;
         }
 
         private void AdminUsersPage_FormClosing(object? sender, FormClosingEventArgs e)
@@ -177,6 +179,8 @@ namespace BettingSystem.Forms
             if (newStatus == selectedUser.Status) return;
 
             await UpdateUserStatus(selectedUser, newStatus);
+
+            dgvUsers.EndEdit();
             StyleStatusCell(dgvUsers.Rows[e.RowIndex], newStatus);
         }
 
