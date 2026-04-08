@@ -114,7 +114,7 @@ CREATE TABLE BetSlip(
 	app_user_id INT NOT NULL,
 	bet_date DATETIME2 NOT NULL DEFAULT GETDATE(),
 	bet_status VARCHAR(7) NOT NULL CHECK (bet_status IN ('Pending','Won','Lost')),
-    total_odds DECIMAL(15,3) NOT NULL CHECK (total_odds > 0),
+    	total_odds DECIMAL(15,3) NOT NULL CHECK (total_odds > 0),
 	stake DECIMAL(10,2) NOT NULL CHECK (stake > 0),
 	payout DECIMAL(15,2) NOT NULL CHECK (payout >= 0),
 	claimed BIT NOT NULL DEFAULT 0,
@@ -160,8 +160,7 @@ CREATE TABLE TeamRating(
 
 -- store player ratings information
 CREATE TABLE PlayerRating(
-    player_rating_id INT IDENTITY(1,1) PRIMARY KEY,
-    player_id INT NOT NULL,
+    player_id INT PRIMARY KEY,
     scoring_rating INT NOT NULL CHECK (scoring_rating BETWEEN 1 AND 100),
     is_active BIT NOT NULL DEFAULT 1,
     last_updated DATETIME2 NOT NULL DEFAULT GETDATE(),
