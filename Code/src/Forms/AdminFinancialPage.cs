@@ -40,6 +40,7 @@ namespace BettingSystem.Forms
         private List<MonthlyProfitLoss> _lastProfitLoss;
         private List<MonthlyTransactionVolume> _lastTransactionVolume;
         private List<BetStatusCount> _lastBetStatus;
+
         public AdminFinancialPage(AppUser admin, SessionManager session)
         {
             InitializeComponent();
@@ -47,24 +48,24 @@ namespace BettingSystem.Forms
             _currentSession = session;
 
             adminNavBar1.SetAdmin(_currentAdmin);
-            adminNavBar1.UsersPageClicked += async (s, e) => await _currentSession.OpenAdminViewUsersPage(this);
+            adminNavBar1.UsersPageClicked += async (s, e) => _currentSession.OpenAdminViewUsersPage(this);
             adminNavBar1.SearchMatchesPageClicked += async (s, e) => await _currentSession.OpenAdminMatchPage(this);
             adminNavBar1.AddMatchesPageClicked += (s, e) => _currentSession.OpenAdminAddMatchPage(this);
-            adminNavBar1.FinancialPageClicked += async (s, e) => await _currentSession.OpenAdminFinancialPage(this);
+            adminNavBar1.FinancialPageClicked += async (s, e) => _currentSession.OpenAdminFinancialPage(this);
             adminNavBar1.LogoutClicked += (s, e) => _currentSession.LogOut(this);
 
             this.Load += AdminFinancialPage_Load;
             this.FormClosing += AdminFinancialPage_FormClosing;
         }
 
-        private async void AdminFinancialPage_Load(object sender, EventArgs e)
+        private void AdminFinancialPage_Load(object sender, EventArgs e)
         {
             CaptureBaseLayout();
             PositionSummaryCards();
             SetChartPanelWidths();
             PositionGenerateButton();
             pnlAiReport.Resize += (s, ev) => PositionGenerateButton();
-            await LoadAllData();
+            LoadAllData();
 
             // for dragging
             pnlAiReport.MouseDown += AiPanel_MouseDown;
@@ -78,17 +79,19 @@ namespace BettingSystem.Forms
 
         }
 
-        public async Task ReloadPage()
+        public void OnShow()
         {
-            await LoadAllData();
+            LoadAllData();
+            PositionSummaryCards();
+            SetChartPanelWidths();
         }
 
-        private async Task LoadAllData()
+        private void LoadAllData()
         {
-            _lastSummary = await _dbManager.FetchFinancialSummaryAsync();
-            _lastProfitLoss = await _dbManager.FetchMonthlyProfitLossAsync();
-            _lastTransactionVolume = await _dbManager.FetchMonthlyTransactionVolumeAsync();
-            _lastBetStatus = await _dbManager.FetchBetStatusBreakdownAsync();
+            _lastSummary = _currentSession.FinancialSummary;
+            _lastProfitLoss = _currentSession.ProfitLoss;
+            _lastTransactionVolume = _currentSession.TransactionVolume;
+            _lastBetStatus = _currentSession.BetStatus;
 
             UpdateSummaryCards(_lastSummary);
             BuildProfitLossChart(_lastProfitLoss);
@@ -363,7 +366,6 @@ namespace BettingSystem.Forms
                 try
                 {
                     string report = await GenerateFinancialReport();
-                    //rtbAiReport.Text = report;
                     FormatAiReport(report);
                     lblAiReportStatus.Text = $"Report generated · {DateTime.Now:dd/MM/yyyy HH:mm}";
                     btnGenerateReport.Text = "Hide Report";
