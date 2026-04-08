@@ -59,7 +59,9 @@ namespace BettingSystem.Forms
             if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false, true);
-                if (closingPopup.ShowDialog() == DialogResult.No)
+
+                DialogResult result = closingPopup.ShowDialog();
+                if (result != DialogResult.Yes)
                 {
                     e.Cancel = true;
                 }
@@ -68,16 +70,6 @@ namespace BettingSystem.Forms
                     _currentSession.IsExiting = true;
                     Application.Exit();
                 }
-            }
-        }
-
-        private void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
-        {
-            if (!_currentSession.IsLoggingOut)
-            {
-                logOutPopup closingPopup = new logOutPopup(true, true);
-                if (closingPopup.ShowDialog() == DialogResult.Yes)
-                    _currentSession.LogOut(this);
             }
         }
 

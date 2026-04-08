@@ -104,10 +104,14 @@ namespace BettingSystem.Forms
             if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false, true);
-                if (closingPopup.ShowDialog() == DialogResult.No)
+
+                DialogResult result = closingPopup.ShowDialog();
+
+                if (result != DialogResult.Yes)
                 {
                     e.Cancel = true;
                 }
+
                 else
                 {
                     _currentSession.IsExiting = true;
