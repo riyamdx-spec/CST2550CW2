@@ -317,6 +317,7 @@ namespace BettingSystem.Forms
 
             // reload to show empty state
             LoadBetSlips();
+            UpdateSummary();    
             txtStake.Clear();
             btnPlaceBet.Enabled = true;
         }
