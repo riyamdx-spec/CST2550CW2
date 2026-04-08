@@ -60,6 +60,19 @@ namespace BettingSystem.Forms
 
         private void UpdateSlipPanel(object sender, EventArgs e)
         {
+            if (!_userSlip.Bets.Any())
+            {
+                // resize empty label if present
+                if (pnlSlipList.Controls.Count > 0 && pnlSlipList.Controls[0] is Label lbl)
+                {
+                    lbl.Size = new Size(
+                        pnlSlipList.ClientSize.Width - pnlSlipList.Padding.Horizontal,
+                        pnlSlipList.ClientSize.Height - pnlSlipList.Padding.Vertical
+                    );
+                }
+                return;
+            }
+
             pnlSlipList.SuspendLayout();
             foreach (Control pnl in pnlSlipList.Controls)
             {
@@ -73,7 +86,9 @@ namespace BettingSystem.Forms
             if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false, true);
-                if (closingPopup.ShowDialog() == DialogResult.No)
+                DialogResult result = closingPopup.ShowDialog();
+
+                if (result != DialogResult.Yes)
                 {
                     e.Cancel = true;
                 }
@@ -146,8 +161,12 @@ namespace BettingSystem.Forms
                 emptyLbl.Font = new Font("Times New Roman", 22, FontStyle.Bold);
                 emptyLbl.ForeColor = Color.FromArgb(241, 241, 241);
                 emptyLbl.Height = 300;
+                emptyLbl.Size = new Size(
+                    pnlSlipList.ClientSize.Width - pnlSlipList.Padding.Horizontal,
+                    pnlSlipList.ClientSize.Height - pnlSlipList.Padding.Vertical
+                );
                 emptyLbl.TextAlign = ContentAlignment.MiddleCenter;
-                emptyLbl.Dock = DockStyle.Fill;
+                emptyLbl.Dock = DockStyle.None;
                 pnlSlipList.Controls.Add(emptyLbl);
                 return;
             }
@@ -317,7 +336,7 @@ namespace BettingSystem.Forms
 
             // reload to show empty state
             LoadBetSlips();
-            UpdateSummary();    
+            UpdateSummary();
             txtStake.Clear();
             btnPlaceBet.Enabled = true;
         }
