@@ -41,6 +41,7 @@ namespace BettingSystem.Forms
 
             this.Load += BetSlipPage_Load;
             this.FormClosing += BetSlipPage_FormClosing;
+            pnlSlipList.SizeChanged += UpdateSlipPanel;
 
             _currentSession.AppSimulator.BetSlipUpdated += AppSimulator_BetSlipUpdated;
         }
@@ -57,12 +58,37 @@ namespace BettingSystem.Forms
             ReloadSlip();
         }
 
+        private void UpdateSlipPanel(object sender, EventArgs e)
+        {
+            if (!_userSlip.Bets.Any())
+            {
+                // resize empty label if present
+                if (pnlSlipList.Controls.Count > 0 && pnlSlipList.Controls[0] is Label lbl)
+                {
+                    lbl.Size = new Size(
+                        pnlSlipList.ClientSize.Width - pnlSlipList.Padding.Horizontal,
+                        pnlSlipList.ClientSize.Height - pnlSlipList.Padding.Vertical
+                    );
+                }
+                return;
+            }
+
+            pnlSlipList.SuspendLayout();
+            foreach (Control pnl in pnlSlipList.Controls)
+            {
+                pnl.Width = pnlSlipList.ClientSize.Width - pnlSlipList.Padding.Horizontal - 5;
+            }
+            pnlSlipList.ResumeLayout();
+        }
+
         private void BetSlipPage_FormClosing(object? sender, FormClosingEventArgs e)
         {
             if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false, true);
-                if (closingPopup.ShowDialog() == DialogResult.No)
+                DialogResult result = closingPopup.ShowDialog();
+
+                if (result != DialogResult.Yes)
                 {
                     e.Cancel = true;
                 }
@@ -136,8 +162,12 @@ namespace BettingSystem.Forms
                 emptyLbl.Font = new Font("Times New Roman", 22, FontStyle.Bold);
                 emptyLbl.ForeColor = Color.FromArgb(241, 241, 241);
                 emptyLbl.Height = 300;
+                emptyLbl.Size = new Size(
+                    pnlSlipList.ClientSize.Width - pnlSlipList.Padding.Horizontal,
+                    pnlSlipList.ClientSize.Height - pnlSlipList.Padding.Vertical
+                );
                 emptyLbl.TextAlign = ContentAlignment.MiddleCenter;
-                emptyLbl.Dock = DockStyle.Fill;
+                emptyLbl.Dock = DockStyle.None;
                 pnlSlipList.Controls.Add(emptyLbl);
                 return;
             }
@@ -180,17 +210,20 @@ namespace BettingSystem.Forms
                 );
                 card.OnRemove += () =>
                 {
+                    pnlSlipList.SuspendLayout();
                     _userSlip.RemoveBet(bet);
                     pnlSlipList.Controls.Remove(card);
                     card.Dispose();
+                    pnlSlipList.ResumeLayout();
 
                     // show empty message if no bets left
                     if (!_userSlip.Bets.Any())
                         LoadBetSlips();
                 };
-                AddCard(card);
+                card.Margin = new Padding(0, 15, 0, 15);
+                pnlSlipList.Controls.Add(card);
             }
-
+            UpdateSlipPanel(null, null);
             UpdateSummary();
         }
 
@@ -304,23 +337,9 @@ namespace BettingSystem.Forms
 
             // reload to show empty state
             LoadBetSlips();
+            UpdateSummary();
             txtStake.Clear();
             btnPlaceBet.Enabled = true;
-        }
-
-        private void AddCard(BetCard card)
-        {
-            card.Dock = DockStyle.Top;
-            card.Margin = new Padding(0);
-
-            // spacer panel for gap between cards
-            Panel spacer = new Panel();
-            spacer.Dock = DockStyle.Top;
-            spacer.Height = 15;
-            spacer.BackColor = Color.Transparent;
-
-            pnlSlipList.Controls.Add(card);
-            pnlSlipList.Controls.Add(spacer);
         }
 
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)

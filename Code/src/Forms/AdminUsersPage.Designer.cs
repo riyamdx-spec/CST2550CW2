@@ -25,7 +25,6 @@
             adminNavBar1.Dock = DockStyle.Top;
             adminNavBar1.Name = "adminNavBar1";
             adminNavBar1.Size = new Size(1200, 85);
-            adminNavBar1.TabIndex = 0;
 
             // lblTitle
             lblTitle.Dock = DockStyle.Top;
