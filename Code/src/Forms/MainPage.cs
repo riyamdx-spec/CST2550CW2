@@ -595,6 +595,7 @@ namespace BettingSystem.Forms
             AllMatchesClicked(null, null);
             _currentLeague = -1;
             _currentMatch = null;
+            navBar1.SetCurrentUser(_currentUser);
         }
 
         private async void confirmScoreBet_Click(object sender, EventArgs e)

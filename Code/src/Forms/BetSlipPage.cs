@@ -107,6 +107,7 @@ namespace BettingSystem.Forms
         private void ReloadSlip()
         {
             _userSlip = _currentSession.UserSlip;
+            navBar1.SetCurrentUser(_currentUser);
             LoadBetSlips();
             DisplayRemovedBets();
         }

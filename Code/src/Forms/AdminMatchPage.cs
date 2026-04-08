@@ -18,6 +18,7 @@ namespace BettingSystem.Forms
 
         private int CurrentLeague = 0;
         private string CurrentSearchTerm = "";
+        private AppUser _admin;
 
         public AdminMatchPage(AppUser admin, SessionManager currentSession)
         {
@@ -31,7 +32,8 @@ namespace BettingSystem.Forms
 
             _matchFilter = new MatchManager(_matchesCollection, _teamsDict);
 
-            adminNavBar1.SetAdmin(admin);
+            _admin = admin;
+            adminNavBar1.SetAdmin(_admin);
 
             //navbar events
             adminNavBar1.UsersPageClicked += AdminNavBar1_UsersPageClicked;
@@ -265,6 +267,7 @@ namespace BettingSystem.Forms
 
         private async Task Reset()
         {
+            adminNavBar1.SetAdmin(_admin);
             CurrentSearchTerm = "";
             CurrentLeague = 0;
             allRadioBtn.Checked = true;

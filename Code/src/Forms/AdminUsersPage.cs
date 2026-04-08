@@ -49,6 +49,7 @@ namespace BettingSystem.Forms
 
         public async Task ReloadPage()
         {
+            adminNavBar1.SetAdmin(_currentAdmin);
             await LoadUsers();
         }
 

@@ -240,6 +240,7 @@ namespace BettingSystem.Forms
         {
             newestRadioBtn.Checked = true;
             allRadioBtn.Checked = true;
+            navBar1.SetCurrentUser(_currentUser);
 
             _currentStatusFilter = "All";
             _sortingDateAsc = false;

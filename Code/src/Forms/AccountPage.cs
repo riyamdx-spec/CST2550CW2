@@ -13,7 +13,6 @@ namespace BettingSystem.Forms
             _currentSession = sessionManager;
 
             InitializeComponent();
-            navBar1.SetCurrentUser(_currentUser);
 
             //event from navbar
             navBar1.MatchesClicked += NavBar1_MatchesClicked;
@@ -74,6 +73,7 @@ namespace BettingSystem.Forms
 
             //display user's wallet balance
             DisplayBalance();
+            navBar1.SetCurrentUser(_currentUser);
         }
 
         private void DisplayDetails()

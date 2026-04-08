@@ -17,6 +17,7 @@ namespace BettingSystem.Forms
 
         private int _currentLeagueID = -1;
         private SessionManager _currentSession;
+        private AppUser _admin;
 
         public AdminAddMatchPage(AppUser admin, SessionManager currentSession)
         {
@@ -30,7 +31,8 @@ namespace BettingSystem.Forms
             _teamsDict = _currentSession.TeamsDict;
             _players = _currentSession.Players;
 
-            adminNavBar1.SetAdmin(admin);
+            _admin = admin;
+            adminNavBar1.SetAdmin(_admin);
 
             //navbar events
             adminNavBar1.UsersPageClicked += AdminNavBar1_UsersPageClicked;
@@ -196,6 +198,7 @@ namespace BettingSystem.Forms
 
         public void Reset()
         {
+            adminNavBar1.SetAdmin(_admin);
             _currentLeagueID = -1;
             leagueComboBox.SelectedIndex = -1;
             homeTeamComboBox.Text = "";
