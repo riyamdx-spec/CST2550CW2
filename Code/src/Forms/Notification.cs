@@ -12,7 +12,8 @@
 
         private bool _slidingIn = true;
         private int _displayTime = 1000;
-        private int _elapsed = 0;
+        //private int _elapsed = 0;
+        private DateTime _shownTime;
 
         public Notification(string message, NotificationType type, Form owner, Point? position = null)
         {
@@ -68,7 +69,8 @@
             int y = ownerScreenPosition.Y + 20;
 
             _targetX = ownerScreenPosition.X + owner.ClientSize.Width - this.Width - 20;
-            _hiddenX = ownerScreenPosition.X + owner.ClientSize.Width - this.Width;
+            //_hiddenX = ownerScreenPosition.X + owner.ClientSize.Width - this.Width;
+            _hiddenX = ownerScreenPosition.X + owner.ClientSize.Width + 10;
             this.Location = new Point(_hiddenX, y);
 
             this.Show(owner);
@@ -95,26 +97,32 @@
 
         private void Animate(object sender, EventArgs e)
         {
+            int speed = 15; // ADDED
+
             if (_slidingIn)
             {
                 if (this.Left > _targetX)
                 {
-                    this.Left -= 10;
+                    //this.Left -= 10;
+                    this.Left = Math.Max(this.Left - speed, _targetX);
                 }
                 else
                 {
                     _slidingIn = false;
+                    _shownTime = DateTime.Now; // ADDED
                 }
             }
             else
             {
-                _elapsed += _animationTimer.Interval;
+                //_elapsed += _animationTimer.Interval;
+                //if (_elapsed >= _displayTime)
 
-                if (_elapsed >= _displayTime)
+                if ((DateTime.Now - _shownTime).TotalMilliseconds >= _displayTime) // ADDED
                 {
                     if (this.Left < _hiddenX)
                     {
-                        this.Left += 10;
+                        //this.Left += 10;
+                        this.Left = Math.Min(this.Left + speed, _hiddenX);
                     }
                     else
                     {
