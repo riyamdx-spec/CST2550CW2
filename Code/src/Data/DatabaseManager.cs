@@ -1529,9 +1529,9 @@ namespace BettingSystem.Data
         }
 
         // fetch all users for admin page
-        public async Task<List<AppUser>> FetchAllUsersAsync()
+        public async Task<MyList<AppUser>> FetchAllUsersAsync()
         {
-            List<AppUser> users = new List<AppUser>();
+            MyList<AppUser> users = new MyList<AppUser>();
             string query = @"SELECT app_user_id, first_name, last_name, dob, email, 
                             wallet_balance, user_role, registration_date, user_status 
                             FROM AppUser 
@@ -1565,12 +1565,12 @@ namespace BettingSystem.Data
                 catch (SqlException e)
                 {
                     Console.WriteLine($"Database error: {e.Message}");
-                    return new List<AppUser>();
+                    return new MyList<AppUser>();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"Error: {e.Message}");
-                    return new List<AppUser>();
+                    return new MyList<AppUser>();
                 }
             }
         }
@@ -1688,9 +1688,9 @@ namespace BettingSystem.Data
             return summary;
         }
 
-        public async Task<List<MonthlyProfitLoss>> FetchMonthlyProfitLossAsync()
+        public async Task<MyList<MonthlyProfitLoss>> FetchMonthlyProfitLossAsync()
         {
-            var result = new List<MonthlyProfitLoss>();
+            var result = new MyList<MonthlyProfitLoss>();
             string query = @"SELECT 
                                 FORMAT(transaction_timestamp, 'MMM yy') AS month,
                                 ISNULL(SUM(CASE WHEN transaction_type = 'bet' THEN amount ELSE 0 END), 0) AS revenue,
@@ -1727,9 +1727,9 @@ namespace BettingSystem.Data
             return result;
         }
 
-        public async Task<List<MonthlyTransactionVolume>> FetchMonthlyTransactionVolumeAsync()
+        public async Task<MyList<MonthlyTransactionVolume>> FetchMonthlyTransactionVolumeAsync()
         {
-            var result = new List<MonthlyTransactionVolume>();
+            var result = new MyList<MonthlyTransactionVolume>();
             string query = @"SELECT 
                                 FORMAT(transaction_timestamp, 'MMM yy') AS month,
                                 transaction_type,
@@ -1766,9 +1766,9 @@ namespace BettingSystem.Data
             return result;
         }
 
-        public async Task<List<BetStatusCount>> FetchBetStatusBreakdownAsync()
+        public async Task<MyList<BetStatusCount>> FetchBetStatusBreakdownAsync()
         {
-            var result = new List<BetStatusCount>();
+            var result = new MyList<BetStatusCount>();
             string query = @"SELECT bet_status, COUNT(*) AS count
                             FROM BetSlip
                             GROUP BY bet_status";

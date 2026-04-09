@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Data;
+using BettingSystem.Data_Structures;
 using BettingSystem.Models;
 using BettingSystem.Services;
 using Google.GenAI;
@@ -37,9 +38,9 @@ namespace BettingSystem.Forms
 
         private static readonly HttpClient HttpClient = new HttpClient();
         private FinancialSummary _lastSummary;
-        private List<MonthlyProfitLoss> _lastProfitLoss;
-        private List<MonthlyTransactionVolume> _lastTransactionVolume;
-        private List<BetStatusCount> _lastBetStatus;
+        private MyList<MonthlyProfitLoss> _lastProfitLoss;
+        private MyList<MonthlyTransactionVolume> _lastTransactionVolume;
+        private MyList<BetStatusCount> _lastBetStatus;
 
         public AdminFinancialPage(AppUser admin, SessionManager session)
         {
@@ -179,13 +180,18 @@ namespace BettingSystem.Forms
             plot.BackColor = System.Drawing.Color.FromArgb(31, 31, 31);
         }
 
-        private void BuildProfitLossChart(List<MonthlyProfitLoss> data)
+        private void BuildProfitLossChart(MyList<MonthlyProfitLoss> data)
         {
-            data = data.OrderBy(d => DateTime.ParseExact(d.Month, "MMM yy", null)).ToList();
+            var sorted = new MyList<MonthlyProfitLoss>(
+                data.OrderBy(d => DateTime.ParseExact(d.Month, "MMM yy", null))
+             );
+
+            data = sorted;
+
             chartProfitLoss.Plot.Clear();
             ApplyDarkTheme(chartProfitLoss);
 
-            if (!data.Any())
+            if (data.Count == 0)
             {
                 chartProfitLoss.Plot.Add.Text("No data available", 0, 0);
                 chartProfitLoss.Refresh();
@@ -231,7 +237,7 @@ namespace BettingSystem.Forms
             chartProfitLoss.Refresh();
         }
 
-        private void BuildTransactionVolumeChart(List<MonthlyTransactionVolume> data)
+        private void BuildTransactionVolumeChart(MyList<MonthlyTransactionVolume> data)
         {
             chartTransactionVolume.Plot.Clear();
             ApplyDarkTheme(chartTransactionVolume);
@@ -288,7 +294,7 @@ namespace BettingSystem.Forms
             chartTransactionVolume.Refresh();
         }
 
-        private void BuildBetStatusChart(List<BetStatusCount> data)
+        private void BuildBetStatusChart(MyList<BetStatusCount> data)
         {
             chartBetStatus.Plot.Clear();
             ApplyDarkTheme(chartBetStatus);
@@ -300,7 +306,7 @@ namespace BettingSystem.Forms
                 return;
             }
 
-            var statusColors = new Dictionary<string, ScottPlot.Color>
+            var statusColors = new MyDictionary<string, ScottPlot.Color>
             {
                 { "Won", _spGreen },
                 { "Lost", _spRed },

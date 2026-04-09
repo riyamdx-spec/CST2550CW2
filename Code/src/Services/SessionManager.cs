@@ -14,11 +14,11 @@ namespace BettingSystem.Services
         public MyDictionary<int, GameResult> GameResults { set; get; }
         
         public MyList<BetHistorySlip> HistoryBetSlips { set; get; }
-        public List<AppUser> Users { get; set; }
+        public MyList<AppUser> Users { get; set; }
         public FinancialSummary FinancialSummary { get; set; }
-        public List<MonthlyProfitLoss> ProfitLoss { get; set; }
-        public List<MonthlyTransactionVolume> TransactionVolume { get; set; }
-        public List<BetStatusCount> BetStatus { get; set; }
+        public MyList<MonthlyProfitLoss> ProfitLoss { get; set; }
+        public MyList<MonthlyTransactionVolume> TransactionVolume { get; set; }
+        public MyList<BetStatusCount> BetStatus { get; set; }
         public BetSlip UserSlip { set; get;}
 
         private AppUser _currentUser { set; get; }

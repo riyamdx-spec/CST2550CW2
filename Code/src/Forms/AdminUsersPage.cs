@@ -1,6 +1,7 @@
 ﻿using BettingSystem.Data;
 using BettingSystem.Models;
 using BettingSystem.Services;
+using BettingSystem.Data_Structures;
 
 namespace BettingSystem.Forms
 {
@@ -9,7 +10,7 @@ namespace BettingSystem.Forms
         private AppUser _currentAdmin;
         private SessionManager _currentSession;
         private readonly DatabaseManager _dbManager = new DatabaseManager();
-        private List<AppUser> _users;
+        private MyList<AppUser> _users;
 
         public AdminUsersPage(AppUser admin, SessionManager session)
         {
