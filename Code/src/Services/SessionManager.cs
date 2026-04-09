@@ -181,7 +181,7 @@ namespace BettingSystem.Services
             currentForm.Hide();
             usersPage.Show();
         }
-        public async Task OpenAdminMatchPage(Form currentForm)
+        public void OpenAdminMatchPage(Form currentForm)
         {
             AdminMatchPage? matchPage = Application.OpenForms.OfType<AdminMatchPage>().FirstOrDefault();
 
@@ -192,7 +192,7 @@ namespace BettingSystem.Services
             else
             {
                 // reinitialise content on page
-                await matchPage.OnShow();
+                matchPage.OnShow();
             }
 
             matchPage.Size = currentForm.Size;
