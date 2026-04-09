@@ -70,11 +70,11 @@ namespace BettingSystem.Forms
             }
         }
 
-        public async Task OnShow()
+        public void OnShow()
         {
             //subscribe to simulator event
             _currentSession.AppSimulator.MatchStatusUpdated += _appSimulator_MatchStatusUpdated;
-            await Reset();
+            _= Reset();
         }
         public void OnHide()
         {

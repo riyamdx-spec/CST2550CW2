@@ -82,9 +82,9 @@ namespace BettingSystem.Forms
         }
 
 
-        private async void AdminNavBar1_SearchMatchesPageClicked(object? sender, EventArgs e)
+        private void AdminNavBar1_SearchMatchesPageClicked(object? sender, EventArgs e)
         {
-            await _currentSession.OpenAdminMatchPage(this);
+            _currentSession.OpenAdminMatchPage(this);
         }
 
         private void AdminNavBar1_UsersPageClicked(object? sender, EventArgs e)

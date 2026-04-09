@@ -50,7 +50,7 @@ namespace BettingSystem.Forms
 
             adminNavBar1.SetAdmin(_currentAdmin);
             adminNavBar1.UsersPageClicked += async (s, e) => _currentSession.OpenAdminViewUsersPage(this);
-            adminNavBar1.SearchMatchesPageClicked += async (s, e) => await _currentSession.OpenAdminMatchPage(this);
+            adminNavBar1.SearchMatchesPageClicked += async (s, e) => _currentSession.OpenAdminMatchPage(this);
             adminNavBar1.AddMatchesPageClicked += (s, e) => _currentSession.OpenAdminAddMatchPage(this);
             adminNavBar1.FinancialPageClicked += async (s, e) => _currentSession.OpenAdminFinancialPage(this);
             adminNavBar1.LogoutClicked += (s, e) => _currentSession.LogOut(this);
