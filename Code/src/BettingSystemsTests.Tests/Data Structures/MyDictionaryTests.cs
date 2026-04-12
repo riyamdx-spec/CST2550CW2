@@ -2,9 +2,15 @@ using BettingSystem.Data_Structures;
 
 namespace BettingSystemsTests;
 
+/// <summary>
+/// Verifies key behaviors of MyDictionary: add/update, remove, lookup, resize, and null-key guards.
+/// </summary>
 [TestClass]
 public class MyDictionaryTests
 {
+    /// <summary>
+    /// Lightweight exception assertion helper used for custom collection guard checks.
+    /// </summary>
     private static void AssertThrows<TException>(Action action) where TException : Exception
     {
         try
@@ -18,6 +24,9 @@ public class MyDictionaryTests
         }
     }
 
+    /// <summary>
+    /// Verifies adding a new key stores the value and increments dictionary count.
+    /// </summary>
     [TestMethod]
     public void Add_NewKey_AddsEntryAndIncreasesCount()
     {
@@ -29,6 +38,9 @@ public class MyDictionaryTests
         Assert.AreEqual(1, dict["one"]);
     }
 
+    /// <summary>
+    /// Verifies adding an existing key updates its value without increasing count.
+    /// </summary>
     [TestMethod]
     public void Add_ExistingKey_UpdatesValueWithoutChangingCount()
     {
@@ -41,6 +53,9 @@ public class MyDictionaryTests
         Assert.AreEqual(99, dict["k"]);
     }
 
+    /// <summary>
+    /// Verifies removing an existing key succeeds and the key is no longer present.
+    /// </summary>
     [TestMethod]
     public void Remove_ExistingKey_ReturnsTrueAndRemovesValue()
     {
@@ -54,6 +69,9 @@ public class MyDictionaryTests
         Assert.IsFalse(dict.ContainsKey("x"));
     }
 
+    /// <summary>
+    /// Verifies removing a missing key returns false and does not throw.
+    /// </summary>
     [TestMethod]
     public void Remove_MissingKey_ReturnsFalse()
     {
@@ -64,6 +82,9 @@ public class MyDictionaryTests
         Assert.IsFalse(removed);
     }
 
+    /// <summary>
+    /// Verifies TryGetValue returns expected boolean and out values for hit and miss.
+    /// </summary>
     [TestMethod]
     public void TryGetValue_ExistingAndMissingKeys_ReturnExpectedResult()
     {
@@ -79,6 +100,9 @@ public class MyDictionaryTests
         Assert.IsNull(notExisting);
     }
 
+    /// <summary>
+    /// Verifies ContainsKey returns true only for keys that exist in the dictionary.
+    /// </summary>
     [TestMethod]
     public void ContainsKey_ReturnsTrueOnlyForExistingKeys()
     {
@@ -89,6 +113,9 @@ public class MyDictionaryTests
         Assert.IsFalse(dict.ContainsKey(2));
     }
 
+    /// <summary>
+    /// Verifies values remain accessible after enough inserts to trigger internal resize.
+    /// </summary>
     [TestMethod]
     public void Resize_AfterManyInsertions_AllValuesRemainAccessible()
     {
@@ -106,6 +133,9 @@ public class MyDictionaryTests
         }
     }
 
+    /// <summary>
+    /// Verifies null reference-type keys throw ArgumentNullException across key APIs.
+    /// </summary>
     [TestMethod]
     public void NullKey_OnReferenceTypeKey_ThrowsArgumentNullException()
     {
