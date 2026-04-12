@@ -5,22 +5,17 @@ namespace BettingSystem.Services
 {
     public class BetSlipFilter
     {
-        public readonly MyList<BetHistorySlip> BetSlips;
-        public BetSlipFilter(MyList<BetHistorySlip> betSlips  )
-        {
-            //already sorted in descending order of date
-            BetSlips = betSlips;
-        }
+        public BetSlipFilter() { }
 
         //sort by date and filter by status
-        public MyList<BetHistorySlip> FilterBetSlips(string? status, bool ascending)
+        public MyList<BetHistorySlip> FilterBetSlips(MyList<BetHistorySlip> betSlips, string? status, bool ascending)
         {
-            MyList<BetHistorySlip> filteredBetSlips = new MyList<BetHistorySlip>(BetSlips);
+            MyList<BetHistorySlip> filteredBetSlips = new MyList<BetHistorySlip>();
 
             //filter by status
             if (!String.IsNullOrWhiteSpace(status) && status != "All")
             {
-                foreach (var slip in BetSlips)
+                foreach (var slip in betSlips)
                 {
                     if (slip.Status.Equals(status, StringComparison.OrdinalIgnoreCase))
                     {
@@ -28,9 +23,16 @@ namespace BettingSystem.Services
                     }
                 }
             }
+            else
+            {
+                foreach(var slip in betSlips)
+                {
+                    filteredBetSlips.Add(slip);
+                }
+            }
 
             //sort in ascending order of date by reversing the list
-            if (ascending) 
+            if (ascending)
             {
                 filteredBetSlips.Reverse();
             }

@@ -7,33 +7,33 @@ namespace BettingSystem.Forms
 {
     public partial class AdminMatchPage : Form
     {
-        private readonly ImageLoader ImgLoader = new ImageLoader();
-        private readonly DatabaseManager DbManager = new DatabaseManager();
-        private MatchManager MatchFilter;
-        private SessionManager CurrentSession;
-        public League[] Leagues;
-        public FootballMatchCollection MatchesCollection;
-        public MyDictionary<int, Team> TeamsDict;
-        public MyDictionary<int, GameResult> GameResults;
-        private Simulator _appSimulator;
+        private readonly ImageLoader _imgLoader = new ImageLoader();
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
+        private MatchManager _matchFilter;
+        private SessionManager _currentSession;
+        private League[] _leagues;
+        private FootballMatchCollection _matchesCollection;
+        private MyDictionary<int, Team> _teamsDict;
+        private MyDictionary<int, GameResult> _gameResults;
 
         private int CurrentLeague = 0;
         private string CurrentSearchTerm = "";
+        private AppUser _admin;
 
         public AdminMatchPage(AppUser admin, SessionManager currentSession)
         {
             InitializeComponent();
 
-            CurrentSession = currentSession;
-            _appSimulator = currentSession.AppSimulator;
-            Leagues = CurrentSession.Leagues;
-            MatchesCollection = CurrentSession.MatchesCollection;
-            TeamsDict = CurrentSession.TeamsDict;
-            GameResults = currentSession.GameResults;
+            _currentSession = currentSession;
+            _leagues = _currentSession.Leagues;
+            _matchesCollection = _currentSession.MatchesCollection;
+            _teamsDict = _currentSession.TeamsDict;
+            _gameResults = _currentSession.GameResults;
 
-            MatchFilter = new MatchManager(MatchesCollection, TeamsDict);
+            _matchFilter = new MatchManager(_matchesCollection, _teamsDict);
 
-            adminNavBar1.SetAdmin(admin);
+            _admin = admin;
+            adminNavBar1.SetAdmin(_admin);
 
             //navbar events
             adminNavBar1.UsersPageClicked += AdminNavBar1_UsersPageClicked;
@@ -46,7 +46,7 @@ namespace BettingSystem.Forms
             matchDataGridView.CellClick += MatchDataGridView_CellClick;
 
             //update status displayed
-            _appSimulator.MatchStatusUpdated += _appSimulator_MatchStatusUpdated;
+            _currentSession.AppSimulator.MatchStatusUpdated += _appSimulator_MatchStatusUpdated;
 
             searchbarTextBox.KeyDown += Searchbar_KeyDown;
         }
@@ -70,6 +70,18 @@ namespace BettingSystem.Forms
             }
         }
 
+        public void OnShow()
+        {
+            //subscribe to simulator event
+            _currentSession.AppSimulator.MatchStatusUpdated += _appSimulator_MatchStatusUpdated;
+            _= Reset();
+        }
+        public void OnHide()
+        {
+            //unsubscribe to simulator event
+            _currentSession.AppSimulator.MatchStatusUpdated -= _appSimulator_MatchStatusUpdated;
+        }
+
         private void MatchDataGridView_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
             //check if header was clicked
@@ -83,10 +95,10 @@ namespace BettingSystem.Forms
                 new Notification("Results will be available after match is completed", NotificationType.Info, this);
                 return;
             }
-            if (GameResults.TryGetValue(selectedMatch.GameID, out var gameResults))
+            if (_gameResults.TryGetValue(selectedMatch.GameID, out var gameResults))
             {
                 //open popup with match outcomes
-                MatchResultPopup resultPopup = new MatchResultPopup(gameResults, TeamsDict[selectedMatch.HomeTeamID].TeamName, TeamsDict[selectedMatch.AwayTeamID].TeamName);
+                MatchResultPopup resultPopup = new MatchResultPopup(gameResults, _teamsDict[selectedMatch.HomeTeamID].TeamName, _teamsDict[selectedMatch.AwayTeamID].TeamName);
                 resultPopup.ShowDialog();
             }
             else
@@ -100,7 +112,7 @@ namespace BettingSystem.Forms
             SetLeaguesRadioBtnTag();
             allRadioBtn.Checked = true;
             AddColumnHeaders();
-            await DisplayMatches(MatchesCollection.AllMatches);
+            await DisplayMatches(_matchesCollection.AllMatches);
         }
 
         private void AddColumnHeaders()
@@ -178,13 +190,13 @@ namespace BettingSystem.Forms
 
             foreach (FootballMatch game in footballMatches)
             {
-                Team homeTeam = TeamsDict[game.HomeTeamID];
-                Team awayTeam = TeamsDict[game.AwayTeamID];
-                var league = Leagues.FirstOrDefault(l => l.LeagueId == game.LeagueID);
+                Team homeTeam = _teamsDict[game.HomeTeamID];
+                Team awayTeam = _teamsDict[game.AwayTeamID];
+                var league = _leagues.FirstOrDefault(l => l.LeagueId == game.LeagueID);
                 string leagueName = league?.Name ?? "Unknown";
 
-                var homeTask = ImgLoader.GetImageAsync(homeTeam.LogoPath);
-                var awayTask = ImgLoader.GetImageAsync(awayTeam.LogoPath);
+                var homeTask = _imgLoader.GetImageAsync(homeTeam.LogoPath);
+                var awayTask = _imgLoader.GetImageAsync(awayTeam.LogoPath);
 
                 await Task.WhenAll(homeTask, awayTask);
 
@@ -209,16 +221,19 @@ namespace BettingSystem.Forms
 
         private void AdminMatchPage_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false, true);
-                if (closingPopup.ShowDialog() == DialogResult.No)
+
+                DialogResult result = closingPopup.ShowDialog();
+
+                if (result != DialogResult.Yes)
                 {
                     e.Cancel = true;
                 }
                 else
                 {
-                    CurrentSession.IsExiting = true;
+                    _currentSession.IsExiting = true;
                     Application.Exit();
                 }
             }
@@ -226,46 +241,50 @@ namespace BettingSystem.Forms
 
         private void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut)
+            if (!_currentSession.IsLoggingOut)
             {
                 logOutPopup closingPopup = new logOutPopup(true, true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
-                    CurrentSession.LogOut(this);
+                    _currentSession.LogOut(this);
             }
         }
 
         //to open other pages
         private void AdminNavBar1_FinancialPageClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenAdminFinancialPage(this);
+            OnHide();
+            _currentSession.OpenAdminFinancialPage(this);
         }
 
         private void AdminNavBar1_AddMatchPageClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenAdminAddMatchPage(this);
+            OnHide();
+            _currentSession.OpenAdminAddMatchPage(this);
         }
 
         private void AdminNavBar1_UsersPageClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenAdminViewUsersPage(this);
+            OnHide();
+            _currentSession.OpenAdminViewUsersPage(this);
         }
 
-        public async Task Reset()
+        private async Task Reset()
         {
+            adminNavBar1.SetAdmin(_admin);
             CurrentSearchTerm = "";
             CurrentLeague = 0;
             allRadioBtn.Checked = true;
             searchbarTextBox.Clear();
-            await DisplayMatches(MatchesCollection.AllMatches);
+            await DisplayMatches(_matchesCollection.AllMatches);
         }
 
         private async Task RefetchData()
         {
-            MatchesCollection = await DbManager.FetchMatchesAsync(true);
-            GameResults = await DbManager.FetchGameResultsAsync(null, true);
-            Leagues = await DbManager.FetchLeaguesAsync();
-            TeamsDict = await DbManager.FetchTeamsAsync(true);
-            MatchFilter = new MatchManager(MatchesCollection, TeamsDict);
+            _matchesCollection = await _dbManager.FetchMatchesAsync(true);
+            _gameResults = await _dbManager.FetchGameResultsAsync(null, true);
+            _leagues = await _dbManager.FetchLeaguesAsync();
+            _teamsDict = await _dbManager.FetchTeamsAsync(true);
+            _matchFilter = new MatchManager(_matchesCollection, _teamsDict);
         }
 
         private async void refreshIcon_Click(object sender, EventArgs e)
@@ -303,11 +322,11 @@ namespace BettingSystem.Forms
 
             CurrentLeague = selectedLeagueId;
             CurrentSearchTerm = searchedTerm;
-            MyList<FootballMatch> leageMatches = CurrentLeague == 0 ? MatchesCollection.AllMatches : MatchFilter.FilterMatchByLeague(CurrentLeague);
+            MyList<FootballMatch> leageMatches = CurrentLeague == 0 ? _matchesCollection.AllMatches : _matchFilter.FilterMatchByLeague(CurrentLeague);
 
             if (!String.IsNullOrEmpty(CurrentSearchTerm))
             {
-                MyList<FootballMatch>  matchDisplayed = MatchFilter.FilterMatchByTeams(searchedTerm, leageMatches);
+                MyList<FootballMatch>  matchDisplayed = _matchFilter.FilterMatchByTeams(searchedTerm, leageMatches);
                 await DisplayMatches(matchDisplayed);
             }
             else
@@ -323,11 +342,11 @@ namespace BettingSystem.Forms
             CurrentSearchTerm = "";
             if (CurrentLeague == 0)
             {
-                await DisplayMatches(MatchesCollection.AllMatches);
+                await DisplayMatches(_matchesCollection.AllMatches);
             }
             else
             {
-                await DisplayMatches(MatchFilter.FilterMatchByLeague(CurrentLeague));
+                await DisplayMatches(_matchFilter.FilterMatchByLeague(CurrentLeague));
             }
         }
 

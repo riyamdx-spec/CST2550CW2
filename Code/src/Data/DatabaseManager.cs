@@ -4,6 +4,7 @@ using BettingSystem.Services;
 using Microsoft.Data.SqlClient;
 using Microsoft.VisualBasic.ApplicationServices;
 using System.Configuration;
+using System.Diagnostics;
 using System.Security.Cryptography;
 
 namespace BettingSystem.Data
@@ -29,7 +30,7 @@ namespace BettingSystem.Data
         public async Task<(AppUser? userObj, string message)> LoginAsync(string email, string password)
         {
             //fetch user's data
-            string query = "SELECT app_user_id, first_name, last_name, email, dob, wallet_balance, password_hash, user_role, user_status, registration_date FROM AppUser WHERE email = @email";
+            string query = "SELECT app_user_id, first_name, last_name, email, dob, wallet_balance, password_hash, user_role, registration_date, user_status FROM AppUser WHERE email = @email";
             using (SqlConnection connection = new SqlConnection(_connectionString))
             using (SqlCommand command = new SqlCommand(query, connection))
             {
@@ -54,6 +55,7 @@ namespace BettingSystem.Data
 
                         //check status
                         string status = reader["user_status"].ToString()!;
+                        Debug.WriteLine($"User status: {status}");
                         if (status != "Active")
                         {
                             return (null, $"Your account has been {status}. Please contact admin@gmail.com for support.");
@@ -68,6 +70,7 @@ namespace BettingSystem.Data
                            reader["email"].ToString()!,
                            Convert.ToDecimal(reader["wallet_balance"]),
                            reader["user_role"].ToString()!,
+                           Convert.ToDateTime(reader["registration_date"]),
                            reader["user_status"].ToString()!
                         );
 
@@ -130,11 +133,9 @@ namespace BettingSystem.Data
 
                 await connection.OpenAsync();
 
-                await connection.OpenAsync();
-
                 //get app_user_id
                 userId = (int)await command.ExecuteScalarAsync();
-                return new AppUser(userId, firstName, lastName, dob, email, 0, "user", "active");
+                return new AppUser(userId, firstName, lastName, dob, email, 0, "user", DateTime.Now, "Active");
             }
         }
 
@@ -778,20 +779,34 @@ namespace BettingSystem.Data
             return null;
         }
 
-        public async Task<MyList<BetHistorySlip>> FetchBetHistoryAsync(int userID)
+        public async Task<MyList<BetHistorySlip>> FetchBetHistoryAsync(int userID, int? lastID = null)
         {
             MyList<BetHistorySlip> history = new MyList<BetHistorySlip>();
-
+            string slipQuery;
             // fetch completed slips by most recent
-            string slipQuery = @"SELECT slip_id, app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed
+            if (lastID is null)
+            {
+                slipQuery = @"SELECT slip_id, app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed
                          FROM BetSlip 
                          WHERE app_user_id = @userID
                          ORDER BY bet_date DESC";
+            }
+            else
+            {
+                // fetch slips that are missing from memory
+                slipQuery = @"SELECT slip_id, app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed
+                         FROM BetSlip 
+                         WHERE app_user_id = @userID
+                         AND slip_id > @lastId
+                         ORDER BY bet_date DESC";
+            }
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
             using (SqlCommand command = new SqlCommand(slipQuery, connection))
             {
                 command.Parameters.AddWithValue("@userID", userID);
+                if (lastID is not null)
+                    command.Parameters.AddWithValue("@lastId", lastID);
 
                 try
                 {
@@ -819,16 +834,17 @@ namespace BettingSystem.Data
                     {
                         // fetch bets for each slip
                         string betQuery = @"SELECT b.bet_id, b.result, o.selection, o.odd_value, bt.bet_type_id, bt.bet_type_name,
-                                                ht.team_name AS home_team, at.team_name AS away_team, 
-                                                g.game_date, l.league_name, g.game_id
-                                            FROM Bet b
-                                            INNER JOIN Odd o ON b.odd_id = o.odd_id
-                                            INNER JOIN BetType bt ON o.bet_type_id = bt.bet_type_id
-                                            INNER JOIN Game g ON o.game_id = g.game_id
-                                            INNER JOIN Team ht ON g.home_team_id = ht.team_id
-                                            INNER JOIN Team at ON g.away_team_id = at.team_id
-                                            INNER JOIN League l ON g.league_id = l.league_id
-                                            WHERE b.slip_id = @slipID";
+                                    ht.team_name AS home_team, at.team_name AS away_team, 
+                                    ht.team_id AS home_team_id, at.team_id AS away_team_id,
+                                    g.game_date, l.league_name, g.game_id
+                                FROM Bet b
+                                INNER JOIN Odd o ON b.odd_id = o.odd_id
+                                INNER JOIN BetType bt ON o.bet_type_id = bt.bet_type_id
+                                INNER JOIN Game g ON o.game_id = g.game_id
+                                INNER JOIN Team ht ON g.home_team_id = ht.team_id
+                                INNER JOIN Team at ON g.away_team_id = at.team_id
+                                INNER JOIN League l ON g.league_id = l.league_id
+                                WHERE b.slip_id = @slipID";
 
                         using (SqlConnection betConnection = new SqlConnection(_connectionString))
                         {
@@ -856,7 +872,9 @@ namespace BettingSystem.Data
                                                 betReader["away_team"].ToString()!,
                                                 Convert.ToDateTime(betReader["game_date"]),
                                                 betReader["league_name"].ToString()!,
-                                                Convert.ToInt32(betReader["game_id"])
+                                                Convert.ToInt32(betReader["game_id"]),
+                                                Convert.ToInt32(betReader["home_team_id"]),
+                                                Convert.ToInt32(betReader["away_team_id"])
                                             );
 
                                             slip.Bets.Add(bet);
@@ -1508,6 +1526,277 @@ namespace BettingSystem.Data
                 // Default ratings if team not found
                 return new TeamRatings(60, 60, 60, 5.0m);
             }
+        }
+
+        // fetch all users for admin page
+        public async Task<MyList<AppUser>> FetchAllUsersAsync()
+        {
+            MyList<AppUser> users = new MyList<AppUser>();
+            string query = @"SELECT app_user_id, first_name, last_name, dob, email, 
+                            wallet_balance, user_role, registration_date, user_status 
+                            FROM AppUser 
+                            ORDER BY registration_date DESC";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            users.Add(new AppUser(
+                                Convert.ToInt32(reader["app_user_id"]),
+                                reader["first_name"].ToString()!,
+                                reader["last_name"].ToString()!,
+                                Convert.ToDateTime(reader["dob"]),
+                                reader["email"].ToString()!,
+                                Convert.ToDecimal(reader["wallet_balance"]),
+                                reader["user_role"].ToString()!,
+                                Convert.ToDateTime(reader["registration_date"]),
+                                reader["user_status"].ToString()!
+                            ));
+                        }
+                    }
+                    return users;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new MyList<AppUser>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new MyList<AppUser>();
+                }
+            }
+        }
+
+        // fetch bet types for bet slip details
+        public async Task<Dictionary<int, string>> FetchBetTypesAsync()
+        {
+            Dictionary<int, string> betTypes = new Dictionary<int, string>();
+            string query = "SELECT bet_type_id, bet_type_name FROM BetType";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            betTypes[Convert.ToInt32(reader["bet_type_id"])] = reader["bet_type_name"].ToString()!;
+                        }
+                    }
+                    return betTypes;
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return new Dictionary<int, string>();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return new Dictionary<int, string>();
+                }
+            }
+        }
+
+        // change status of current user in database
+        public async Task<(bool success, string message)> UpdateUserStatusAsync(int userId, string newStatus)
+        {
+            string query = @"UPDATE AppUser
+                            SET user_status = @newStatus
+                            WHERE app_user_id = @userId";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@newStatus", newStatus);
+                command.Parameters.AddWithValue("@userId", userId);
+                try
+                {
+                    await connection.OpenAsync();
+                    int rows = await command.ExecuteNonQueryAsync();
+                    return rows > 0
+                        ? (true, $"User {newStatus} successfully")
+                        : (false, "User not found");
+                }
+                catch (SqlException e)
+                {
+                    Console.WriteLine($"Database error: {e.Message}");
+                    return (false, "Failed to update user status. Please try again.");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                    return (false, "Failed to update user status. Please try again.");
+                }
+            }
+        }
+
+        public async Task<FinancialSummary> FetchFinancialSummaryAsync()
+        {
+            var summary = new FinancialSummary();
+            string query = @"SELECT 
+                            (SELECT ISNULL(SUM(amount), 0) 
+                            FROM SystemTransaction 
+                            WHERE transaction_type = 'bet') -
+                            (SELECT ISNULL(SUM(amount), 0) 
+                            FROM SystemTransaction 
+                            WHERE transaction_type = 'payout') AS total_revenue,
+                            (SELECT COUNT(*) 
+                            FROM AppUser 
+                            WHERE user_status = 'Active' AND user_role = 'user') AS active_users,
+                            (SELECT COUNT(*) FROM BetSlip) AS total_bets,
+                            (SELECT ISNULL(SUM(amount), 0) 
+                            FROM SystemTransaction 
+                            WHERE transaction_type = 'deposit') AS total_deposits,
+                            (SELECT ISNULL(SUM(amount), 0) 
+                            FROM SystemTransaction WHERE transaction_type = 'withdrawal') AS total_withdrawals";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            summary.TotalRevenue = Convert.ToDecimal(reader["total_revenue"]);
+                            summary.TotalActiveUsers = Convert.ToInt32(reader["active_users"]);
+                            summary.TotalBetsPlaced = Convert.ToInt32(reader["total_bets"]);
+                            summary.TotalDeposits = Convert.ToDecimal(reader["total_deposits"]);
+                            summary.TotalWithdrawals = Convert.ToDecimal(reader["total_withdrawals"]);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                }
+            }
+            return summary;
+        }
+
+        public async Task<MyList<MonthlyProfitLoss>> FetchMonthlyProfitLossAsync()
+        {
+            var result = new MyList<MonthlyProfitLoss>();
+            string query = @"SELECT 
+                                FORMAT(transaction_timestamp, 'MMM yy') AS month,
+                                ISNULL(SUM(CASE WHEN transaction_type = 'bet' THEN amount ELSE 0 END), 0) AS revenue,
+                                ISNULL(SUM(CASE WHEN transaction_type = 'payout' THEN amount ELSE 0 END), 0) AS payouts
+                            FROM SystemTransaction
+                            WHERE transaction_timestamp >= DATEADD(MONTH, -11, GETDATE())
+                            GROUP BY FORMAT(transaction_timestamp, 'MMM yy'), YEAR(transaction_timestamp), MONTH(transaction_timestamp)
+                            ORDER BY YEAR(transaction_timestamp), MONTH(transaction_timestamp)";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            result.Add(new MonthlyProfitLoss
+                            {
+                                Month = reader["month"].ToString()!,
+                                Revenue = Convert.ToDecimal(reader["revenue"]),
+                                Payouts = Convert.ToDecimal(reader["payouts"])
+                            });
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                }
+            }
+            return result;
+        }
+
+        public async Task<MyList<MonthlyTransactionVolume>> FetchMonthlyTransactionVolumeAsync()
+        {
+            var result = new MyList<MonthlyTransactionVolume>();
+            string query = @"SELECT 
+                                FORMAT(transaction_timestamp, 'MMM yy') AS month,
+                                transaction_type,
+                                ISNULL(SUM(amount), 0) AS total_amount
+                            FROM SystemTransaction
+                            WHERE transaction_timestamp >= DATEADD(MONTH, -11, GETDATE())
+                            GROUP BY FORMAT(transaction_timestamp, 'MMM yy'), transaction_type, YEAR(transaction_timestamp), MONTH(transaction_timestamp)
+                            ORDER BY YEAR(transaction_timestamp), MONTH(transaction_timestamp)";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            result.Add(new MonthlyTransactionVolume
+                            {
+                                Month = reader["month"].ToString()!,
+                                Type = reader["transaction_type"].ToString()!,
+                                Amount = Convert.ToDecimal(reader["total_amount"])
+                            });
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                }
+            }
+            return result;
+        }
+
+        public async Task<MyList<BetStatusCount>> FetchBetStatusBreakdownAsync()
+        {
+            var result = new MyList<BetStatusCount>();
+            string query = @"SELECT bet_status, COUNT(*) AS count
+                            FROM BetSlip
+                            GROUP BY bet_status";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                try
+                {
+                    await connection.OpenAsync();
+                    using (SqlDataReader reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            result.Add(new BetStatusCount
+                            {
+                                Status = reader["bet_status"].ToString()!,
+                                Count = Convert.ToInt32(reader["count"])
+                            });
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Error: {e.Message}");
+                }
+            }
+            return result;
         }
 
         //Get player information and ratings from database

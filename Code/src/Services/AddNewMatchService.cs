@@ -6,18 +6,18 @@ namespace BettingSystem.Services
 {
     public class AddNewMatchService
     {
-        private MyList<Player> HomeTeamPlayers;
-        private MyList<Player> AwayTeamPlayers;
-        private readonly DatabaseManager DbManager = new DatabaseManager();
-        private FootballMatch NewMatch;
+        private MyList<Player> _homeTeamPlayers;
+        private MyList<Player> _awayTeamPlayers;
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
+        private FootballMatch _newMatch;
         private SessionManager _currentSession;
-        Random Rdm = new Random();
+        private Random _rdm = new Random();
 
         public AddNewMatchService(FootballMatch newMatch, MyList<Player> homeTeamPlayers, MyList<Player> awayTeamPlayers, SessionManager currentSession)
         {
-            NewMatch = newMatch;
-            HomeTeamPlayers = homeTeamPlayers;
-            AwayTeamPlayers = awayTeamPlayers;
+            _newMatch = newMatch;
+            _homeTeamPlayers = homeTeamPlayers;
+            _awayTeamPlayers = awayTeamPlayers;
             _currentSession = currentSession;
         }
 
@@ -25,10 +25,10 @@ namespace BettingSystem.Services
         public async Task<(bool valid, string message, GameResult? generatedResult)> AddMatchToDatabase()
         {
             GameResult generatedResult = GenerateGameResults();
-            bool valid = await DbManager.AddNewMatchAsync(NewMatch, generatedResult);
+            bool valid = await _dbManager.AddNewMatchAsync(_newMatch, generatedResult);
             if (valid)
             {
-                AddNewMatchInMemory(NewMatch, generatedResult);
+                AddNewMatchInMemory(_newMatch, generatedResult);
                 return (true, "Match Successfully Added", generatedResult);
             }
             return (false, "Failed to Add Match", null);
@@ -45,27 +45,27 @@ namespace BettingSystem.Services
         // generate random results for match
         private GameResult GenerateGameResults()
         {
-            int homeScore = Rdm.Next(0, 7);
-            int awayScore = Rdm.Next(0, 7);
-            int corners = Rdm.Next(0, 16);
-            int redCards = Rdm.Next(0, 2);
-            int yellowCards = Rdm.Next(0, 11);
+            int homeScore = _rdm.Next(0, 7);
+            int awayScore = _rdm.Next(0, 7);
+            int corners = _rdm.Next(0, 16);
+            int redCards = _rdm.Next(0, 2);
+            int yellowCards = _rdm.Next(0, 11);
             int? firstScorerId = null;
             Player? firstScorer = null;
 
             MyList<Player> randomScorer = new MyList<Player>();
             if (homeScore > 0)
             {
-                randomScorer.AddRange(HomeTeamPlayers);
+                randomScorer.AddRange(_homeTeamPlayers);
             }
             if (awayScore > 0)
             {
-                randomScorer.AddRange(AwayTeamPlayers);
+                randomScorer.AddRange(_awayTeamPlayers);
             }
 
             if (randomScorer.Count > 0)
             {
-                firstScorer = randomScorer[Rdm.Next(randomScorer.Count)];
+                firstScorer = randomScorer[_rdm.Next(randomScorer.Count)];
                 firstScorerId = firstScorer.PlayerId;
             }
 

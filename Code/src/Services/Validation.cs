@@ -1,20 +1,19 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace BettingSystem.Services
 {
     internal class Validation
     {
-        private Regex upperCase = new Regex(@"[A-Z]");
-        private Regex number = new Regex(@"\d");
-        private Regex specialChar = new Regex(@"[-+_!@#$%^&*., ?]");
-        private Regex emailFormat = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
-        private Regex dateFormat = new Regex(@"^\d{2}/\d{2}$"); // for expiry date in deposit money popup
+        private Regex _upperCase = new Regex(@"[A-Z]");
+        private Regex _number = new Regex(@"\d");
+        private Regex _specialChar = new Regex(@"[-+_!@#$%^&*., ?]");
+        private Regex _emailFormat = new Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+        private Regex _dateFormat = new Regex(@"^\d{2}/\d{2}$"); // for expiry date in deposit money popup
 
         //check if text contains at least 1 number (used for password and names)
         public bool CheckNumber(string text)
         {
-            return number.IsMatch(text);
+            return _number.IsMatch(text);
         }
 
         //check if name contains between 3 and 50 characters
@@ -33,13 +32,13 @@ namespace BettingSystem.Services
 
         public bool CheckUpperCase(string password)
         {
-            return upperCase.IsMatch(password);
+            return _upperCase.IsMatch(password);
         }
 
         //check if password contains at least 1 special character
         public bool CheckSpecialChar(string password)
         {
-            return specialChar.IsMatch(password);
+            return _specialChar.IsMatch(password);
         }
 
         //check password format
@@ -54,7 +53,7 @@ namespace BettingSystem.Services
             if (email.Length > 100)
                 return (false, "Email cannot be more than 100 characters");
 
-            if (emailFormat.IsMatch(email))
+            if (_emailFormat.IsMatch(email))
             {
                 return (true, null);
             }
@@ -112,7 +111,7 @@ namespace BettingSystem.Services
         // check expiry date
         public (bool valid, string? message) CheckExpiryDate(string expiryDateInput)
         {
-            if (!dateFormat.IsMatch(expiryDateInput))
+            if (!_dateFormat.IsMatch(expiryDateInput))
                 return (false, "Expiry date should be in correct format");
 
             DateTime expiryDate = DateTime.ParseExact(expiryDateInput, "MM/yy", null);

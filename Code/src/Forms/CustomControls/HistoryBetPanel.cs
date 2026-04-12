@@ -5,34 +5,49 @@ namespace BettingSystem.Forms.CustomControls
 {
     public partial class HistoryBetPanel : UserControl
     {
-        private HistoryBet Bet;
-        public HistoryBetPanel(HistoryBet bet, string actualResult, MyDictionary<int, MyList<Player>> players)
+        private HistoryBet _bet;
+        public HistoryBetPanel(HistoryBet bet, string actualResult, MyList<Player>? players)
         {
-            Bet = bet;
+            _bet = bet;
             InitializeComponent();
             DisplayDetails(actualResult, players);
             betTableLayoutBgPanel.CellPaint += TableLayoutAddBorders;
         }
             
-        private void DisplayDetails(string actualResult, MyDictionary<int, MyList<Player>> players)
+        private void DisplayDetails(string actualResult, MyList<Player>? players)
         {
-            betMatchDateLbl.Text = Bet.MatchDate.ToString("dd/MM/yyyy") + "-" + Bet.MatchDate.ToString("HH:mm");
-            betMatchLeagueLbl.Text = Bet.LeagueName;
-            betHomeTeamLbl.Text = Bet.HomeTeam;
-            betAwayTeamLbl.Text = Bet.AwayTeam;
-            betTypeLbl.Text = $"Bet Type: {Bet.BetTypeName}";
-            betSelectionLbl.Text = $"Selection: {(Bet.BetTypeId == 6 ? players[int.Parse(Bet.Selection)] :  Bet.Selection)}";
-            betOddLbl.Text = $"Odd: {Math.Round(Bet.OddValue, 2)}";
+            betMatchDateLbl.Text = _bet.MatchDate.ToString("dd/MM/yyyy") + " - " + _bet.MatchDate.ToString("HH:mm");
+            betMatchLeagueLbl.Text = _bet.LeagueName;
+            betHomeTeamLbl.Text = _bet.HomeTeam;
+            betAwayTeamLbl.Text = _bet.AwayTeam;
+            betTypeLbl.Text = $"Bet Type: {_bet.BetTypeName}";
+            betSelectionLbl.Text = $"Selection: {(_bet.BetTypeId == 6 ? DisplaySelectedPlayer(players) : _bet.Selection)}";
+            betOddLbl.Text = $"Odd: {Math.Round(_bet.OddValue, 2)}";
             betResultLbl.Text = "Actual Result: " + actualResult;
             DisplayBetResult();
+        }
+
+        private string DisplaySelectedPlayer(MyList<Player> players)
+        {
+            string selectionText;
+           
+            if (int.TryParse(_bet.Selection, out int id))
+            {
+                selectionText = players.FirstOrDefault(p => p.PlayerId == id)?.Name ?? "Unknown";
+            }
+            else
+            {
+                selectionText = "Unknown";
+            }
+            return selectionText;
         }
 
         //display if the person has make a correct bet
         private void DisplayBetResult()
         {
-            betOutcomeLbl.Text = Bet.Result;
+            betOutcomeLbl.Text = _bet.Result;
 
-            switch (Bet.Result)
+            switch (_bet.Result)
             {
                 case "Won":
                     betOutcomeLbl.BackColor = Color.FromArgb(93, 185, 64);

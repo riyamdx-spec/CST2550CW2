@@ -318,7 +318,7 @@
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "EditFormPopup";
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "EditFormPopup";
             editFormBgPanel.ResumeLayout(false);
             ConfirmationBtntableLayoutPanel.ResumeLayout(false);

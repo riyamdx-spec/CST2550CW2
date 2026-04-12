@@ -8,9 +8,9 @@ namespace BettingSystem.Forms
 
     public partial class RegisterLoginForm : BaseForm
     {
-        private Validation validator = new Validation();
-        private DatabaseManager db = new DatabaseManager();
-        public bool NavigatingBack = false;
+        private Validation _validator = new Validation();
+        private DatabaseManager _dbManager = new DatabaseManager();
+        public bool _navigatingBack = false;
         private Simulator _simulator;
 
         public RegisterLoginForm(Simulator appSimulator, ViewPanel view = ViewPanel.SignUp)
@@ -190,7 +190,7 @@ namespace BettingSystem.Forms
             appLandingPage.WindowState = this.WindowState;
             appLandingPage.Show();
             this.Hide();
-            NavigatingBack = true;
+            _navigatingBack = true;
         }
 
         // Button login 
@@ -207,7 +207,7 @@ namespace BettingSystem.Forms
             }
 
             btnLogin.Enabled = false;
-            var (user, message) = await db.LoginAsync(email, password);
+            var (user, message) = await _dbManager.LoginAsync(email, password);
             btnLogin.Enabled = true;
 
             if (user == null)
@@ -240,28 +240,28 @@ namespace BettingSystem.Forms
             }
 
             // check name length
-            if (!validator.CheckNameLength(firstName) || !validator.CheckNameLength(lastName))
+            if (!_validator.CheckNameLength(firstName) || !_validator.CheckNameLength(lastName))
             {
                 new Notification("Name must be between 3 and 50 characters.", NotificationType.Warning, this);
                 return;
             }
 
             // check name doesn't contain numbers
-            if (validator.CheckNumber(firstName) || validator.CheckNumber(lastName))
+            if (_validator.CheckNumber(firstName) || _validator.CheckNumber(lastName))
             {
                 new Notification("Name should not contain numbers.", NotificationType.Warning, this);
                 return;
             }
 
             // check password validity
-            if (!validator.CheckPasswordValidity(password))
+            if (!_validator.CheckPasswordValidity(password))
             {
                 new Notification("Password is in incorrect format.", NotificationType.Warning, this);
                 return;
             }
 
             // check age
-            var (ageValid, ageMsg) = validator.CheckAge(dob);
+            var (ageValid, ageMsg) = _validator.CheckAge(dob);
             if (!ageValid)
             {
                 new Notification(ageMsg, NotificationType.Error, this);
@@ -276,7 +276,7 @@ namespace BettingSystem.Forms
             }
 
             btnSignUp.Enabled = false;
-            var (user, message) = await db.RegisterAsync(firstName, lastName, dob, email, password);
+            var (user, message) = await _dbManager.RegisterAsync(firstName, lastName, dob, email, password);
             btnSignUp.Enabled = true;
 
             if (user == null)
@@ -300,7 +300,7 @@ namespace BettingSystem.Forms
             if (user.Role == "admin")
             {
                 await currentSession.FetchAdminData();
-                await currentSession.OpenAdminMatchPage(this);
+                currentSession.OpenAdminViewUsersPage(this);
             }
             else
             {

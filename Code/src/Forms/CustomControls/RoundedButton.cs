@@ -5,8 +5,8 @@ namespace BettingSystem
 {
     public class RoundedButton : Button
     {
-        private int cornerRadius = 22;
-        private int imageSize = 32;
+        private int _cornerRadius = 22;
+        private int _imageSize = 32;
 
         [Category("Appearance")]
         [Description("The radius, in pixels, of the button's corners.")]
@@ -14,17 +14,17 @@ namespace BettingSystem
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public int CornerRadius
         {
-            get => cornerRadius;
+            get => _cornerRadius;
             set
             {
                 if (value < 0) value = 0;
-                if (cornerRadius == value) return;
-                cornerRadius = value;
+                if (_cornerRadius == value) return;
+                _cornerRadius = value;
                 Invalidate();
                 if (IsHandleCreated)
                 {
                     using var path = new GraphicsPath();
-                    int d = cornerRadius * 2;
+                    int d = _cornerRadius * 2;
                     var r = ClientRectangle;
                     path.AddArc(r.X, r.Y, d, d, 180, 90);
                     path.AddArc(r.Right - d, r.Y, d, d, 270, 90);
@@ -42,11 +42,11 @@ namespace BettingSystem
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public int ImageSize
         {
-            get => imageSize;
+            get => _imageSize;
             set
             {
                 if (value < 0) value = 0;
-                imageSize = value;
+                _imageSize = value;
                 Invalidate();
             }
         }
@@ -79,7 +79,7 @@ namespace BettingSystem
             {
                 int x = Width - ImageSize - 10;
                 int y = (Height - ImageSize) / 2;
-                e.Graphics.DrawImage(Image, x, y, imageSize, imageSize);
+                e.Graphics.DrawImage(Image, x, y, _imageSize, _imageSize);
             }
         }
     }

@@ -1,29 +1,31 @@
 ﻿using BettingSystem.Data;
 using BettingSystem.Models;
 using BettingSystem.Services;
+using BettingSystem.Data_Structures;
 
 namespace BettingSystem.Forms
 {
     public partial class AdminUsersPage : BaseForm
     {
-        private AppUser CurrentAdmin;
-        private SessionManager CurrentSession;
-        private readonly DatabaseManager DBManager = new DatabaseManager();
-        private List<AppUser> Users = new List<AppUser>();
+        private AppUser _currentAdmin;
+        private SessionManager _currentSession;
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
+        private MyList<AppUser> _users;
 
         public AdminUsersPage(AppUser admin, SessionManager session)
         {
             InitializeComponent();
             dgvUsers.ReadOnly = false; // added to show dropdown
-            CurrentAdmin = admin;
-            CurrentSession = session;
 
-            adminNavBar1.SetAdmin(CurrentAdmin);
-            adminNavBar1.UsersPageClicked += (s, e) => CurrentSession.OpenAdminViewUsersPage(this);
-            adminNavBar1.SearchMatchesPageClicked += (s, e) => CurrentSession.OpenAdminMatchPage(this);
-            adminNavBar1.AddMatchesPageClicked += (s, e) => CurrentSession.OpenAdminAddMatchPage(this);
-            adminNavBar1.FinancialPageClicked += (s, e) => CurrentSession.OpenAdminFinancialPage(this);
-            adminNavBar1.LogoutClicked += (s, e) => CurrentSession.LogOut(this);
+            _currentAdmin = admin;
+            _currentSession = session;
+
+            adminNavBar1.SetAdmin(_currentAdmin);
+            adminNavBar1.SearchMatchesPageClicked += (s, e) => _currentSession.OpenAdminMatchPage(this);
+            adminNavBar1.AddMatchesPageClicked += (s, e) => _currentSession.OpenAdminAddMatchPage(this);
+            adminNavBar1.FinancialPageClicked += (s, e) => _currentSession.OpenAdminFinancialPage(this);
+            adminNavBar1.LogoutClicked += AdminNavBar1_LogoutClicked;
+
 
             this.Load += AdminUsersPage_Load;
             this.FormClosing += AdminUsersPage_FormClosing;
@@ -40,41 +42,45 @@ namespace BettingSystem.Forms
             dgvUsers.CellBeginEdit += OnCellBeginEdit;
         }
 
-        private async Task LoadUsers()
+        private Task LoadUsers()
         {
-            Users = await DBManager.FetchAllUsersAsync();
+            _users = _currentSession.Users;
             PopulateGrid();
+            return Task.CompletedTask;
         }
 
-        public async Task ReloadPage()
+        public Task OnShow()
         {
-            await LoadUsers();
+            adminNavBar1.SetAdmin(_currentAdmin);
+            PopulateGrid();
+            return Task.CompletedTask;
         }
 
         private void AdminUsersPage_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false, true);
-                if (closingPopup.ShowDialog() == DialogResult.No)
+
+                DialogResult result = closingPopup.ShowDialog();
+                if (result != DialogResult.Yes)
                 {
                     e.Cancel = true;
                 }
                 else
                 {
-                    CurrentSession.IsExiting = true;
+                    _currentSession.IsExiting = true;
                     Application.Exit();
                 }
             }
         }
-
         private void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut)
+            if (!_currentSession.IsLoggingOut)
             {
                 logOutPopup closingPopup = new logOutPopup(true, true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
-                    CurrentSession.LogOut(this);
+                    _currentSession.LogOut(this);
             }
         }
 
@@ -85,9 +91,9 @@ namespace BettingSystem.Forms
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colLastName", HeaderText = "Last Name", FillWeight = 80 });
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colDob", HeaderText = "Date of Birth", FillWeight = 80 });
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colEmail", HeaderText = "Email", FillWeight = 140 });
-            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRegistration", HeaderText = "Registered", FillWeight = 90 });
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colBalance", HeaderText = "Balance", FillWeight = 70 });
             dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRole", HeaderText = "Role", FillWeight = 60 });
+            dgvUsers.Columns.Add(new DataGridViewTextBoxColumn { Name = "colRegistration", HeaderText = "Registered", FillWeight = 90 });
 
             var statusCol = new DataGridViewComboBoxColumn
             {
@@ -96,9 +102,10 @@ namespace BettingSystem.Forms
                 FillWeight = 70,
                 FlatStyle = FlatStyle.Flat,
                 DisplayStyle = DataGridViewComboBoxDisplayStyle.ComboBox,
-                ReadOnly = false
+                ReadOnly = false,
+                AutoComplete = false
             };
-            statusCol.Items.AddRange("active", "suspended", "banned");
+            statusCol.Items.AddRange("Active", "Suspended", "Banned");
             dgvUsers.Columns.Add(statusCol);
         }
 
@@ -106,7 +113,7 @@ namespace BettingSystem.Forms
         {
             dgvUsers.Rows.Clear();
 
-            foreach (AppUser user in Users)
+            foreach (AppUser user in _users)
             {
                 int rowIndex = dgvUsers.Rows.Add(
                     user.UserID,
@@ -114,9 +121,9 @@ namespace BettingSystem.Forms
                     user.LastName,
                     user.Dob.ToString("dd/MM/yyyy"),
                     user.Email,
-                    user.RegistrationDate.ToString("dd/MM/yyyy"),
                     $"${user.WalletBalance:F2}",
                     user.Role,
+                    user.RegistrationDate.ToString("dd/MM/yyyy"),
                     user.Status
                 );
 
@@ -131,10 +138,10 @@ namespace BettingSystem.Forms
             if (dgvUsers.Columns[e.ColumnIndex].Name == "colStatus")
             {
                 int userId = Convert.ToInt32(dgvUsers.Rows[e.RowIndex].Cells["colId"].Value);
-                AppUser selectedUser = Users.First(u => u.UserID == userId);
+                AppUser selectedUser = _users.First(u => u.UserID == userId);
 
                 // if status is banned, prevent editing
-                if (selectedUser.Status == "banned")
+                if (selectedUser.Status == "Banned")
                 {
                     e.Cancel = true;
                     new Notification("Cannot modify banned users", NotificationType.Warning, this);
@@ -147,9 +154,9 @@ namespace BettingSystem.Forms
             var cell = row.Cells["colStatus"];
             cell.Style.ForeColor = status switch
             {
-                "active" => Color.FromArgb(93, 185, 64),
-                "suspended" => Color.FromArgb(255, 165, 0),
-                "banned" => Color.FromArgb(220, 53, 53),
+                "Active" => Color.FromArgb(93, 185, 64),
+                "Suspended" => Color.FromArgb(255, 165, 0),
+                "Banned" => Color.FromArgb(220, 53, 53),
                 _ => Color.FromArgb(241, 241, 241)
             };
             cell.Style.Font = new Font("Times New Roman", 10F, FontStyle.Bold);
@@ -169,18 +176,20 @@ namespace BettingSystem.Forms
             if (dgvUsers.Columns[e.ColumnIndex].Name != "colStatus") return;
 
             int userId = Convert.ToInt32(dgvUsers.Rows[e.RowIndex].Cells["colId"].Value);
-            AppUser selectedUser = Users.First(u => u.UserID == userId);
+            AppUser selectedUser = _users.First(u => u.UserID == userId);
             string newStatus = dgvUsers.Rows[e.RowIndex].Cells["colStatus"].Value.ToString()!;
 
             if (newStatus == selectedUser.Status) return;
 
             await UpdateUserStatus(selectedUser, newStatus);
+
+            dgvUsers.EndEdit();
             StyleStatusCell(dgvUsers.Rows[e.RowIndex], newStatus);
         }
 
         private async Task UpdateUserStatus(AppUser user, string newStatus)
         {
-            (bool success, string message) = await DBManager.UpdateUserStatusAsync(user.UserID, newStatus);
+            (bool success, string message) = await _dbManager.UpdateUserStatusAsync(user.UserID, newStatus);
 
             if (success)
             {

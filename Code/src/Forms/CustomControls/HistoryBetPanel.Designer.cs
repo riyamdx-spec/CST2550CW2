@@ -294,7 +294,7 @@
             // 
             betOutcomeLbl.BackColor = Color.FromArgb(93, 185, 64);
             betOutcomeLbl.Dock = DockStyle.Fill;
-            betOutcomeLbl.Font = new Font("Times New Roman", 18F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            betOutcomeLbl.Font = new Font("Times New Roman", 13.875F, FontStyle.Bold, GraphicsUnit.Point, 0);
             betOutcomeLbl.ForeColor = Color.FromArgb(241, 241, 241);
             betOutcomeLbl.Location = new Point(0, 0);
             betOutcomeLbl.Name = "betOutcomeLbl";

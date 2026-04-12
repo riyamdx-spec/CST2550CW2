@@ -138,7 +138,7 @@
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "logOutPopup";
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "logOutForm";
             panelBg.ResumeLayout(false);
             confirmationBtnPanel.ResumeLayout(false);

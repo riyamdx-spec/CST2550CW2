@@ -4,7 +4,7 @@ namespace BettingSystem.Forms.CustomControls
 {
     public partial class AdminNavBar : UserControl
     {
-        private AppUser ConnectedAdmin;
+        private AppUser _connectedAdmin;
 
         //click events
         public event EventHandler UsersPageClicked;
@@ -20,24 +20,24 @@ namespace BettingSystem.Forms.CustomControls
 
         public void SetAdmin(AppUser loggedInUser)
         {
-            ConnectedAdmin = loggedInUser;
+            _connectedAdmin = loggedInUser;
             DisplayInfo();
         }
 
         public void DisplayInfo()
         {
-            navDropdownBtn.Text = $"{ConnectedAdmin.FirstName} {ConnectedAdmin.LastName}";
+            navDropdownBtn.Text = $"{_connectedAdmin.FirstName} {_connectedAdmin.LastName}";
         }
 
         private void ChangedPassword_Click(object sender, EventArgs e)
         {
-            ChangePasswordPopup passwordPopup = new ChangePasswordPopup(ConnectedAdmin);
+            ChangePasswordPopup passwordPopup = new ChangePasswordPopup(_connectedAdmin);
             passwordPopup.ShowDialog();
         }
 
         private void EditProfile_Click(object sender, EventArgs e)
         {
-            EditFormPopup editFormPopup = new EditFormPopup(ConnectedAdmin);
+            EditFormPopup editFormPopup = new EditFormPopup(_connectedAdmin);
 
             //update details displayed when admin edit details
             if (editFormPopup.ShowDialog() == DialogResult.OK)

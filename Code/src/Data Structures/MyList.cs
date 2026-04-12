@@ -158,25 +158,6 @@ namespace BettingSystem.Data_Structures
             _count++;
         }
 
-        // return index of a value
-        public int IndexOf(T value)
-        {
-            for (int i = 0; i < _count; i++)
-            {
-                if (_items[i].Equals(value))
-                {
-                    return i;
-                }
-            }
-            return -1; //if value is not found
-        }
-
-        // check if list contains a value
-        public bool Contains(T value)
-        {
-            return IndexOf(value) != -1;
-        }
-
         // merge lists
         public void AddRange(MyList<T> combiningList)
         {
@@ -184,20 +165,6 @@ namespace BettingSystem.Data_Structures
             {
                 Add(combiningList._items[i]);
             }
-        }
-
-        public void ForEach(Action<T> action)
-        {
-            for (int i = 0; i < _count; i++)
-            {
-                action(_items[i]);
-            }
-        }
-
-        public void Clear()
-        {
-            _items = new T[_capacity];
-            _count = 0;
         }
 
         // to make list iterable

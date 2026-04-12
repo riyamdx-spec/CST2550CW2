@@ -1,4 +1,3 @@
 <Solution>
   <Project Path="BettingSystem.csproj" />
-  <Project Path="BettingSystemsTests.Tests\BettingSystemsTests.Tests.csproj" />
 </Solution>

@@ -6,13 +6,13 @@ namespace BettingSystem.Forms.CustomControls
     public partial class BetSlipPanel : UserControl
     {
         public event Action<BetHistorySlip, bool, string> ClaimClicked;
-        private readonly WalletService Payment = new WalletService();
-        private AppUser CurrentUser;
+        private readonly WalletService _payment = new WalletService();
+        private AppUser _currentUser;
 
         private BetHistorySlip CurrentSlip;
         public BetSlipPanel(BetHistorySlip currentSlip, AppUser loggedInUser)
         {
-            CurrentUser = loggedInUser;
+            _currentUser = loggedInUser;
             CurrentSlip = currentSlip;
             InitializeComponent();
             slipTableLayoutBgPanel.CellPaint += tableLayoutAddBorders;
@@ -33,7 +33,7 @@ namespace BettingSystem.Forms.CustomControls
             // preview of bet from slip
             HistoryBet betPreview = CurrentSlip.Bets[0];
             previewedLeagueLbl.Text = betPreview.LeagueName;
-            previewMatchDateLbl.Text = betPreview.MatchDate.ToString("dd/MM/yyyy") + betPreview.MatchDate.ToString("HH:mm");
+            previewMatchDateLbl.Text = betPreview.MatchDate.ToString("dd/MM/yyyy") + " - " + betPreview.MatchDate.ToString("HH:mm");
             homeTeamLbl.Text = betPreview.HomeTeam;
             awayTeamLbl.Text = betPreview.AwayTeam;
         }
@@ -47,6 +47,7 @@ namespace BettingSystem.Forms.CustomControls
                 claimBtn.Enabled = true;
                 claimBtn.Text = "Claim Now";
                 claimBtn.Click += ClaimBtn_Click;
+                claimBtn.BackColor = Color.FromArgb(93, 185, 64);
                 return;
             }
             claimBtn.Enabled = false;
@@ -58,13 +59,14 @@ namespace BettingSystem.Forms.CustomControls
             }
 
             claimBtn.BackColor = Color.FromArgb(169, 169, 169);
+            claimBtn.ForeColor = Color.FromArgb(36, 36, 36);
             claimBtn.Text = "Cannot Claim";
         }
 
         private async void ClaimBtn_Click(object? sender, EventArgs e)
         {
             claimBtn.Enabled = false;
-            (bool valid, string message) = await Payment.DepositOrPayoutAsync(CurrentUser, CurrentSlip.Payout, "payout", CurrentSlip.SlipID);
+            (bool valid, string message) = await _payment.DepositOrPayoutAsync(_currentUser, CurrentSlip.Payout, "payout", CurrentSlip.SlipID);
             if (valid)
             {
                 //update slip

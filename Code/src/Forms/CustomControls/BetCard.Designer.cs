@@ -259,6 +259,7 @@
             btnRemove.TabIndex = 3;
             btnRemove.Text = "✕";
             btnRemove.UseVisualStyleBackColor = false;
+            btnRemove.Click += btnRemove_Click;
             // 
             // betRoundedPanel
             // 

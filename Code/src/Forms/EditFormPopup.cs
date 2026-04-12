@@ -6,14 +6,14 @@ namespace BettingSystem.Forms
 {
     public partial class EditFormPopup : Form
     {
-        private AppUser CurrentUser;
-        private readonly DatabaseManager DbManager;
-        private readonly Validation Validator;
+        private AppUser _currentUser;
+        private readonly DatabaseManager _dbManager;
+        private readonly Validation _validator;
         public EditFormPopup(AppUser loggedInUser)
         {
-            DbManager = new DatabaseManager();
-            Validator = new Validation();
-            CurrentUser = loggedInUser;
+            _dbManager = new DatabaseManager();
+            _validator = new Validation();
+            _currentUser = loggedInUser;
 
             InitializeComponent();
             ClearForm();
@@ -29,9 +29,9 @@ namespace BettingSystem.Forms
         }
         private void displayInitialDetails()
         {
-            fNameTextbox.Text = CurrentUser.FirstName;
-            lNameTextbox.Text = CurrentUser.LastName;
-            emailTextbox.Text = CurrentUser.Email;
+            fNameTextbox.Text = _currentUser.FirstName;
+            lNameTextbox.Text = _currentUser.LastName;
+            emailTextbox.Text = _currentUser.Email;
         }
 
         private bool ValidateEntries(string firstName, string lastName, string email)
@@ -49,7 +49,7 @@ namespace BettingSystem.Forms
             valid = ValidateName(lastName, lNameErrorMsg, "Last Name") && valid;
 
             //validate email
-            (bool emailValid, string message) = Validator.CheckEmail(email);
+            (bool emailValid, string message) = _validator.CheckEmail(email);
             if (!emailValid)
             {
                 valid = false;
@@ -62,14 +62,14 @@ namespace BettingSystem.Forms
         private bool ValidateName(string name, Label errorLbl, string fieldName)
         {
             //check number of characters
-            if (!Validator.CheckNameLength(name))
+            if (!_validator.CheckNameLength(name))
             {
                 DisplayErrorMessage(errorLbl, $"{fieldName} must be between 3 and 50 characters");
                 return false;
             }
 
             //check if name contains numbers
-            if (Validator.CheckNumber(name))
+            if (_validator.CheckNumber(name))
             {
                 DisplayErrorMessage(errorLbl, $"{fieldName} cannot contain numbers");
                 return false;
@@ -96,13 +96,13 @@ namespace BettingSystem.Forms
             if (!ValidateEntries(firstName, lastName, email))
                 return;
             
-            (bool valid, string message) = await DbManager.UpdateUserDetailsAsync(CurrentUser.UserID, firstName, lastName, email);
+            (bool valid, string message) = await _dbManager.UpdateUserDetailsAsync(_currentUser.UserID, firstName, lastName, email);
             if (valid)
             {
                 //update user object
-                CurrentUser.FirstName = firstName;
-                CurrentUser.LastName = lastName;
-                CurrentUser.Email = email;
+                _currentUser.FirstName = firstName;
+                _currentUser.LastName = lastName;
+                _currentUser.Email = email;
 
                 DialogResult = DialogResult.OK;
                 this.Close();

@@ -197,13 +197,12 @@
             // 
             selectedMatchDate.Anchor = AnchorStyles.Left;
             selectedMatchDate.CalendarFont = new Font("Times New Roman", 10.125F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            selectedMatchDate.CustomFormat = "dd/MM/yyyy HH:mm";
+            selectedMatchDate.Format = DateTimePickerFormat.Custom;
             selectedMatchDate.Location = new Point(303, 339);
             selectedMatchDate.Name = "selectedMatchDate";
             selectedMatchDate.Size = new Size(214, 23);
             selectedMatchDate.TabIndex = 7;
-            selectedMatchDate.Format = DateTimePickerFormat.Custom;
-            selectedMatchDate.CustomFormat = "dd/MM/yyyy HH:mm";
-            selectedMatchDate.ShowUpDown = false;
             // 
             // ConfirmationBtntableLayoutPanel
             // 
@@ -287,6 +286,7 @@
             Controls.Add(panelBg);
             MinimumSize = new Size(1200, 750);
             Name = "AdminAddMatchPage";
+            StartPosition = FormStartPosition.CenterScreen;
             Text = "AddMatchPage";
             panelBg.ResumeLayout(false);
             contentPanel.ResumeLayout(false);

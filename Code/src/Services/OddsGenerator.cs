@@ -5,8 +5,8 @@ namespace BettingSystem.Services
 {
     public class OddsGenerator
     {
-        private const decimal StandardMargin = 0.93m;
-        private const decimal HighVarianceMargin = 0.85m;
+        private const decimal STANDARD_MARGIN = 0.93m;
+        private const decimal HIGH_VARIANCE_MARGIN = 0.85m;
 
         public OddsGenerator()
         {
@@ -29,9 +29,9 @@ namespace BettingSystem.Services
             drawProbability /= totalProbability;
 
             return new OutcomeOdds(
-                ToOdds(homeProbability, StandardMargin, 1.20m, 15.00m),
-                ToOdds(drawProbability, StandardMargin, 2.00m, 15.00m),
-                ToOdds(awayProbability, StandardMargin, 1.20m, 15.00m));
+                ToOdds(homeProbability, STANDARD_MARGIN, 1.20m, 15.00m),
+                ToOdds(drawProbability, STANDARD_MARGIN, 2.00m, 15.00m),
+                ToOdds(awayProbability, STANDARD_MARGIN, 1.20m, 15.00m));
         }
 
         public OutcomeOdds GenerateOutcomeOdds(TeamRatings homeRatings, TeamRatings awayRatings)
@@ -90,7 +90,7 @@ namespace BettingSystem.Services
             var combinedProbability = PoissonProbability(homeGoals, homeExpected) * PoissonProbability(awayGoals, awayExpected);
             var selection = $"{homeGoals}-{awayGoals}";
 
-            return new GeneratedOdd(gameId, 3, selection, ToOdds(combinedProbability, HighVarianceMargin, 6.0m, 100.0m));
+            return new GeneratedOdd(gameId, 3, selection, ToOdds(combinedProbability, HIGH_VARIANCE_MARGIN, 6.0m, 100.0m));
         }
 
         public decimal GenerateCorrectScoreOdds(int gameId, int homeGoals, int awayGoals, TeamRatings homeRatings, TeamRatings awayRatings)
@@ -136,9 +136,9 @@ namespace BettingSystem.Services
 
             return new List<GeneratedOdd>
             {
-                new(gameId, 2, "1X", ToOdds(homeProbability + drawProbability, StandardMargin, 1.05m, 8.0m)),
-                new(gameId, 2, "12", ToOdds(homeProbability + awayProbability, StandardMargin, 1.05m, 8.0m)),
-                new(gameId, 2, "X2", ToOdds(drawProbability + awayProbability, StandardMargin, 1.05m, 8.0m))
+                new(gameId, 2, "1X", ToOdds(homeProbability + drawProbability, STANDARD_MARGIN, 1.05m, 8.0m)),
+                new(gameId, 2, "12", ToOdds(homeProbability + awayProbability, STANDARD_MARGIN, 1.05m, 8.0m)),
+                new(gameId, 2, "X2", ToOdds(drawProbability + awayProbability, STANDARD_MARGIN, 1.05m, 8.0m))
             };
         }
 
@@ -231,7 +231,7 @@ namespace BettingSystem.Services
                     gameId,
                     6,
                     player.PlayerId.ToString(),
-                    ToOdds(baseProbability, HighVarianceMargin, 3.0m, 50.0m)));
+                    ToOdds(baseProbability, HIGH_VARIANCE_MARGIN, 3.0m, 50.0m)));
             }
 
             return generatedOdds;
@@ -239,7 +239,7 @@ namespace BettingSystem.Services
 
 
         private static GeneratedOdd CreateBinaryMarketOdd(int gameId, int betTypeId, string selection, double probability) =>
-            new(gameId, betTypeId, selection, ToOdds(probability, StandardMargin, 1.20m, 50.0m));
+            new(gameId, betTypeId, selection, ToOdds(probability, STANDARD_MARGIN, 1.20m, 50.0m));
 
         private static double InvertOdds(decimal odds) => odds <= 0 ? 0 : 1d / (double)odds;
 

@@ -52,9 +52,10 @@
             betsFlowLayoutPanel.FlowDirection = FlowDirection.TopDown;
             betsFlowLayoutPanel.Location = new Point(0, 57);
             betsFlowLayoutPanel.Name = "betsFlowLayoutPanel";
-            betsFlowLayoutPanel.Padding = new Padding(15, 10, 15, 10);
+            betsFlowLayoutPanel.Padding = new Padding(15, 10, 15, 20);
             betsFlowLayoutPanel.Size = new Size(832, 488);
             betsFlowLayoutPanel.TabIndex = 4;
+            betsFlowLayoutPanel.WrapContents = false;
             // 
             // betsPopupLbl
             // 
@@ -80,7 +81,7 @@
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "HistoryBetsPopup";
-            StartPosition = FormStartPosition.CenterScreen;
+            StartPosition = FormStartPosition.CenterParent;
             Text = "HistoryBetsPopup";
             panelBg.ResumeLayout(false);
             ResumeLayout(false);
@@ -91,6 +92,5 @@
         private Panel panelBg;
         private Label betsPopupLbl;
         private FlowLayoutPanel betsFlowLayoutPanel;
-        private Label label1;
     }
 }

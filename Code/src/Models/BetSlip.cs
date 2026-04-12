@@ -15,9 +15,15 @@ namespace BettingSystem.Models
             TotalOdds = 1;
         }
 
+
         // add bet or update
-        public string AddBet(Bet bet)
+        public (bool success, string message) AddBet(Bet bet)
         {
+            if (bet.Date <= DateTime.Now)
+            {
+                return (false, "Cannot place bet. Game has already started.");
+            }
+
             // check if bet exists
             foreach (Bet existingBet in Bets)
             {
@@ -28,7 +34,7 @@ namespace BettingSystem.Models
                     existingBet.Selection = bet.Selection;
                     existingBet.OddValue = bet.OddValue;
                     CalculateTotalOdds();
-                    return "Bet updated";
+                    return (true, "Bet updated");
                 }
             }
 
@@ -38,7 +44,7 @@ namespace BettingSystem.Models
             // store node reference 
             bet.Node = node;
             CalculateTotalOdds();
-            return "Bet added";
+            return (true, "Bet added");
         }
 
         // remove bet with node reference
@@ -60,6 +66,7 @@ namespace BettingSystem.Models
             {
                 TotalOdds *= bet.OddValue;
             }
+            TotalOdds = Math.Round(TotalOdds, 3);
         }
 
         // calculate payout if bet is success
@@ -69,26 +76,26 @@ namespace BettingSystem.Models
         }
 
         // remove bets using game id
-        public bool RemoveBetsByGameIds(List<int> gameIds)
+        public int RemoveBetsByGameIds(List<int> gameIds)
         {
             var currentNode = Bets.First;
             int removedBets = 0;
-            int initialBetsNum = Bets.Count;
 
             while (currentNode != null)
             {
+                var next = currentNode.Next;
                 if (gameIds.Contains(currentNode.Value.GameID))
                 {
                     Bets.Remove(currentNode);
                     currentNode.Value.Node = null;
                     removedBets++;
                 }
-                currentNode = currentNode.Next;
+                currentNode = next;
             }
             if (removedBets > 0)
                 CalculateTotalOdds();
 
-            return initialBetsNum != Bets.Count;
+            return removedBets;
         }
     }
 }

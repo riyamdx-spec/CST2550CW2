@@ -2,8 +2,8 @@
 {
     public class ImageLoader
     {
-        private static readonly HttpClient client = new HttpClient();
-        public async Task<Image> GetImageAsync(string url)
+        private static readonly HttpClient _client = new HttpClient();
+        public async Task<Image?> GetImageAsync(string url)
         {
             try
             {
@@ -13,7 +13,7 @@
                     return Image.FromFile(url);
                 }
                 //image from web
-                using (Stream stream = await client.GetStreamAsync(url))
+                using (Stream stream = await _client.GetStreamAsync(url))
                 {
                     return Image.FromStream(stream);
                 }

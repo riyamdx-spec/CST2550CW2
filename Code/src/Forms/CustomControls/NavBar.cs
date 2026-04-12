@@ -4,7 +4,7 @@ namespace BettingSystem.Forms
 {
     public partial class NavBar : UserControl
     {
-        private AppUser CurrentUser;
+        private AppUser _currentUser;
 
         //click events
         public event EventHandler MatchesClicked;
@@ -20,19 +20,19 @@ namespace BettingSystem.Forms
         //display user's name and ballance
         public void SetCurrentUser(AppUser loggedInUser)
         {
-            CurrentUser = loggedInUser;
+            _currentUser = loggedInUser;
             DisplayInfo();
         }
 
         public void DisplayInfo()
         {
-            navDropdownBtn.Text = $"{CurrentUser.FirstName} {CurrentUser.LastName} \n${Math.Round(CurrentUser.WalletBalance, 2)}";
+            navDropdownBtn.Text = $"{_currentUser.FirstName} {_currentUser.LastName} \n${Math.Round(_currentUser.WalletBalance, 2)}";
         }
 
         //open popup for deposit
         private void navDepositBtn_Click(object sender, EventArgs e)
         {
-            WalletPopup walletTransactionPopup = new WalletPopup("Deposit", CurrentUser);
+            WalletPopup walletTransactionPopup = new WalletPopup("Deposit", _currentUser);
             if (walletTransactionPopup.ShowDialog() == DialogResult.OK)
             {
                 DisplayInfo(); //update balance displayed in nav bar

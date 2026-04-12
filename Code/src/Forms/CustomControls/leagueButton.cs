@@ -4,7 +4,7 @@ namespace BettingSystem.Forms.CustomControls
 {
     public partial class leagueButton : UserControl
     {
-        private ImageLoader imageLoader = new ImageLoader();
+        private ImageLoader _imageLoader = new ImageLoader();
 
         public leagueButton()
         {
@@ -27,7 +27,7 @@ namespace BettingSystem.Forms.CustomControls
                 leagueImg.Image.Dispose();
                 leagueImg.Image = null; // Clear existing image while loading new one
             }
-            leagueImg.Image = await imageLoader.GetImageAsync(url);
+            leagueImg.Image = await _imageLoader.GetImageAsync(url);
         }
     }
 }

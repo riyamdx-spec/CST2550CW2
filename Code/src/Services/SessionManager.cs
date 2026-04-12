@@ -14,6 +14,11 @@ namespace BettingSystem.Services
         public MyDictionary<int, GameResult> GameResults { set; get; }
         
         public MyList<BetHistorySlip> HistoryBetSlips { set; get; }
+        public MyList<AppUser> Users { get; set; }
+        public FinancialSummary FinancialSummary { get; set; }
+        public MyList<MonthlyProfitLoss> ProfitLoss { get; set; }
+        public MyList<MonthlyTransactionVolume> TransactionVolume { get; set; }
+        public MyList<BetStatusCount> BetStatus { get; set; }
         public BetSlip UserSlip { set; get;}
 
         private AppUser _currentUser { set; get; }
@@ -25,7 +30,8 @@ namespace BettingSystem.Services
         public bool IsExiting { get; set; }
         public bool IsAdmin { get; set; }
 
-        public Simulator AppSimulator;
+        public Simulator AppSimulator { get; set; }
+        public int RemovedBetCounter { get; set; }
 
         public SessionManager(AppUser currentUser, Simulator appSimulator)
         {
@@ -35,15 +41,17 @@ namespace BettingSystem.Services
             AppSimulator = appSimulator;
             if (_currentUser.Role == "user")
             {
+                RemovedBetCounter = 0;
                 UserSlip = new BetSlip(currentUser.UserID);
                 GameResults = new MyDictionary<int, GameResult>();
+                HistoryBetSlips = new MyList<BetHistorySlip>();
                 IsAdmin = false;
                 return;
             }
             IsAdmin = true;
         }
-        
-        //load data for uer's side
+
+        //load data for user's side
         public async Task FetchUserData()
         {
             Leagues = await _dbManager.FetchLeaguesAsync();
@@ -56,11 +64,18 @@ namespace BettingSystem.Services
         //load data for admin panel
         public async Task FetchAdminData()
         {
+            Users = await _dbManager.FetchAllUsersAsync();
+
             MatchesCollection = await _dbManager.FetchMatchesAsync(true);
             GameResults = await _dbManager.FetchGameResultsAsync(null, true);
             Leagues = await _dbManager.FetchLeaguesAsync();
             TeamsDict = await _dbManager.FetchTeamsAsync(true);
             Players = await _dbManager.FetchPlayersAsync();
+
+            FinancialSummary = await _dbManager.FetchFinancialSummaryAsync();
+            ProfitLoss = await _dbManager.FetchMonthlyProfitLossAsync();
+            TransactionVolume = await _dbManager.FetchMonthlyTransactionVolumeAsync();
+            BetStatus = await _dbManager.FetchBetStatusBreakdownAsync();
         }
 
         public void OpenProfilePage(Form currentForm)
@@ -108,7 +123,7 @@ namespace BettingSystem.Services
         public async Task OpenHistoryPage(Form currentForm) 
         {
             HistoryPage? betHistoryPage = Application.OpenForms.OfType<HistoryPage>().FirstOrDefault();
-            //check if histoty page is already opened
+            //check if history page is already opened
             if (betHistoryPage is null)
             {
                 betHistoryPage = new HistoryPage(_currentUser, this);
@@ -116,7 +131,7 @@ namespace BettingSystem.Services
             else
             {
                 // reinitialise content on page
-                await betHistoryPage.ReInitialisePage();
+                await betHistoryPage.OnShow();
             }
 
             betHistoryPage.Size = currentForm.Size;
@@ -136,7 +151,7 @@ namespace BettingSystem.Services
             else
             {
                 // reinitialise content on page
-                betSlipPage.ReloadSlip();
+                betSlipPage.OnShow();
             }
 
             betSlipPage.Size = currentForm.Size;
@@ -147,7 +162,7 @@ namespace BettingSystem.Services
         }
 
         // forms on admin side
-        public async Task OpenAdminViewUsersPage(Form currentForm)
+        public void OpenAdminViewUsersPage(Form currentForm)
         {
             AdminUsersPage? usersPage = Application.OpenForms.OfType<AdminUsersPage>().FirstOrDefault();
             if (usersPage is null)
@@ -157,7 +172,7 @@ namespace BettingSystem.Services
             else
             {
                 // reinitialise content on page
-                await usersPage.ReloadPage();
+                usersPage.OnShow();
             }
 
             usersPage.Size = currentForm.Size;
@@ -166,7 +181,7 @@ namespace BettingSystem.Services
             currentForm.Hide();
             usersPage.Show();
         }
-        public async Task OpenAdminMatchPage(Form currentForm)
+        public void OpenAdminMatchPage(Form currentForm)
         {
             AdminMatchPage? matchPage = Application.OpenForms.OfType<AdminMatchPage>().FirstOrDefault();
 
@@ -177,7 +192,7 @@ namespace BettingSystem.Services
             else
             {
                 // reinitialise content on page
-                await matchPage.Reset();
+                matchPage.OnShow();
             }
 
             matchPage.Size = currentForm.Size;
@@ -207,7 +222,7 @@ namespace BettingSystem.Services
             addMatchPage.Show();
         }
 
-        public async Task OpenAdminFinancialPage(Form currentForm)
+        public void OpenAdminFinancialPage(Form currentForm)
         {
             AdminFinancialPage? financialPage = Application.OpenForms.OfType<AdminFinancialPage>().FirstOrDefault();
             if (financialPage is null)
@@ -216,8 +231,8 @@ namespace BettingSystem.Services
             }
             else
             {
-                // reinitialise content on page
-                await financialPage.ReloadPage();
+                // reinitialise content on page 
+                financialPage.OnShow();
             }
 
             financialPage.Size = currentForm.Size;
@@ -235,6 +250,9 @@ namespace BettingSystem.Services
                 if (!(activeForm is landingPage))
                     activeForm.Close();
             }
+
+            //clear session in simulator
+            AppSimulator.SetSession(null);
 
             IsLoggingOut = false;
             landingPage? appLandingPage = Application.OpenForms.OfType<landingPage>().FirstOrDefault();

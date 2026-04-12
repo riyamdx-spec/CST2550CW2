@@ -9,45 +9,45 @@ namespace BettingSystem.Forms
 {
     public partial class MainPage : Form
     {
-        private AppUser CurrentUser;
+        private AppUser _currentUser;
 
-        private readonly DatabaseManager DBManager = new DatabaseManager();
-        private readonly ImageLoader ImgLoader = new ImageLoader();
-        private readonly Validation validator = new Validation();
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
+        private readonly ImageLoader _imgLoader = new ImageLoader();
+        private readonly Validation _validator = new Validation();
 
-        private League[] Leagues;
-        private MyDictionary<int, Team> TeamsDict;
-        private MyDictionary<int, MyList<Odd>> Odds;
-        private MyDictionary<int, MyList<Player>> Players;
-        private FootballMatchCollection MatchesCollection;
+        private League[] _leagues;
+        private MyDictionary<int, Team> _teamsDict;
+        private MyDictionary<int, MyList<Odd>> _odds;
+        private MyDictionary<int, MyList<Player>> _players;
+        private FootballMatchCollection _matchesCollection;
 
-        private MatchManager MatchFilter;
-        private SessionManager CurrentSession;
+        private MatchManager _matchFilter;
+        private SessionManager _currentSession;
 
-        private BetSlip UserSlip;
-        private int CurrentMatchId;
-        private int CurrentLeague;
-        private string CurrentSearchTerm="";
+        private BetSlip _userSlip;
+        private FootballMatch? _currentMatch;
+        private int _currentLeague;
+        private string _currentSearchTerm="";
 
-        private readonly MyList<TableLayoutPanel> BtnParentPanel = new MyList<TableLayoutPanel>();
-        private MyList<RoundedButton> BetButtons = new MyList<RoundedButton>();
+        private readonly MyList<TableLayoutPanel> _btnParentPanel = new MyList<TableLayoutPanel>();
+        private MyList<RoundedButton> _betButtons = new MyList<RoundedButton>();
 
         public MainPage(AppUser loggedInUser, SessionManager sessionManager)
         {
-            CurrentUser = loggedInUser;
-            CurrentSession = sessionManager;
+            _currentUser = loggedInUser;
+            _currentSession = sessionManager;
             InitializeComponent();
 
-            navBar1.SetCurrentUser(CurrentUser);
-            UserSlip = CurrentSession.UserSlip;
-            Leagues = CurrentSession.Leagues;
+            navBar1.SetCurrentUser(_currentUser);
+            _userSlip = _currentSession.UserSlip;
+            _leagues = _currentSession.Leagues;
 
-            Players = CurrentSession.Players;
-            TeamsDict = CurrentSession.TeamsDict;
-            MatchesCollection = CurrentSession.MatchesCollection;
+            _players = _currentSession.Players;
+            _teamsDict = _currentSession.TeamsDict;
+            _matchesCollection = _currentSession.MatchesCollection;
 
             // list of panels that contain bet buttons
-            BtnParentPanel = new MyList<TableLayoutPanel> 
+            _btnParentPanel = new MyList<TableLayoutPanel> 
             {   
                 OutcomeTableLayout, 
                 chanceTableLayout, 
@@ -88,30 +88,32 @@ namespace BettingSystem.Forms
 
         private async void MainPage_Load(object sender, EventArgs e)
         {
-            CurrentLeague = 0;
-            MatchFilter = new MatchManager(MatchesCollection, TeamsDict);
-            Odds = await DBManager.FetchOddsAsync();
+            _currentLeague = 0;
+            _matchFilter = new MatchManager(_matchesCollection, _teamsDict);
+            _odds = await _dbManager.FetchOddsAsync();
 
             DisplayLeagueButtons();
 
             //display matches
-            LoadMatches(MatchesCollection.AllMatches);
+            LoadMatches(_matchesCollection.AllMatches);
 
             SetButtonTags();
         }
 
         private void MainPage_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false);
-                if (closingPopup.ShowDialog() == DialogResult.No)
+                DialogResult result = closingPopup.ShowDialog();
+
+                if (result != DialogResult.Yes)
                 {
                     e.Cancel = true;
                 }
                 else
                 {
-                    CurrentSession.IsExiting = true;
+                    _currentSession.IsExiting = true;
                     Application.Exit();
                 }
             }
@@ -119,12 +121,12 @@ namespace BettingSystem.Forms
 
         private void NavBar1_LogoutClicked(object? sender, EventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut)
+            if (!_currentSession.IsLoggingOut)
             {
                 logOutPopup closingPopup = new logOutPopup(true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
                 {
-                    CurrentSession.LogOut(this);
+                    _currentSession.LogOut(this);
                 }
 
             }
@@ -144,7 +146,7 @@ namespace BettingSystem.Forms
 
             leaguePanel.Controls.Add(allMatchBtn);
 
-            foreach (League league in Leagues)
+            foreach (League league in _leagues)
             {
                 leagueButton leagueBtn = new leagueButton();
                 
@@ -183,9 +185,9 @@ namespace BettingSystem.Forms
             foreach (FootballMatch match in footballMatches)
             {
                 // get info to be displayed on the match panel
-                Team homeTeam = TeamsDict[match.HomeTeamID];
-                Team awayTeam = TeamsDict[match.AwayTeamID];
-                string leagueName = Leagues.First(l => l.LeagueId == match.LeagueID).Name;
+                Team homeTeam = _teamsDict[match.HomeTeamID];
+                Team awayTeam = _teamsDict[match.AwayTeamID];
+                string leagueName = _leagues.First(l => l.LeagueId == match.LeagueID).Name;
 
                 MatchDisplayInfo displayInfo = new MatchDisplayInfo(match, homeTeam, awayTeam, leagueName);
                 MatchPanel matchPanel = new MatchPanel(displayInfo);
@@ -203,16 +205,16 @@ namespace BettingSystem.Forms
         //display matches filtered by leagues
         private void FilterByLeagues(int leagueId)
         {
-            MyList<FootballMatch> matchLeagueFiltered = MatchFilter.FilterMatchByLeague(leagueId);
+            MyList<FootballMatch> matchLeagueFiltered = _matchFilter.FilterMatchByLeague(leagueId);
             LoadMatches(matchLeagueFiltered);
         }
 
         //display matches filtered by teams 
         private void FilterByTeams(string searchedTeam)
         {
-            MyList<FootballMatch> matchTeamFiltered = MatchFilter.FilterMatchByTeams(searchedTeam);
+            MyList<FootballMatch> matchTeamFiltered = _matchFilter.FilterMatchByTeams(searchedTeam);
             bannerPanel.Hide();
-            CurrentLeague = -1;
+            _currentLeague = -1;
             LoadMatches(matchTeamFiltered);
         }
 
@@ -220,13 +222,13 @@ namespace BettingSystem.Forms
         private void AllMatchesClicked(object sender, EventArgs e)
         {
             //avoid reloading if user is already viewing all matches
-            if (CurrentLeague == 0)
+            if (_currentLeague == 0)
                 return;
 
-            CurrentLeague = 0;
+            _currentLeague = 0;
             leagueLbl.Text = "All Matches";
             bannerImg.Image = Image.FromFile(@"..\..\..\..\Assets\allMatchBaner.jpg");
-            LoadMatches(MatchesCollection.AllMatches);
+            LoadMatches(_matchesCollection.AllMatches);
         }
 
         //display matches of league selected
@@ -236,10 +238,10 @@ namespace BettingSystem.Forms
             League leagueSelected = (League)(clickedControl).Tag!;
             int leagueId = leagueSelected.LeagueId;
 
-            if (CurrentLeague == leagueId)
+            if (_currentLeague == leagueId)
                 return;
 
-            CurrentLeague = leagueId;
+            _currentLeague = leagueId;
             string leagueName = leagueSelected.Name;
             leagueLbl.Text = "";
             bannerImg.Image = Image.FromFile(Path.Combine("..", "..", "..", "..", "Assets", leagueSelected.BannerPath));
@@ -255,10 +257,10 @@ namespace BettingSystem.Forms
                 if (!String.IsNullOrEmpty(searchedTerm))
                 {
                     //avoid reloading if user is already viewing matches of the team searched
-                    if (string.Equals(searchedTerm, CurrentSearchTerm, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(searchedTerm, _currentSearchTerm, StringComparison.OrdinalIgnoreCase))
                         return;
-                    
-                    CurrentSearchTerm = searchedTerm;
+
+                    _currentSearchTerm = searchedTerm;
                     FilterByTeams(searchbarTextBox.Text.Trim());
                 }
             }
@@ -268,7 +270,7 @@ namespace BettingSystem.Forms
         private void clearSearchIcon_Click(object sender, EventArgs e)
         {
             searchbarTextBox.Clear();
-            CurrentSearchTerm = "";
+            _currentSearchTerm = "";
             matchesFlowLayoutPanel.Hide();
             bannerPanel.Show();
             AllMatchesClicked(sender, e);
@@ -278,10 +280,10 @@ namespace BettingSystem.Forms
         private async void SeeBetsBtnClicked(MatchDisplayInfo MatchDetails)
         {
             //avoid reloading if user is already viewing bets of the match selected
-            if (CurrentMatchId == MatchDetails.CurrentMatch.GameID)
+            if (_currentMatch is not null && (_currentMatch == MatchDetails.CurrentMatch))
                 return;
 
-            CurrentMatchId = MatchDetails.CurrentMatch.GameID;
+            _currentMatch = MatchDetails.CurrentMatch;
             noMatchSelectedPanel.Hide();
             await DisplayBetSelections(MatchDetails);
         }
@@ -289,7 +291,13 @@ namespace BettingSystem.Forms
         //display panel with the bets that can be placed
         private async Task DisplayBetSelections(MatchDisplayInfo MatchDetails)
         {
-            if (!await EnsureOddsLoadedForMatch(CurrentMatchId))
+            if (_currentMatch is null)
+            {
+                new Notification("Please select a match first", NotificationType.Warning, this);
+                return;
+            }
+
+            if (!await EnsureOddsLoadedForMatch(_currentMatch.GameID))
             {
                 new Notification("Odds are not available for this match yet. Please refresh shortly.", NotificationType.Warning, this);
                 MatchSelectedBetsPanel.Visible = false;
@@ -309,8 +317,8 @@ namespace BettingSystem.Forms
         {
             betHomeTeamLbl.Text = MatchDetails.HomeTeam.TeamName;
             betAwayTeamLbl.Text = MatchDetails.AwayTeam.TeamName;
-            betHomeTeamImg.Image = await ImgLoader.GetImageAsync(MatchDetails.HomeTeam.LogoPath);
-            betAwayTeamImg.Image = await ImgLoader.GetImageAsync(MatchDetails.AwayTeam.LogoPath);
+            betHomeTeamImg.Image = await _imgLoader.GetImageAsync(MatchDetails.HomeTeam.LogoPath);
+            betAwayTeamImg.Image = await _imgLoader.GetImageAsync(MatchDetails.AwayTeam.LogoPath);
 
             betLeagueLbl.Text = MatchDetails.LeagueName;
             betMatchDateLbl.Text = MatchDetails.CurrentMatch.GameDate.ToString("dd/MM/yyyy");
@@ -378,13 +386,13 @@ namespace BettingSystem.Forms
             redBtn3.Tag = new BetButtonTag(9, "Over 1.5");
             redBtn4.Tag = new BetButtonTag(9, "Under 1.5");
 
-            foreach (var panel in BtnParentPanel)
+            foreach (var panel in _btnParentPanel)
             {
                 foreach (var button in panel.Controls.OfType<RoundedButton>())
                 {
                     if (button.Tag is BetButtonTag)
                     {
-                        BetButtons.Add(button);
+                        _betButtons.Add(button);
                         button.Click += BetBtnClicked;
 
                     }
@@ -395,7 +403,7 @@ namespace BettingSystem.Forms
         //display odds
         private void DisplayButtonText()
         {
-            foreach (RoundedButton btn in BetButtons)
+            foreach (RoundedButton btn in _betButtons)
             {
                 BetButtonTag btnTagInfo = (BetButtonTag)(btn).Tag!;
                 int betTypeId = btnTagInfo.BetTypeId;
@@ -423,12 +431,12 @@ namespace BettingSystem.Forms
 
             MyList<Player> currentPlayers = new MyList<Player>();
 
-            if (Players.TryGetValue(homeTeamID, out var homePlayers))
+            if (_players.TryGetValue(homeTeamID, out var homePlayers))
             {
                 currentPlayers.AddRange(homePlayers);
             }
 
-            if (Players.TryGetValue(awayTeamID, out var awayPlayers))
+            if (_players.TryGetValue(awayTeamID, out var awayPlayers))
             {
                 currentPlayers.AddRange(awayPlayers);
             }
@@ -473,58 +481,79 @@ namespace BettingSystem.Forms
 
         private void AddToBetSlip(Odd oddObj)
         {
+            if (_currentMatch is null)
+            {
+                new Notification("Please select a match first", NotificationType.Warning, this);
+                return;
+            }
+
             //create bet instance
             Bet newBet = new Bet(
                 oddObj.OddID,
                 oddObj.Selection,
                 oddObj.OddValue,
                 oddObj.BetTypeID,
-                CurrentMatchId
+                _currentMatch.GameID,
+                _currentMatch.GameDate
             );
 
             //add to bet slip
-            string message = UserSlip.AddBet(newBet);
-            new Notification(message, NotificationType.Success, this);
+            (bool success, string message) = _userSlip.AddBet(newBet);
+            NotificationType notif;
+            if (success)
+            {
+                notif = NotificationType.Success;
+            }
+            else
+            {
+                notif = NotificationType.Warning;
+            }
+            new Notification(message, notif, this);
+
         }
 
         //find odd
         private Odd FindOddInstance(int betTypeId, string selection)
         {
+            if (_currentMatch is null)
+                throw new InvalidOperationException("No match selected");
+
             return FindOddInstanceOrNull(betTypeId, selection)
-                   ?? throw new InvalidOperationException($"No odd found for match {CurrentMatchId}, bet type {betTypeId}, selection '{selection}'.");
+                ?? throw new InvalidOperationException($"No odd found for match {_currentMatch.GameID}, bet type {betTypeId}, selection '{selection}'.");
         }
 
         private Odd? FindOddInstanceOrNull(int betTypeId, string selection)
         {
-            if (!Odds.TryGetValue(CurrentMatchId, out var matchOdds))
-            {
+            if (_currentMatch is null)
                 return null;
-            }
+
+            if (!_odds.TryGetValue(_currentMatch.GameID, out var matchOdds))
+                return null;
 
             return matchOdds.FirstOrDefault(o => o.BetTypeID == betTypeId && o.Selection == selection);
         }
 
         private async Task<bool> EnsureOddsLoadedForMatch(int gameId)
         {
-            if (Odds.ContainsKey(gameId))
+            if (_odds.ContainsKey(gameId))
             {
                 return true;
             }
 
-            Odds = await DBManager.FetchOddsAsync();
-            return Odds.ContainsKey(gameId);
+            _odds = await _dbManager.FetchOddsAsync();
+            return _odds.ContainsKey(gameId);
         }
 
         //open profile page
         private void NavBar1_AccountClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenProfilePage(this);
+            _currentSession.OpenProfilePage(this);
         }
 
         //open bet slip page
         private void NavBar1_BetSlipClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenBetSlipPage(this);
+            _currentSession.OpenBetSlipPage(this);
         }
 
         //update width of matchesPanel dynamically
@@ -543,14 +572,14 @@ namespace BettingSystem.Forms
             matchesFlowLayoutPanel.Controls.Clear();
             MatchSelectedBetsPanel.Hide();
             noMatchSelectedPanel.Show();
-            CurrentMatchId = -1;
+            _currentMatch = null;
         }
 
         //fetch from database to refresh matches info
         private async void refreshIcon_Click(object sender, EventArgs e)
         {
-            MatchFilter = new MatchManager(MatchesCollection, TeamsDict);
-            Odds = await DBManager.FetchOddsAsync();
+            _matchFilter = new MatchManager(_matchesCollection, _teamsDict);
+            _odds = await _dbManager.FetchOddsAsync();
             ReInitialise();
         }
 
@@ -558,7 +587,7 @@ namespace BettingSystem.Forms
         public void ReInitialise()
         {
             searchbarTextBox.Text = "";
-            CurrentSearchTerm = "";
+            _currentSearchTerm = "";
             homeScoreTxt.Text ="";
             awayScoreTxt.Text = "";
             scoreOddLbl.Visible = false;
@@ -566,8 +595,9 @@ namespace BettingSystem.Forms
             noMatchSelectedPanel.Show();
             MatchSelectedBetsPanel.Hide();
             AllMatchesClicked(null, null);
-            CurrentLeague = 0;
-            CurrentMatchId = -1;
+            _currentLeague = -1;
+            _currentMatch = null;
+            navBar1.SetCurrentUser(_currentUser);
         }
 
         private async void confirmScoreBet_Click(object sender, EventArgs e)
@@ -585,23 +615,12 @@ namespace BettingSystem.Forms
                 return;
             }
 
-            (bool valid, string? message) = validator.CheckScores(homeScore, awayScore);
+            (bool valid, string? message) = _validator.CheckScores(homeScore, awayScore);
             if (valid) 
             {
-                if (CurrentMatchId <= 0)
+                if (_currentMatch is null)
                 {
                     scoreOddLbl.Text = "Please select a match before adding a score bet";
-                    scoreOddLbl.ForeColor = Color.Firebrick;
-                    scoreOddLbl.Visible = true;
-                    return;
-                }
-
-                FootballMatch? selectedMatch = MatchesCollection.AllMatches
-                    .FirstOrDefault(match => match.GameID == CurrentMatchId);
-
-                if (selectedMatch is null)
-                {
-                    scoreOddLbl.Text = "Selected match details could not be found";
                     scoreOddLbl.ForeColor = Color.Firebrick;
                     scoreOddLbl.Visible = true;
                     return;
@@ -610,13 +629,13 @@ namespace BettingSystem.Forms
                 int homeGoals = int.Parse(homeScore);
                 int awayGoals = int.Parse(awayScore);
 
-                Odd? scoreOdd = await DBManager.GetOrCreateCorrectScoreOddAsync(
-                    CurrentMatchId,
+                Odd? scoreOdd = await _dbManager.GetOrCreateCorrectScoreOddAsync(
+                    _currentMatch.GameID,
                     homeGoals,
                     awayGoals,
-                    selectedMatch.HomeTeamID,
-                    selectedMatch.AwayTeamID,
-                    selectedMatch.LeagueID);
+                    _currentMatch.HomeTeamID,
+                    _currentMatch.AwayTeamID,
+                    _currentMatch.LeagueID);
 
                 if (scoreOdd is null)
                 {
@@ -626,16 +645,16 @@ namespace BettingSystem.Forms
                     return;
                 }
 
-                if (!Odds.TryGetValue(CurrentMatchId, out var matchOdds))
+                if (!_odds.TryGetValue(_currentMatch.GameID, out var matchOdds))
                 {
                     matchOdds = new MyList<Odd>();
-                    Odds[CurrentMatchId] = matchOdds;
+                    _odds[_currentMatch.GameID] = matchOdds;
                 }
 
                 matchOdds.RemoveAll(odd => odd.BetTypeID == scoreOdd.BetTypeID && odd.Selection == scoreOdd.Selection);
                 matchOdds.Add(scoreOdd);
 
-                scoreOddLbl.Text = scoreOdd.OddValue.ToString();
+                scoreOddLbl.Text = (Math.Round(scoreOdd.OddValue, 2)).ToString();
                 scoreOddLbl.ForeColor = Color.FromArgb(93, 185, 64);
                 scoreOddLbl.Visible = true;
 

@@ -5,20 +5,20 @@ namespace BettingSystem.Services
 {
     public class MatchManager
     {
-        private FootballMatchCollection MatchCollections;
-        private MyDictionary<int, Team> TeamsById;
+        private FootballMatchCollection _matchCollections;
+        private MyDictionary<int, Team> _teamsById;
 
         public MatchManager(FootballMatchCollection matchCollection, MyDictionary<int, Team> teamDict)
         {
-            MatchCollections = matchCollection;
-            TeamsById = teamDict;
+            _matchCollections = matchCollection;
+            _teamsById = teamDict;
         }
 
         //filter matches by leagues 
         public MyList<FootballMatch> FilterMatchByLeague(int leagueID)
         {
             //get matches for that league
-            if (MatchCollections.MatchesByLeague.TryGetValue(leagueID, out var leagueMatches))
+            if (_matchCollections.MatchesByLeague.TryGetValue(leagueID, out var leagueMatches))
             {
                 return leagueMatches;
             }
@@ -30,10 +30,10 @@ namespace BettingSystem.Services
         public MyList<FootballMatch> FilterMatchByTeams(string searchedTeamName, MyList<FootballMatch>? matches=null)
         {
             if (matches == null)
-                matches = MatchCollections.AllMatches;
+                matches = _matchCollections.AllMatches;
 
             //get ids of teams with name containing the searched term
-            HashSet<int> teamIds = TeamsById
+            HashSet<int> teamIds = _teamsById
                 .Where(t => t.Value.TeamName.Contains(searchedTeamName, StringComparison.InvariantCultureIgnoreCase))
                 .Select(t => t.Key)
                 .ToHashSet();

@@ -8,36 +8,42 @@ namespace BettingSystem.Forms
 {
     public partial class BetSlipPage : BaseForm
     {
-        private AppUser CurrentUser;
-        private SessionManager CurrentSession;
-        private BetSlip UserSlip;
-        private FootballMatchCollection MatchesCollection;
-        private MyDictionary<int, Team> TeamsDict;
-        private League[] Leagues;
+        private AppUser _currentUser;
+        private SessionManager _currentSession;
+        private BetSlip _userSlip;
+        private FootballMatchCollection _matchesCollection;
+        private MyDictionary<int, Team> _teamsDict;
+        private MyDictionary<int, MyList<Player>> _players;
+        private League[] _leagues;
 
-        private readonly DatabaseManager DBManager = new DatabaseManager();
+        private readonly DatabaseManager _dbManager = new DatabaseManager();
 
-        private Dictionary<int, string> BetTypeNames;
+        private Dictionary<int, string> _betTypeNames;
 
         public BetSlipPage(AppUser user, SessionManager session)
         {
             InitializeComponent();
-            CurrentUser = user;
-            CurrentSession = session;
-            UserSlip = session.UserSlip;
-            MatchesCollection = session.MatchesCollection;
-            TeamsDict = session.TeamsDict;
-            Leagues = session.Leagues;
+            _currentUser = user;
+            _currentSession = session;
+            _userSlip = session.UserSlip;
+            _matchesCollection = session.MatchesCollection;
+            _teamsDict = session.TeamsDict;
+            _players = session.Players;
+            _leagues = session.Leagues;
 
-            navBar1.SetCurrentUser(CurrentUser);
+            navBar1.SetCurrentUser(_currentUser);
             navBar1.MatchesClicked += NavBar1_MatchesClicked;
             navBar1.AccountClicked += NavBar1_AccountClicked;
             navBar1.LogoutClicked += NavBar1_LogoutClicked;
 
+            txtStake.TextChanged += txtStake_TextChanged;
+            btnPlaceBet.Click += btnPlaceBet_Click;
+
             this.Load += BetSlipPage_Load;
             this.FormClosing += BetSlipPage_FormClosing;
+            pnlSlipList.SizeChanged += UpdateSlipPanel;
 
-            CurrentSession.AppSimulator.BetSlipUpdated += AppSimulator_BetSlipUpdated;
+            _currentSession.AppSimulator.BetSlipUpdated += AppSimulator_BetSlipUpdated;
         }
 
         private void AppSimulator_BetSlipUpdated()
@@ -52,18 +58,43 @@ namespace BettingSystem.Forms
             ReloadSlip();
         }
 
+        private void UpdateSlipPanel(object sender, EventArgs e)
+        {
+            if (!_userSlip.Bets.Any())
+            {
+                // resize empty label if present
+                if (pnlSlipList.Controls.Count > 0 && pnlSlipList.Controls[0] is Label lbl)
+                {
+                    lbl.Size = new Size(
+                        pnlSlipList.ClientSize.Width - pnlSlipList.Padding.Horizontal,
+                        pnlSlipList.ClientSize.Height - pnlSlipList.Padding.Vertical
+                    );
+                }
+                return;
+            }
+
+            pnlSlipList.SuspendLayout();
+            foreach (Control pnl in pnlSlipList.Controls)
+            {
+                pnl.Width = pnlSlipList.ClientSize.Width - pnlSlipList.Padding.Horizontal - 5;
+            }
+            pnlSlipList.ResumeLayout();
+        }
+
         private void BetSlipPage_FormClosing(object? sender, FormClosingEventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut && !CurrentSession.IsExiting)
+            if (!_currentSession.IsLoggingOut && !_currentSession.IsExiting)
             {
                 logOutPopup closingPopup = new logOutPopup(false, true);
-                if (closingPopup.ShowDialog() == DialogResult.No)
+                DialogResult result = closingPopup.ShowDialog();
+
+                if (result != DialogResult.Yes)
                 {
                     e.Cancel = true;
                 }
                 else
                 {
-                    CurrentSession.IsExiting = true;
+                    _currentSession.IsExiting = true;
                     Application.Exit();
                 }
             }
@@ -71,86 +102,149 @@ namespace BettingSystem.Forms
 
         private void NavBar1_LogoutClicked(object? sender, EventArgs e)
         {
-            if (!CurrentSession.IsLoggingOut)
+            if (!_currentSession.IsLoggingOut)
             {
                 logOutPopup closingPopup = new logOutPopup(true);
                 if (closingPopup.ShowDialog() == DialogResult.Yes)
-                    CurrentSession.LogOut(this);
+                    _currentSession.LogOut(this);
             }
         }
 
         private async void BetSlipPage_Load(object sender, EventArgs e)
         {
-            BetTypeNames = await DBManager.FetchBetTypesAsync();
+            _betTypeNames = await _dbManager.FetchBetTypesAsync();
             CaptureBaseLayout();
             LoadBetSlips();
+            DisplayRemovedBets();
         }
 
-        public void ReloadSlip()
+        public void OnShow()
         {
-            UserSlip = CurrentSession.UserSlip;
+            //subscribe to simulator event
+            _currentSession.AppSimulator.BetSlipUpdated += AppSimulator_BetSlipUpdated;
+            ReloadSlip();
+        }
+        public void OnHide()
+        {
+            //unsubscribe to simulator event
+            _currentSession.AppSimulator.BetSlipUpdated -= AppSimulator_BetSlipUpdated;
+        }
+
+        private void ReloadSlip()
+        {
+            _userSlip = _currentSession.UserSlip;
+            navBar1.SetCurrentUser(_currentUser);
             LoadBetSlips();
-            UpdateSummary();
+            DisplayRemovedBets();
+        }
+
+        //display number of bets removed from slip by Simulator
+        private void DisplayRemovedBets()
+        {
+            if (_currentSession.RemovedBetCounter > 0)
+            {
+                new Notification($"{_currentSession.RemovedBetCounter} bet(s) were removed as their match(es) started", NotificationType.Warning, this);
+                _currentSession.RemovedBetCounter = 0;
+            }
         }
 
         private void LoadBetSlips()
         {
+            //clear stake
+            txtStake.Clear();
             pnlSlipList.Controls.Clear();
-            if (!UserSlip.Bets.Any())
+            pnlSummaryContainer.Hide();
+
+            if (!_userSlip.Bets.Any())
             {
                 Label emptyLbl = new Label();
                 emptyLbl.Text = "Your bet slip is empty.";
                 emptyLbl.Font = new Font("Times New Roman", 22, FontStyle.Bold);
                 emptyLbl.ForeColor = Color.FromArgb(241, 241, 241);
                 emptyLbl.Height = 300;
+                emptyLbl.Size = new Size(
+                    pnlSlipList.ClientSize.Width - pnlSlipList.Padding.Horizontal,
+                    pnlSlipList.ClientSize.Height - pnlSlipList.Padding.Vertical
+                );
                 emptyLbl.TextAlign = ContentAlignment.MiddleCenter;
-                emptyLbl.Dock = DockStyle.Fill;
+                emptyLbl.Dock = DockStyle.None;
                 pnlSlipList.Controls.Add(emptyLbl);
-                pnlSummaryContainer.Hide();
                 return;
-
             }
 
-            foreach (Bet bet in UserSlip.Bets)
+            foreach (Bet bet in _userSlip.Bets)
             {
-                FootballMatch match = MatchesCollection.AllMatches
-                    .First(m => m.GameID == bet.GameID);
+                FootballMatch? match = _matchesCollection.AllMatches
+                    .FirstOrDefault(m => m.GameID == bet.GameID);
 
-                Team homeTeam = TeamsDict[match.HomeTeamID];
-                Team awayTeam = TeamsDict[match.AwayTeamID];
-                string leagueName = Leagues.First(l => l.LeagueId == match.LeagueID).Name;
-                string betTypeName = BetTypeNames.TryGetValue(bet.BetTypeID, out string? name) ? name : "Unknown";
+                if (match is null)
+                {
+                    continue;
+                }
 
+                Team homeTeam = _teamsDict[match.HomeTeamID];
+                Team awayTeam = _teamsDict[match.AwayTeamID];
+                string leagueName = _leagues.First(l => l.LeagueId == match.LeagueID).Name;
+                string betTypeName = _betTypeNames.TryGetValue(bet.BetTypeID, out string? name) ? name : "Unknown";
+                string userSelection;
+
+                // get player's name
+                if (bet.BetTypeID == 6)
+                {
+                    MyList<Player> playerList = GetPlayers(homeTeam.TeamId, awayTeam.TeamId);
+                    userSelection = playerList.FirstOrDefault(p => p.PlayerId == int.Parse(bet.Selection))?.Name ?? "Unknown";
+                }
+                else
+                {
+                    userSelection = bet.Selection;
+                }
                 var card = new BetCard();
                 card.SetData(
                     leagueName,
                     homeTeam.TeamName,
                     awayTeam.TeamName,
                     betTypeName,
-                    bet.Selection,
+                    userSelection,
                     bet.OddValue.ToString("F2"),
                     match.GameDate
                 );
                 card.OnRemove += () =>
                 {
-                    UserSlip.RemoveBet(bet);
+                    pnlSlipList.SuspendLayout();
+                    _userSlip.RemoveBet(bet);
                     pnlSlipList.Controls.Remove(card);
                     card.Dispose();
+                    pnlSlipList.ResumeLayout();
 
                     // show empty message if no bets left
-                    if (!UserSlip.Bets.Any())
+                    if (!_userSlip.Bets.Any())
                         LoadBetSlips();
                 };
-                AddCard(card);
+                card.Margin = new Padding(0, 15, 0, 15);
+                pnlSlipList.Controls.Add(card);
             }
-
+            UpdateSlipPanel(null, null);
             UpdateSummary();
         }
 
+        private MyList<Player> GetPlayers(int homeId, int awayId)
+        {
+            MyList<Player> gamePlayers = new MyList<Player>();
+
+            if (_players.TryGetValue(homeId, out var homePlayers))
+            {
+                gamePlayers.AddRange(homePlayers);
+            }
+            if (_players.TryGetValue(awayId, out var awayPlayers))
+            {
+                gamePlayers.AddRange(awayPlayers);
+            }
+            return gamePlayers;
+        }
         private void UpdateSummary()
         {
-            lblTotalOdds.Text = UserSlip.TotalOdds.ToString("F2");
-            lblPayout.Text = $"${UserSlip.CalculatePayout():F2}";
+            lblTotalOdds.Text = _userSlip.TotalOdds.ToString("F2");
+            lblPayout.Text = $"${_userSlip.CalculatePayout():F2}";
             pnlSummaryContainer.Show();
         }
 
@@ -158,12 +252,12 @@ namespace BettingSystem.Forms
         {
             if (decimal.TryParse(txtStake.Text, out decimal stake))
             {
-                UserSlip.Stake = stake;
-                lblPayout.Text = $"${UserSlip.CalculatePayout():F2}";
+                _userSlip.Stake = stake;
+                lblPayout.Text = $"${_userSlip.CalculatePayout():F2}";
             }
             else
             {
-                UserSlip.Stake = 0;
+                _userSlip.Stake = 0;
                 lblPayout.Text = "$0.00";
             }
         }
@@ -171,9 +265,18 @@ namespace BettingSystem.Forms
         private async void btnPlaceBet_Click(object sender, EventArgs e)
         {
             // validate slip is not empty
-            if (!UserSlip.Bets.Any())
+            if (!_userSlip.Bets.Any())
             {
                 new Notification("Your bet slip is empty.", NotificationType.Error, this);
+                return;
+            }
+
+            var startedBets = _userSlip.Bets.Where(b => b.Date <= DateTime.Now).ToList();
+
+            // check if match has already started before confirming bet slip
+            if (startedBets.Any())
+            {
+                new Notification("Cannot place bet. One or more matches have already started.", NotificationType.Error, this);
                 return;
             }
 
@@ -185,18 +288,18 @@ namespace BettingSystem.Forms
             }
 
             // check user has enough balance
-            if (stake > CurrentUser.WalletBalance)
+            if (stake > _currentUser.WalletBalance)
             {
                 new Notification("Insufficient balance.", NotificationType.Error, this);
                 return;
             }
 
-            UserSlip.Stake = stake;
+            _userSlip.Stake = stake;
 
             btnPlaceBet.Enabled = false;
 
             // save bet slip to database
-            (bool success, string message) = await DBManager.SaveBetSlipAsync(UserSlip);
+            (bool success, string message) = await _dbManager.SaveBetSlipAsync(_userSlip);
 
             if (!success)
             {
@@ -206,9 +309,9 @@ namespace BettingSystem.Forms
             }
 
             // deduct stake from wallet
-            decimal newBalance = CurrentUser.WalletBalance - stake;
-            bool walletUpdated = await DBManager.ProcessWalletTransactionAsync(
-                CurrentUser.UserID,
+            decimal newBalance = _currentUser.WalletBalance - stake;
+            bool walletUpdated = await _dbManager.ProcessWalletTransactionAsync(
+                _currentUser.UserID,
                 "bet",
                 newBalance,
                 stake
@@ -222,46 +325,33 @@ namespace BettingSystem.Forms
             }
 
             // update balance in memory
-            CurrentUser.WalletBalance = newBalance;
+            _currentUser.WalletBalance = newBalance;
             navBar1.DisplayInfo();
 
             // reset slip
-            UserSlip.Bets.Clear();
-            UserSlip.Stake = 0;
+            _userSlip.Bets.Clear();
+            _userSlip.Stake = 0;
 
             // show confirmation
             new Notification("Bet placed successfully!", NotificationType.Success, this);
 
             // reload to show empty state
             LoadBetSlips();
+            UpdateSummary();
             txtStake.Clear();
             btnPlaceBet.Enabled = true;
         }
 
-        private void AddCard(BetCard card)
-        {
-            card.Dock = DockStyle.Top;
-            card.Margin = new Padding(0);
-
-            // spacer panel for gap between cards
-            Panel spacer = new Panel();
-            spacer.Dock = DockStyle.Top;
-            spacer.Height = 15;
-            spacer.BackColor = Color.Transparent;
-
-            // add spacer first, then card 
-            pnlSlipList.Controls.Add(spacer);
-            pnlSlipList.Controls.Add(card);
-        }
-
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenMainPage(this);
+            OnHide();
+            _currentSession.OpenMainPage(this);
         }
 
         private void NavBar1_AccountClicked(object? sender, EventArgs e)
         {
-            CurrentSession.OpenProfilePage(this);
+            OnHide();
+            _currentSession.OpenProfilePage(this);
         }
     }
 }

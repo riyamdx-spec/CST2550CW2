@@ -6,11 +6,11 @@ namespace BettingSystem.Services
     //handle adding and retrieving money from digital wallet
     public class WalletService
     {
-        private readonly DatabaseManager DBManager;
+        private readonly DatabaseManager _dbManager;
 
         public WalletService()
         {
-            DBManager = new DatabaseManager();
+            _dbManager = new DatabaseManager();
         }
 
         //add money to wallet during deposit or payout
@@ -28,7 +28,7 @@ namespace BettingSystem.Services
             decimal newAmount = currentUser.WalletBalance + amount;
 
             //update user's wallet and record transaction in database 
-            bool success = await DBManager.ProcessWalletTransactionAsync(currentUser.UserID, transactionType, newAmount, amount, slipId);
+            bool success = await _dbManager.ProcessWalletTransactionAsync(currentUser.UserID, transactionType, newAmount, amount, slipId);
 
             if (!success)
                 return (false, "Failed to process your transaction. Please try again.");
@@ -61,7 +61,7 @@ namespace BettingSystem.Services
             decimal newAmount = currentUser.WalletBalance - amount;
 
             //update user's wallet and record transaction in database 
-            bool success = await DBManager.ProcessWalletTransactionAsync(currentUser.UserID, transactionType, newAmount, amount);
+            bool success = await _dbManager.ProcessWalletTransactionAsync(currentUser.UserID, transactionType, newAmount, amount);
 
             if (!success)
                 return (false, "Failed to process your transaction. Please try again.");
