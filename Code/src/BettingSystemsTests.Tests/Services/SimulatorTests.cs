@@ -5,9 +5,15 @@ using BettingSystem.Services;
 
 namespace BettingSystemsTests.Services;
 
+/// <summary>
+/// Covers simulator in-memory update paths and emitted events for admin and user sessions.
+/// </summary>
 [TestClass]
 public class SimulatorTests
 {
+	/// <summary>
+	/// Creates a test user with a selectable role.
+	/// </summary>
 	private static AppUser CreateUser(string role = "user")
 	{
 		return new AppUser(
@@ -22,6 +28,9 @@ public class SimulatorTests
 			status: "active");
 	}
 
+	/// <summary>
+	/// Builds a non-admin session containing two scheduled matches.
+	/// </summary>
 	private static SessionManager CreateUserSessionWithMatches()
 	{
 		var session = new SessionManager(CreateUser(), new Simulator())
@@ -46,6 +55,9 @@ public class SimulatorTests
 		return session;
 	}
 
+	/// <summary>
+	/// Builds an admin session containing three scheduled matches.
+	/// </summary>
 	private static SessionManager CreateAdminSessionWithMatches()
 	{
 		var session = new SessionManager(CreateUser("admin"), new Simulator())
@@ -62,6 +74,9 @@ public class SimulatorTests
 		return session;
 	}
 
+	/// <summary>
+	/// Invokes a private simulator method to test isolated update logic.
+	/// </summary>
 	private static void InvokePrivateMethod(object target, string methodName, params object[] parameters)
 	{
 		MethodInfo? method = target.GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
@@ -69,6 +84,10 @@ public class SimulatorTests
 		method.Invoke(target, parameters);
 	}
 
+	/// <summary>
+	/// Verifies that UpdateAdminSide marks the supplied matches as Started and Completed,
+	/// and fires the MatchStatusUpdated event exactly once.
+	/// </summary>
 	[TestMethod]
 	public void UpdateAdminSide_UpdatesStatuses_AndRaisesMatchStatusEvent()
 	{
@@ -93,6 +112,10 @@ public class SimulatorTests
 		Assert.AreEqual(1, statusUpdatedCalls);
 	}
 
+	/// <summary>
+	/// Verifies that UpdateMemory removes started matches from all in-memory collections,
+	/// updates bet and slip statuses in history, and raises BetSlipUpdated and HistoryUpdated events.
+	/// </summary>
 	[TestMethod]
 	public void UpdateMemory_RemovesStartedMatches_UpdatesHistory_AndRaisesEvents()
 	{
@@ -100,11 +123,11 @@ public class SimulatorTests
 		var session = CreateUserSessionWithMatches();
 		simulator.SetSession(session);
 
-		session.UserSlip.AddBet(new Bet(1, "Home Win", 2.00m, 1, 1));
-		session.UserSlip.AddBet(new Bet(2, "Away Win", 3.00m, 1, 2));
+		session.UserSlip.AddBet(new Bet(1, "Home Win", 2.00m, 1, 1, DateTime.Today));
+		session.UserSlip.AddBet(new Bet(2, "Away Win", 3.00m, 1, 2, DateTime.Today));
 
 		var historySlip = new BetHistorySlip(500, 1, DateTime.Today, 10m, 2m, 20m, "Pending", false);
-		var historyBet = new HistoryBet(900, "Home Win", 2m, 1, "Match Winner", "Pending", "A", "B", DateTime.Today, "League", 1);
+		var historyBet = new HistoryBet(900, "Home Win", 2m, 1, "Match Winner", "Pending", "A", "B", DateTime.Today, "League", 1, 10, 20);
 		historySlip.Bets.Add(historyBet);
 		session.HistoryBetSlips.Add(historySlip);
 
@@ -141,6 +164,10 @@ public class SimulatorTests
 		Assert.AreEqual(1, historyUpdatedCalls);
 	}
 
+	/// <summary>
+	/// Verifies that UpdateMemory raises no events and leaves all collections unchanged
+	/// when both the started and completed ID lists are empty.
+	/// </summary>
 	[TestMethod]
 	public void UpdateMemory_NoChanges_DoesNotRaiseEvents()
 	{
