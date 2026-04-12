@@ -123,11 +123,11 @@ public class SimulatorTests
 		var session = CreateUserSessionWithMatches();
 		simulator.SetSession(session);
 
-		session.UserSlip.AddBet(new Bet(1, "Home Win", 2.00m, 1, 1, DateTime.Today));
-		session.UserSlip.AddBet(new Bet(2, "Away Win", 3.00m, 1, 2, DateTime.Today));
+		session.UserSlip.AddBet(new Bet(1, "Home Win", 2.00m, 1, 1));
+		session.UserSlip.AddBet(new Bet(2, "Away Win", 3.00m, 1, 2));
 
 		var historySlip = new BetHistorySlip(500, 1, DateTime.Today, 10m, 2m, 20m, "Pending", false);
-		var historyBet = new HistoryBet(900, "Home Win", 2m, 1, "Match Winner", "Pending", "A", "B", DateTime.Today, "League", 1, 10, 20);
+		var historyBet = new HistoryBet(900, "Home Win", 2m, 1, "Match Winner", "Pending", "A", "B", DateTime.Today, "League", 1);
 		historySlip.Bets.Add(historyBet);
 		session.HistoryBetSlips.Add(historySlip);
 
