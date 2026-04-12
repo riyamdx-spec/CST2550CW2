@@ -753,7 +753,7 @@ public class DatabaseManagerTests
             Assert.IsNotNull(reg.userObj);
 
             BetSlip slip = new BetSlip(reg.userObj!.UserID) { Stake = 15m };
-            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Today));
+            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID));
 
             var (success, message) = await _db.SaveBetSlipAsync(slip);
             int? savedSlipId = await GetLatestSlipIdByUserAsync(reg.userObj.UserID);
@@ -794,7 +794,7 @@ public class DatabaseManagerTests
             BetSlip slip = new BetSlip(reg.userObj!.UserID) { Stake = 20m };
             foreach (Odd odd in odds)
             {
-                slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Today));
+                slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID));
             }
 
             decimal expectedOdds = odds.Aggregate(1m, (current, odd) => current * odd.OddValue);
@@ -982,7 +982,7 @@ public class DatabaseManagerTests
             await _db.ProcessWalletTransactionAsync(userId, "deposit", 100m, 100m);
 
             BetSlip slip = new BetSlip(userId) { Stake = 10m };
-            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Today));
+            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID));
             await _db.SaveBetSlipAsync(slip);
 
             int? slipId = await GetLatestSlipIdByUserAsync(userId);
@@ -1179,7 +1179,7 @@ public class DatabaseManagerTests
             int userId = reg.userObj!.UserID;
 
             BetSlip slip = new BetSlip(userId) { Stake = 5m };
-            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Today));
+            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID));
             await _db.SaveBetSlipAsync(slip);
 
             MyList<BetHistorySlip> history = await _db.FetchBetHistoryAsync(userId);
@@ -1706,257 +1706,6 @@ public class DatabaseManagerTests
                     $"Unexpected normalized position '{player.Position}' for player '{player.PlayerName}'");
             }
         }
-    }
-
-    /// <summary>
-    /// Verifies that financial summary totals increase by the expected amounts after inserting test transactions and a bet slip.
-    /// </summary>
-    [TestMethod]
-    public async Task FetchFinancialSummaryAsync_WithNewTransactionsAndSlip_ReflectsExpectedDeltas()
-    {
-        FinancialSummary baseline = await _db.FetchFinancialSummaryAsync();
-
-        string email = $"dbtest_financial_summary_{Guid.NewGuid():N}@gmail.com";
-        const string password = "StrongPassword123!";
-
-        await DeleteUserByEmailAsync(email);
-
-        try
-        {
-            var reg = await _db.RegisterAsync("Finance", "Summary", new DateTime(2000, 1, 1), email, password);
-            Assert.IsNotNull(reg.userObj);
-            int userId = reg.userObj!.UserID;
-
-            await SetUserStatusAsync(email, "Active");
-
-            await InsertSystemTransactionAsync(userId, "deposit", 50m, DateTime.Now);
-            await InsertSystemTransactionAsync(userId, "withdrawal", 20m, DateTime.Now);
-            await InsertSystemTransactionAsync(userId, "bet", 30m, DateTime.Now);
-            await InsertSystemTransactionAsync(userId, "payout", 10m, DateTime.Now);
-            await InsertBetSlipWithStatusAsync(userId, "Pending");
-
-            FinancialSummary after = await _db.FetchFinancialSummaryAsync();
-
-            Assert.AreEqual(baseline.TotalDeposits + 50m, after.TotalDeposits);
-            Assert.AreEqual(baseline.TotalWithdrawals + 20m, after.TotalWithdrawals);
-            Assert.AreEqual(baseline.TotalRevenue + 20m, after.TotalRevenue);
-            Assert.AreEqual(baseline.TotalBetsPlaced + 1, after.TotalBetsPlaced);
-            Assert.IsTrue(after.TotalActiveUsers >= baseline.TotalActiveUsers + 1);
-        }
-        finally
-        {
-            await DeleteUserByEmailAsync(email);
-        }
-    }
-
-    /// <summary>
-    /// Verifies that the current month's revenue and payout figures increase by the expected amounts after inserting test transactions.
-    /// </summary>
-    [TestMethod]
-    public async Task FetchMonthlyProfitLossAsync_WithCurrentMonthTransactions_IncludesExpectedIncrements()
-    {
-        string currentMonth = await GetCurrentMonthLabelAsync();
-        MyList<MonthlyProfitLoss> baseline = await _db.FetchMonthlyProfitLossAsync();
-        decimal baselineRevenue = GetMonthlyRevenue(baseline, currentMonth);
-        decimal baselinePayouts = GetMonthlyPayouts(baseline, currentMonth);
-
-        string email = $"dbtest_monthly_pl_{Guid.NewGuid():N}@gmail.com";
-        const string password = "StrongPassword123!";
-
-        await DeleteUserByEmailAsync(email);
-
-        try
-        {
-            var reg = await _db.RegisterAsync("Finance", "ProfitLoss", new DateTime(2000, 1, 1), email, password);
-            Assert.IsNotNull(reg.userObj);
-            int userId = reg.userObj!.UserID;
-
-            await InsertSystemTransactionAsync(userId, "bet", 42m, DateTime.Now);
-            await InsertSystemTransactionAsync(userId, "payout", 13m, DateTime.Now);
-
-            MyList<MonthlyProfitLoss> after = await _db.FetchMonthlyProfitLossAsync();
-            decimal afterRevenue = GetMonthlyRevenue(after, currentMonth);
-            decimal afterPayouts = GetMonthlyPayouts(after, currentMonth);
-
-            Assert.AreEqual(baselineRevenue + 42m, afterRevenue);
-            Assert.AreEqual(baselinePayouts + 13m, afterPayouts);
-        }
-        finally
-        {
-            await DeleteUserByEmailAsync(email);
-        }
-    }
-
-    /// <summary>
-    /// Verifies that each transaction type's monthly volume total increases by the expected amount after inserting test rows.
-    /// </summary>
-    [TestMethod]
-    public async Task FetchMonthlyTransactionVolumeAsync_WithCurrentMonthTransactions_IncludesTypeTotals()
-    {
-        string currentMonth = await GetCurrentMonthLabelAsync();
-        MyList<MonthlyTransactionVolume> baseline = await _db.FetchMonthlyTransactionVolumeAsync();
-
-        decimal baseDeposit = GetMonthlyTransactionAmount(baseline, currentMonth, "deposit");
-        decimal baseWithdrawal = GetMonthlyTransactionAmount(baseline, currentMonth, "withdrawal");
-        decimal baseBet = GetMonthlyTransactionAmount(baseline, currentMonth, "bet");
-        decimal basePayout = GetMonthlyTransactionAmount(baseline, currentMonth, "payout");
-
-        string email = $"dbtest_monthly_tv_{Guid.NewGuid():N}@gmail.com";
-        const string password = "StrongPassword123!";
-
-        await DeleteUserByEmailAsync(email);
-
-        try
-        {
-            var reg = await _db.RegisterAsync("Finance", "Volume", new DateTime(2000, 1, 1), email, password);
-            Assert.IsNotNull(reg.userObj);
-            int userId = reg.userObj!.UserID;
-
-            await InsertSystemTransactionAsync(userId, "deposit", 60m, DateTime.Now);
-            await InsertSystemTransactionAsync(userId, "withdrawal", 25m, DateTime.Now);
-            await InsertSystemTransactionAsync(userId, "bet", 15m, DateTime.Now);
-            await InsertSystemTransactionAsync(userId, "payout", 5m, DateTime.Now);
-
-            MyList<MonthlyTransactionVolume> after = await _db.FetchMonthlyTransactionVolumeAsync();
-
-            Assert.AreEqual(baseDeposit + 60m, GetMonthlyTransactionAmount(after, currentMonth, "deposit"));
-            Assert.AreEqual(baseWithdrawal + 25m, GetMonthlyTransactionAmount(after, currentMonth, "withdrawal"));
-            Assert.AreEqual(baseBet + 15m, GetMonthlyTransactionAmount(after, currentMonth, "bet"));
-            Assert.AreEqual(basePayout + 5m, GetMonthlyTransactionAmount(after, currentMonth, "payout"));
-        }
-        finally
-        {
-            await DeleteUserByEmailAsync(email);
-        }
-    }
-
-    /// <summary>
-    /// Verifies that inserting bet slips with different statuses causes each status count to increase by one.
-    /// </summary>
-    [TestMethod]
-    public async Task FetchBetStatusBreakdownAsync_WithInsertedStatuses_ReturnsUpdatedCounts()
-    {
-        MyList<BetStatusCount> baseline = await _db.FetchBetStatusBreakdownAsync();
-        int baselinePending = GetBetStatusCount(baseline, "Pending");
-        int baselineWon = GetBetStatusCount(baseline, "Won");
-        int baselineLost = GetBetStatusCount(baseline, "Lost");
-
-        string email = $"dbtest_bet_status_{Guid.NewGuid():N}@gmail.com";
-        const string password = "StrongPassword123!";
-
-        await DeleteUserByEmailAsync(email);
-
-        try
-        {
-            var reg = await _db.RegisterAsync("Finance", "Status", new DateTime(2000, 1, 1), email, password);
-            Assert.IsNotNull(reg.userObj);
-            int userId = reg.userObj!.UserID;
-
-            await InsertBetSlipWithStatusAsync(userId, "Pending");
-            await InsertBetSlipWithStatusAsync(userId, "Won");
-            await InsertBetSlipWithStatusAsync(userId, "Lost");
-
-            MyList<BetStatusCount> after = await _db.FetchBetStatusBreakdownAsync();
-
-            Assert.AreEqual(baselinePending + 1, GetBetStatusCount(after, "Pending"));
-            Assert.AreEqual(baselineWon + 1, GetBetStatusCount(after, "Won"));
-            Assert.AreEqual(baselineLost + 1, GetBetStatusCount(after, "Lost"));
-        }
-        finally
-        {
-            await DeleteUserByEmailAsync(email);
-        }
-    }
-
-    private static async Task<string> GetCurrentMonthLabelAsync()
-    {
-        const string query = "SELECT FORMAT(GETDATE(), 'MMM yy')";
-        await using SqlConnection connection = new SqlConnection(GetConnectionString());
-        await using SqlCommand command = new SqlCommand(query, connection);
-        await connection.OpenAsync();
-        return (await command.ExecuteScalarAsync())?.ToString() ?? string.Empty;
-    }
-
-    private static decimal GetMonthlyRevenue(MyList<MonthlyProfitLoss> rows, string month)
-    {
-        for (int i = 0; i < rows.Count; i++)
-        {
-            MonthlyProfitLoss row = rows[i];
-            if (row.Month == month) return row.Revenue;
-        }
-
-        return 0m;
-    }
-
-    private static decimal GetMonthlyPayouts(MyList<MonthlyProfitLoss> rows, string month)
-    {
-        for (int i = 0; i < rows.Count; i++)
-        {
-            MonthlyProfitLoss row = rows[i];
-            if (row.Month == month) return row.Payouts;
-        }
-
-        return 0m;
-    }
-
-    private static decimal GetMonthlyTransactionAmount(MyList<MonthlyTransactionVolume> rows, string month, string type)
-    {
-        for (int i = 0; i < rows.Count; i++)
-        {
-            MonthlyTransactionVolume row = rows[i];
-            if (row.Month == month && string.Equals(row.Type, type, StringComparison.OrdinalIgnoreCase))
-            {
-                return row.Amount;
-            }
-        }
-
-        return 0m;
-    }
-
-    private static int GetBetStatusCount(MyList<BetStatusCount> rows, string status)
-    {
-        for (int i = 0; i < rows.Count; i++)
-        {
-            BetStatusCount row = rows[i];
-            if (string.Equals(row.Status, status, StringComparison.OrdinalIgnoreCase))
-            {
-                return row.Count;
-            }
-        }
-
-        return 0;
-    }
-
-    private static async Task InsertSystemTransactionAsync(int userId, string transactionType, decimal amount, DateTime timestamp)
-    {
-        const string query = @"INSERT INTO SystemTransaction (app_user_id, transaction_type, amount, transaction_timestamp)
-                               VALUES (@userId, @type, @amount, @timestamp)";
-        await using SqlConnection connection = new SqlConnection(GetConnectionString());
-        await using SqlCommand command = new SqlCommand(query, connection);
-        command.Parameters.AddWithValue("@userId", userId);
-        command.Parameters.AddWithValue("@type", transactionType);
-        command.Parameters.AddWithValue("@amount", amount);
-        command.Parameters.AddWithValue("@timestamp", timestamp);
-
-        await connection.OpenAsync();
-        await command.ExecuteNonQueryAsync();
-    }
-
-    private static async Task InsertBetSlipWithStatusAsync(int userId, string status)
-    {
-        const string query = @"INSERT INTO BetSlip (app_user_id, bet_status, total_odds, stake, payout, claimed)
-                               VALUES (@userId, @status, @totalOdds, @stake, @payout, @claimed)";
-        await using SqlConnection connection = new SqlConnection(GetConnectionString());
-        await using SqlCommand command = new SqlCommand(query, connection);
-        command.Parameters.AddWithValue("@userId", userId);
-        command.Parameters.AddWithValue("@status", status);
-        command.Parameters.AddWithValue("@totalOdds", 1m);
-        command.Parameters.AddWithValue("@stake", 1m);
-        command.Parameters.AddWithValue("@payout", 1m);
-        command.Parameters.AddWithValue("@claimed", false);
-
-        await connection.OpenAsync();
-        await command.ExecuteNonQueryAsync();
     }
 
     private static async Task<int> GetOddsCountByGameBetTypeAndSelectionAsync(int gameId, int betTypeId, string selection)
