@@ -83,7 +83,7 @@ Code/
 6. Execute `Code/db/testData.txt` in SSMS to insert sample data
 
 ### AI Agent Setup
-1. Create a **Google Gemini API Key**
+1. Create a **Google Gemini API Key** at https://aistudio.google.com/api-keys
 2. Replace the value of `GOOGLE_API_KEY` in `App.Config` with your key
 3. Replace the connectionString for `BettingDB` in `App.Config` to match your created database
 
@@ -92,6 +92,8 @@ Code/
 2. Restore NuGet packages using `dotnet restore`
 3. Build the solution
 2. Run the application
+
+## Troubleshooting
 
 ## How to use the program
 
