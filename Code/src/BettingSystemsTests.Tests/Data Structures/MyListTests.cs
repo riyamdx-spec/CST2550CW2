@@ -3,9 +3,15 @@ using BettingSystem.Models;
 
 namespace BettingSystemsTests;
 
+/// <summary>
+/// Validates MyList core operations, bounds checks, mutation methods, and match-date insertion order.
+/// </summary>
 [TestClass]
 public class MyListTests
 {
+    /// <summary>
+    /// Lightweight exception assertion helper for out-of-range and guard-path tests.
+    /// </summary>
     private static void AssertThrows<TException>(Action action) where TException : Exception
     {
         try
@@ -19,6 +25,9 @@ public class MyListTests
         }
     }
 
+    /// <summary>
+    /// Verifies a newly created list starts empty and reports IsEmpty as true.
+    /// </summary>
     [TestMethod]
     public void Constructor_EmptyList_StartsWithZeroCount()
     {
@@ -28,6 +37,9 @@ public class MyListTests
         Assert.IsTrue(list.IsEmpty());
     }
 
+    /// <summary>
+    /// Verifies Add appends items in order and updates Count correctly.
+    /// </summary>
     [TestMethod]
     public void Add_ItemsIncreaseCount_AndKeepOrder()
     {
@@ -43,6 +55,9 @@ public class MyListTests
         Assert.AreEqual(30, list[2]);
     }
 
+    /// <summary>
+    /// Verifies indexer access throws for negative and upper-bound out-of-range indices.
+    /// </summary>
     [TestMethod]
     public void Indexer_GetOutOfRange_Throws()
     {
@@ -53,6 +68,9 @@ public class MyListTests
         AssertThrows<IndexOutOfRangeException>(() => _ = list[1]);
     }
 
+    /// <summary>
+    /// Verifies Remove deletes only the first matching value instance.
+    /// </summary>
     [TestMethod]
     public void Remove_RemovesFirstMatchingValue()
     {
@@ -68,6 +86,9 @@ public class MyListTests
         Assert.AreEqual(5, list[1]);
     }
 
+    /// <summary>
+    /// Verifies RemoveAll removes only values that satisfy the provided predicate.
+    /// </summary>
     [TestMethod]
     public void RemoveAll_RemovesOnlyMatchingValues()
     {
@@ -84,6 +105,9 @@ public class MyListTests
         Assert.AreEqual(3, list[1]);
     }
 
+    /// <summary>
+    /// Verifies Reverse reorders elements in place from tail to head.
+    /// </summary>
     [TestMethod]
     public void Reverse_ReversesElementsInPlace()
     {
@@ -100,6 +124,9 @@ public class MyListTests
         Assert.AreEqual("A", list[2]);
     }
 
+    /// <summary>
+    /// Verifies AddRange appends all items from another list in source order.
+    /// </summary>
     [TestMethod]
     public void AddRange_AppendsAllElementsFromOtherList()
     {
@@ -118,6 +145,9 @@ public class MyListTests
         Assert.AreEqual(3, list[2]);
     }
 
+    /// <summary>
+    /// Verifies InsertMatch keeps matches sorted by game date in descending order.
+    /// </summary>
     [TestMethod]
     public void InsertMatch_InsertsByGameDateDescending()
     {
