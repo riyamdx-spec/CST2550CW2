@@ -15,7 +15,7 @@ public class BetSlipTests
     /// Creates a minimal valid bet for slip behavior tests with overridable game/type/odd values.
     /// </summary>
     private static Bet MakeBet(int gameId = 1, int betTypeId = 1, decimal oddValue = 2.0m)
-        => new Bet(10, "Home Win", oddValue, betTypeId, gameId, DateTime.Today);
+        => new Bet(10, "Home Win", oddValue, betTypeId, gameId, DateTime.Now.AddDays(1));
 
     // ==================== CONSTRUCTOR TESTS ====================
 
@@ -48,7 +48,7 @@ public class BetSlipTests
         var bet = MakeBet(gameId: 1, betTypeId: 1, oddValue: 2.5m);
 
         // ACT
-        string result = slip.AddBet(bet);
+        var (_, result) = slip.AddBet(bet);
 
         // ASSERT
         Assert.AreEqual("Bet added", result);
@@ -63,13 +63,13 @@ public class BetSlipTests
     {
         // ARRANGE
         var slip = new BetSlip(userID: 1);
-        var originalBet = new Bet(1, "Home Win", 2.0m, 1, 1, DateTime.Today);
-        var updatedBet  = new Bet(2, "Away Win", 3.5m, 1, 1, DateTime.Today);
+        var originalBet = new Bet(1, "Home Win", 2.0m, 1, 1, DateTime.Now.AddDays(1));
+        var updatedBet  = new Bet(2, "Away Win", 3.5m, 1, 1, DateTime.Now.AddDays(1));
 
         slip.AddBet(originalBet);
 
         // ACT
-        string result = slip.AddBet(updatedBet);
+        var (_, result) = slip.AddBet(updatedBet);
 
         // ASSERT
         Assert.AreEqual("Bet updated", result);
@@ -238,10 +238,10 @@ public class BetSlipTests
         slip.AddBet(bet3);
 
         // ACT
-        bool changed = slip.RemoveBetsByGameIds(new List<int> { 10, 30 });
+        int changed = slip.RemoveBetsByGameIds(new List<int> { 10, 30 });
 
         // ASSERT
-        Assert.IsTrue(changed, "Should report that bets were removed");
+        Assert.IsTrue(changed > 0, "Should report that bets were removed");
         Assert.AreEqual(1, slip.Bets.Count, "Only the bet for game 20 should remain");
         Assert.AreEqual(20, slip.Bets.First!.Value.GameID);
     }
@@ -257,10 +257,10 @@ public class BetSlipTests
         slip.AddBet(MakeBet(gameId: 5));
 
         // ACT
-        bool changed = slip.RemoveBetsByGameIds(new List<int> { 99 });
+        int changed = slip.RemoveBetsByGameIds(new List<int> { 99 });
 
         // ASSERT
-        Assert.IsFalse(changed, "Should return false when no bets were removed");
+        Assert.AreEqual(0, changed, "Should return 0 when no bets were removed");
         Assert.AreEqual(1, slip.Bets.Count);
     }
 
@@ -274,10 +274,10 @@ public class BetSlipTests
         var slip = new BetSlip(userID: 1);
 
         // ACT
-        bool changed = slip.RemoveBetsByGameIds(new List<int> { 1, 2, 3 });
+        int changed = slip.RemoveBetsByGameIds(new List<int> { 1, 2, 3 });
 
         // ASSERT
-        Assert.IsFalse(changed);
+        Assert.AreEqual(0, changed);
     }
 
     /// <summary>
