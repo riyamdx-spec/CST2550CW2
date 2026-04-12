@@ -966,9 +966,10 @@ public sealed class ValidationTests
         // ARRANGE
         int homeId = 1;
         int awayId = 2;
+        DateTime matchDate = DateTime.Today.AddDays(1);
 
         // ACT
-        var (valid, message) = _validation.CheckMatchEntries(homeId, awayId);
+        var (valid, message) = _validation.CheckMatchEntries(homeId, awayId, matchDate);
 
         // ASSERT
         Assert.IsTrue(valid, "Different team IDs should pass validation");
@@ -984,9 +985,10 @@ public sealed class ValidationTests
         // ARRANGE
         int homeId = 5;
         int awayId = 5;
+        DateTime matchDate = DateTime.Today.AddDays(1);
 
         // ACT
-        var (valid, message) = _validation.CheckMatchEntries(homeId, awayId);
+        var (valid, message) = _validation.CheckMatchEntries(homeId, awayId, matchDate);
 
         // ASSERT
         Assert.IsFalse(valid, "Same home and away team ID should fail validation");
