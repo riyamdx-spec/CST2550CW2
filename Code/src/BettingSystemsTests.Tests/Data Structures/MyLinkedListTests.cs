@@ -2,9 +2,15 @@ using BettingSystem.Data_Structures;
 
 namespace BettingSystemsTests;
 
+/// <summary>
+/// Verifies core linked-list node operations: add, remove, and clear.
+/// </summary>
 [TestClass]
 public class MyLinkedListTests
 {
+    /// <summary>
+    /// Verifies that a newly created linked list has a count of zero and a null head node.
+    /// </summary>
     [TestMethod]
     public void Constructor_StartsEmpty()
     {
@@ -14,6 +20,9 @@ public class MyLinkedListTests
         Assert.IsNull(list.First);
     }
 
+    /// <summary>
+    /// Confirms that AddFirst inserts nodes at the head and correctly maintains previous and next pointer links.
+    /// </summary>
     [TestMethod]
     public void AddFirst_AddsAtHead_AndUpdatesCount()
     {
@@ -29,6 +38,9 @@ public class MyLinkedListTests
         Assert.AreEqual(n2, n1.Previous);
     }
 
+    /// <summary>
+    /// Checks that removing the current head node updates the head pointer to the next node and decrements count.
+    /// </summary>
     [TestMethod]
     public void Remove_HeadNode_UpdatesHead()
     {
@@ -44,6 +56,9 @@ public class MyLinkedListTests
         Assert.IsNull(list.First.Previous);
     }
 
+    /// <summary>
+    /// Verifies that removing a middle node correctly relinks its neighboring nodes to each other.
+    /// </summary>
     [TestMethod]
     public void Remove_MiddleNode_ReconnectsNeighbors()
     {
@@ -60,6 +75,9 @@ public class MyLinkedListTests
         Assert.AreEqual(tail.Previous, head);
     }
 
+    /// <summary>
+    /// Ensures that passing null to Remove returns false without throwing an exception.
+    /// </summary>
     [TestMethod]
     public void Remove_NullNode_ReturnsFalse()
     {
@@ -70,6 +88,9 @@ public class MyLinkedListTests
         Assert.IsFalse(removed);
     }
 
+    /// <summary>
+    /// Checks that calling Clear resets the list to an empty state with zero count and a null head.
+    /// </summary>
     [TestMethod]
     public void Clear_RemovesAllNodes()
     {
