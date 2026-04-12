@@ -31,6 +31,7 @@ namespace BettingSystem.Forms
         private void InitializeComponent()
         {
             pnlContainer = new RoundedPanel();
+            backButton = new PictureBox();
             pnlSignUpRight = new Panel();
             dtpDOB = new DateTimePicker();
             btnSignUp = new RoundedButton();
@@ -51,12 +52,14 @@ namespace BettingSystem.Forms
             lblFirstName = new Label();
             lblCreate = new Label();
             pnlLoginRight = new Panel();
+            appLbl2 = new Label();
             lnkToSignUp = new LinkLabel();
             lblPrompt = new Label();
             lblReady = new Label();
             piclogoLogin = new PictureBox();
             lblWelcomeBack = new Label();
             pnlSignupLeft = new Panel();
+            appLbl = new Label();
             lnkToLogin = new LinkLabel();
             lblAccount = new Label();
             lblSignupJoin = new Label();
@@ -69,15 +72,14 @@ namespace BettingSystem.Forms
             txtLoginEmail = new UnderlineTextBox();
             lblLoginEmail = new Label();
             lblLogin = new Label();
-            backButton = new PictureBox();
             pnlContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)backButton).BeginInit();
             pnlSignUpRight.SuspendLayout();
             pnlLoginRight.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)piclogoLogin).BeginInit();
             pnlSignupLeft.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picLogoSignup).BeginInit();
             pnlLoginLeft.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)backButton).BeginInit();
             SuspendLayout();
             // 
             // pnlContainer
@@ -93,6 +95,20 @@ namespace BettingSystem.Forms
             pnlContainer.Name = "pnlContainer";
             pnlContainer.Size = new Size(962, 465);
             pnlContainer.TabIndex = 0;
+            // 
+            // backButton
+            // 
+            backButton.BackColor = Color.Transparent;
+            backButton.Cursor = Cursors.Hand;
+            backButton.Image = Resources.backBtn;
+            backButton.Location = new Point(14, 9);
+            backButton.Margin = new Padding(3, 2, 3, 2);
+            backButton.Name = "backButton";
+            backButton.Size = new Size(42, 36);
+            backButton.SizeMode = PictureBoxSizeMode.Zoom;
+            backButton.TabIndex = 5;
+            backButton.TabStop = false;
+            backButton.Click += backButton_Click;
             // 
             // pnlSignUpRight
             // 
@@ -120,6 +136,7 @@ namespace BettingSystem.Forms
             pnlSignUpRight.Name = "pnlSignUpRight";
             pnlSignUpRight.Size = new Size(481, 465);
             pnlSignUpRight.TabIndex = 0;
+            pnlSignUpRight.Visible = false;
             // 
             // dtpDOB
             // 
@@ -345,6 +362,7 @@ namespace BettingSystem.Forms
             // pnlLoginRight
             // 
             pnlLoginRight.BackColor = Color.FromArgb(84, 139, 66);
+            pnlLoginRight.Controls.Add(appLbl2);
             pnlLoginRight.Controls.Add(lnkToSignUp);
             pnlLoginRight.Controls.Add(lblPrompt);
             pnlLoginRight.Controls.Add(lblReady);
@@ -356,6 +374,18 @@ namespace BettingSystem.Forms
             pnlLoginRight.Size = new Size(481, 465);
             pnlLoginRight.TabIndex = 1;
             // 
+            // appLbl2
+            // 
+            appLbl2.AutoSize = true;
+            appLbl2.BackColor = Color.Transparent;
+            appLbl2.Font = new Font("Times New Roman", 30F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            appLbl2.ForeColor = Color.FromArgb(241, 241, 241);
+            appLbl2.Location = new Point(152, 292);
+            appLbl2.Name = "appLbl2";
+            appLbl2.Size = new Size(176, 45);
+            appLbl2.TabIndex = 7;
+            appLbl2.Text = "Pitch Bet";
+            // 
             // lnkToSignUp
             // 
             lnkToSignUp.ActiveLinkColor = Color.FromArgb(43, 86, 52);
@@ -364,7 +394,7 @@ namespace BettingSystem.Forms
             lnkToSignUp.Font = new Font("Times New Roman", 15F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lnkToSignUp.ForeColor = Color.FromArgb(241, 241, 241);
             lnkToSignUp.LinkColor = Color.FromArgb(27, 42, 58);
-            lnkToSignUp.Location = new Point(316, 428);
+            lnkToSignUp.Location = new Point(285, 428);
             lnkToSignUp.Name = "lnkToSignUp";
             lnkToSignUp.Size = new Size(73, 22);
             lnkToSignUp.TabIndex = 5;
@@ -390,7 +420,7 @@ namespace BettingSystem.Forms
             lblReady.BackColor = Color.Transparent;
             lblReady.Font = new Font("Times New Roman", 15F);
             lblReady.ForeColor = Color.FromArgb(241, 241, 241);
-            lblReady.Location = new Point(82, 301);
+            lblReady.Location = new Point(82, 373);
             lblReady.Name = "lblReady";
             lblReady.Size = new Size(311, 22);
             lblReady.TabIndex = 3;
@@ -423,6 +453,7 @@ namespace BettingSystem.Forms
             // pnlSignupLeft
             // 
             pnlSignupLeft.BackColor = Color.FromArgb(84, 139, 66);
+            pnlSignupLeft.Controls.Add(appLbl);
             pnlSignupLeft.Controls.Add(lnkToLogin);
             pnlSignupLeft.Controls.Add(lblAccount);
             pnlSignupLeft.Controls.Add(lblSignupJoin);
@@ -434,6 +465,18 @@ namespace BettingSystem.Forms
             pnlSignupLeft.Size = new Size(481, 465);
             pnlSignupLeft.TabIndex = 0;
             // 
+            // appLbl
+            // 
+            appLbl.AutoSize = true;
+            appLbl.BackColor = Color.Transparent;
+            appLbl.Font = new Font("Times New Roman", 30F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            appLbl.ForeColor = Color.FromArgb(241, 241, 241);
+            appLbl.Location = new Point(152, 292);
+            appLbl.Name = "appLbl";
+            appLbl.Size = new Size(176, 45);
+            appLbl.TabIndex = 6;
+            appLbl.Text = "Pitch Bet";
+            // 
             // lnkToLogin
             // 
             lnkToLogin.ActiveLinkColor = Color.FromArgb(43, 86, 52);
@@ -442,7 +485,7 @@ namespace BettingSystem.Forms
             lnkToLogin.Font = new Font("Times New Roman", 15F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lnkToLogin.ForeColor = Color.FromArgb(241, 241, 241);
             lnkToLogin.LinkColor = Color.FromArgb(27, 42, 58);
-            lnkToLogin.Location = new Point(327, 428);
+            lnkToLogin.Location = new Point(303, 428);
             lnkToLogin.Name = "lnkToLogin";
             lnkToLogin.Size = new Size(60, 22);
             lnkToLogin.TabIndex = 4;
@@ -469,7 +512,7 @@ namespace BettingSystem.Forms
             lblSignupJoin.BackColor = Color.Transparent;
             lblSignupJoin.Font = new Font("Times New Roman", 15F);
             lblSignupJoin.ForeColor = Color.FromArgb(241, 241, 241);
-            lblSignupJoin.Location = new Point(100, 301);
+            lblSignupJoin.Location = new Point(113, 373);
             lblSignupJoin.Name = "lblSignupJoin";
             lblSignupJoin.Size = new Size(254, 22);
             lblSignupJoin.TabIndex = 2;
@@ -493,7 +536,7 @@ namespace BettingSystem.Forms
             lblSignupWelcome.BackColor = Color.Transparent;
             lblSignupWelcome.Font = new Font("Times New Roman", 30F);
             lblSignupWelcome.ForeColor = Color.FromArgb(241, 241, 241);
-            lblSignupWelcome.Location = new Point(121, 20);
+            lblSignupWelcome.Location = new Point(133, 20);
             lblSignupWelcome.Name = "lblSignupWelcome";
             lblSignupWelcome.Size = new Size(215, 46);
             lblSignupWelcome.TabIndex = 0;
@@ -590,20 +633,6 @@ namespace BettingSystem.Forms
             lblLogin.TabIndex = 1;
             lblLogin.Text = "Log In";
             // 
-            // backButton
-            // 
-            backButton.BackColor = Color.Transparent;
-            backButton.Cursor = Cursors.Hand;
-            backButton.Image = Resources.backBtn;
-            backButton.Location = new Point(14, 9);
-            backButton.Margin = new Padding(3, 2, 3, 2);
-            backButton.Name = "backButton";
-            backButton.Size = new Size(42, 36);
-            backButton.SizeMode = PictureBoxSizeMode.Zoom;
-            backButton.TabIndex = 5;
-            backButton.TabStop = false;
-            backButton.Click += backButton_Click;
-            // 
             // RegisterLoginForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -617,6 +646,7 @@ namespace BettingSystem.Forms
             StartPosition = FormStartPosition.CenterScreen;
             Text = "RegisterLoginForm";
             pnlContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)backButton).EndInit();
             pnlSignUpRight.ResumeLayout(false);
             pnlSignUpRight.PerformLayout();
             pnlLoginRight.ResumeLayout(false);
@@ -627,7 +657,6 @@ namespace BettingSystem.Forms
             ((System.ComponentModel.ISupportInitialize)picLogoSignup).EndInit();
             pnlLoginLeft.ResumeLayout(false);
             pnlLoginLeft.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)backButton).EndInit();
             ResumeLayout(false);
         }
 
@@ -635,21 +664,22 @@ namespace BettingSystem.Forms
 
         private RoundedPanel pnlContainer;
         private Panel pnlLoginLeft;
-        private Panel pnlLoginRight;
-        private Panel pnlSignUpRight;
         private Panel pnlSignupLeft;
         private LinkLabel lnkToLogin;
         private Label lblAccount;
         private Label lblSignupJoin;
         private PictureBox picLogoSignup;
         private Label lblSignupWelcome;
-        private Label lblLastName;
-        private Label lblFirstName;
-        private Label lblCreate;
-        private Label lblPassword;
-        private Label lblSignUpEmail;
-        private Label lblDOB;
-        private UnderlineTextBox txtFirstName;
+        private Label lblLogin;
+        private RoundedButton btnLogin;
+        private UnderlineTextBox txtLoginPassword;
+        private Label lblLoginPassword;
+        private UnderlineTextBox txtLoginEmail;
+        private Label lblLoginEmail;
+        private PictureBox backButton;
+        private Label appLbl;
+        private Panel pnlSignUpRight;
+        private DateTimePicker dtpDOB;
         private RoundedButton btnSignUp;
         private CheckBox chk18;
         private Label lblCritSpec;
@@ -660,18 +690,19 @@ namespace BettingSystem.Forms
         private UnderlineTextBox txtSignUpPassword;
         private UnderlineTextBox txtSignUpEmail;
         private UnderlineTextBox txtLastName;
-        private DateTimePicker dtpDOB;
-        private Label lblLogin;
-        private RoundedButton btnLogin;
-        private UnderlineTextBox txtLoginPassword;
-        private Label lblLoginPassword;
-        private UnderlineTextBox txtLoginEmail;
-        private Label lblLoginEmail;
+        private UnderlineTextBox txtFirstName;
+        private Label lblPassword;
+        private Label lblSignUpEmail;
+        private Label lblDOB;
+        private Label lblLastName;
+        private Label lblFirstName;
+        private Label lblCreate;
+        private Panel pnlLoginRight;
         private LinkLabel lnkToSignUp;
         private Label lblPrompt;
         private Label lblReady;
         private PictureBox piclogoLogin;
         private Label lblWelcomeBack;
-        private PictureBox backButton;
+        private Label appLbl2;
     }
 }
