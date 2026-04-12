@@ -34,9 +34,9 @@ public class BetSlipFilterTests
         slips.Add(MakeSlip(1, new DateTime(2026, 4, 3), "Won"));
         slips.Add(MakeSlip(2, new DateTime(2026, 4, 2), "Lost"));
 
-        var filter = new BetSlipFilter(slips);
+        var filter = new BetSlipFilter();
 
-        var result = filter.FilterBetSlips("All", ascending: false);
+        var result = filter.FilterBetSlips(slips, "All", ascending: false);
 
         Assert.AreEqual(2, result.Count);
         Assert.AreEqual(1, result[0].SlipID);
@@ -53,9 +53,9 @@ public class BetSlipFilterTests
         slips.Add(MakeSlip(10, new DateTime(2026, 4, 3), "Won"));
         slips.Add(MakeSlip(20, new DateTime(2026, 4, 2), "Lost"));
 
-        var filter = new BetSlipFilter(slips);
+        var filter = new BetSlipFilter();
 
-        var result = filter.FilterBetSlips(null, ascending: false);
+        var result = filter.FilterBetSlips(slips, null, ascending: false);
 
         Assert.AreEqual(2, result.Count);
         Assert.AreEqual(10, result[0].SlipID);
@@ -73,9 +73,9 @@ public class BetSlipFilterTests
         slips.Add(MakeSlip(2, new DateTime(2026, 4, 2), "Lost"));
         slips.Add(MakeSlip(3, new DateTime(2026, 4, 1), "won"));
 
-        var filter = new BetSlipFilter(slips);
+        var filter = new BetSlipFilter();
 
-        var result = filter.FilterBetSlips("WON", ascending: false);
+        var result = filter.FilterBetSlips(slips, "WON", ascending: false);
 
         Assert.AreEqual(2, result.Count);
         Assert.IsTrue(result[0].Status.Equals("Won", StringComparison.OrdinalIgnoreCase));
@@ -93,9 +93,9 @@ public class BetSlipFilterTests
         slips.Add(MakeSlip(2, new DateTime(2026, 4, 2), "Lost"));
         slips.Add(MakeSlip(3, new DateTime(2026, 4, 1), "Won"));
 
-        var filter = new BetSlipFilter(slips);
+        var filter = new BetSlipFilter();
 
-        var result = filter.FilterBetSlips("Won", ascending: true);
+        var result = filter.FilterBetSlips(slips, "Won", ascending: true);
 
         Assert.AreEqual(2, result.Count);
         Assert.AreEqual(3, result[0].SlipID);
