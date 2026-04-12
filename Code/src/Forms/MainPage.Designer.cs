@@ -264,7 +264,7 @@
             // 
             // bannerImg
             // 
-            bannerImg.BackColor = Color.Transparent;
+            bannerImg.BackColor = Color.FromArgb(64, 64, 64);
             bannerImg.Controls.Add(leagueLbl);
             bannerImg.Controls.Add(leaguesPanel);
             bannerImg.Dock = DockStyle.Fill;

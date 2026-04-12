@@ -379,7 +379,7 @@ namespace BettingSystem.Forms
             appLbl2.AutoSize = true;
             appLbl2.BackColor = Color.Transparent;
             appLbl2.Font = new Font("Times New Roman", 30F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            appLbl2.ForeColor = Color.FromArgb(241, 241, 241);
+            appLbl2.ForeColor = Color.FromArgb(27, 42, 58);
             appLbl2.Location = new Point(152, 292);
             appLbl2.Name = "appLbl2";
             appLbl2.Size = new Size(176, 45);
@@ -470,7 +470,7 @@ namespace BettingSystem.Forms
             appLbl.AutoSize = true;
             appLbl.BackColor = Color.Transparent;
             appLbl.Font = new Font("Times New Roman", 30F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            appLbl.ForeColor = Color.FromArgb(241, 241, 241);
+            appLbl.ForeColor = Color.FromArgb(27, 42, 58);
             appLbl.Location = new Point(152, 292);
             appLbl.Name = "appLbl";
             appLbl.Size = new Size(176, 45);
