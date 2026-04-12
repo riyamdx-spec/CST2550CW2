@@ -11,8 +11,11 @@ public class BetSlipTests
 {
     // ==================== HELPER ====================
 
+    /// <summary>
+    /// Creates a minimal valid bet for slip behavior tests with overridable game/type/odd values.
+    /// </summary>
     private static Bet MakeBet(int gameId = 1, int betTypeId = 1, decimal oddValue = 2.0m)
-        => new Bet(oddID: 10, selection: "Home Win", oddValue: oddValue, betTypeID: betTypeId, gameID: gameId);
+        => new Bet(10, "Home Win", oddValue, betTypeId, gameId, DateTime.Today);
 
     // ==================== CONSTRUCTOR TESTS ====================
 
@@ -60,8 +63,8 @@ public class BetSlipTests
     {
         // ARRANGE
         var slip = new BetSlip(userID: 1);
-        var originalBet = new Bet(oddID: 1, selection: "Home Win", oddValue: 2.0m, betTypeID: 1, gameID: 1);
-        var updatedBet  = new Bet(oddID: 2, selection: "Away Win", oddValue: 3.5m, betTypeID: 1, gameID: 1);
+        var originalBet = new Bet(1, "Home Win", 2.0m, 1, 1, DateTime.Today);
+        var updatedBet  = new Bet(2, "Away Win", 3.5m, 1, 1, DateTime.Today);
 
         slip.AddBet(originalBet);
 
