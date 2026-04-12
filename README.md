@@ -131,6 +131,7 @@ Code/
 ## Simulation System
 
 A periodic timer runs every minute to simulate live match updates by modifying the database automatically.
+Code to handle the simulation system is found in `Simulator.cs`
 
 ### Database Updates
 1. Update match status to `Completed` when the match duration has elapsed (5 minutes from current time)
@@ -155,8 +156,23 @@ A periodic timer runs every minute to simulate live match updates by modifying t
 
 ## Data Analyst Agent
 
-1. System reads Google Gemini API Key
-2. Builds a prompt based on financial data fetched from database (SystemTransaction and BetSlip tables)
-3. Sends request to AI Agent
-4. AI Agent analyses the data and executes a financial summary
-5. Agent returns the report to be displayed on the interface
+1. Code can be found in AdminFinancialManager.cs (`GenerateFinancialReport` method)
+2. System reads Google Gemini API Key
+3. Builds a prompt based on financial data fetched from database (SystemTransaction and BetSlip tables)
+4. Sends request to AI Agent
+5. AI Agent analyses the data and executes a financial summary
+6. Agent returns the report to be displayed on the interface
+
+## References
+Password hashing:
+- Gollhardt, C. (2019) How to hash a password. Available at: https://stackoverflow.com/a/32191537 (Accessed: 7 February 2026). 
+
+Periodic Timer:
+- Kanavos, P. (2022) How to use PeriodicTimer inside of constructor?. Available at: https://stackoverflow.com/questions/70688080/how-to-use-periodictimer-inside-of-constructor (Accessed: 22 March 2026). 
+
+Custom Data Structures:
+- Davis, M. (2021) Building a Linked List System From Scratch in C#, Part 1. Available at: https://medium.com/geekculture/building-a-linked-list-system-from-scratch-in-c-part-1-51aa6c68ea19 (Accessed: 26 March 2026). 
+
+- Microsoft. (2026) Indexers. Available at: https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/indexers/ (Accessed: 26 March 2026). 
+
+- Nemes, A. (2020) Roll your own custom list with C# .NET. Available at: https://dotnetcodr.com/2020/10/13/roll-your-own-custom-list-with-c-net/ (Accessed: 25 March).
