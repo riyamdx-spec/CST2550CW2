@@ -244,7 +244,7 @@ namespace BettingSystem.Forms
             _currentLeague = leagueId;
             string leagueName = leagueSelected.Name;
             leagueLbl.Text = "";
-            bannerImg.Image = Image.FromFile(Path.Combine("..", "..", "..", "..", "Assets", leagueSelected.BannerPath));
+            bannerImg.Image = Image.FromFile(Path.Combine("..", "..", "..", "..", "Assets", leagueSelected.BannerPath.Trim()));
             FilterByLeagues(leagueId);
         }
 
