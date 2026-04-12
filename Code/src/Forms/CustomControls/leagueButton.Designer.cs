@@ -36,7 +36,7 @@
             // 
             // LeagueBtnRoundedPanelBG
             // 
-            LeagueBtnRoundedPanelBG.BackColor = Color.FromArgb(35, 255, 255, 255);
+            LeagueBtnRoundedPanelBG.BackColor = Color.FromArgb(80, 255, 255, 255);
             LeagueBtnRoundedPanelBG.Controls.Add(leagueImg);
             LeagueBtnRoundedPanelBG.Dock = DockStyle.Fill;
             LeagueBtnRoundedPanelBG.Location = new Point(0, 0);
