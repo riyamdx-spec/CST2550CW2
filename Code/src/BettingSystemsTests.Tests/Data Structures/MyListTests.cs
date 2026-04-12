@@ -1,5 +1,6 @@
 using BettingSystem.Data_Structures;
 using BettingSystem.Models;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BettingSystemsTests;
 
