@@ -11,7 +11,9 @@ namespace BettingSystemsTests;
 [TestClass]
 public class AddNewMatchServiceTests
 {
-    // Helper creates an admin session context expected by AddNewMatchService.
+    /// <summary>
+    /// Creates an admin user context required by AddNewMatchService session setup.
+    /// </summary>
     private static AppUser CreateAdminUser()
     {
         return new AppUser(
@@ -26,7 +28,9 @@ public class AddNewMatchServiceTests
             status: "active");
     }
 
-    // Helper seeds the session with an empty league bucket for target league lookups.
+    /// <summary>
+    /// Creates a session with an initialized league bucket used by in-memory insert tests.
+    /// </summary>
     private static SessionManager CreateSessionWithMatches(int leagueId)
     {
         var session = new SessionManager(CreateAdminUser(), new Simulator())
@@ -41,6 +45,9 @@ public class AddNewMatchServiceTests
         return session;
     }
 
+    /// <summary>
+    /// Constructs the service under test using provided match, player pools, and session state.
+    /// </summary>
     private static AddNewMatchService CreateService(
         FootballMatch match,
         MyList<Player> homePlayers,
