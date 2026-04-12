@@ -1,5 +1,31 @@
 # Football Betting System
 
+## Table of Contents
+
+- [Project Overview](#project-overview)
+- [Features](#features)
+    - [System Features](#system-features)
+    - [User Features](#user-features)
+    - [Admin Features](#admin-features)
+- [Folder Structure](#folder-structure)
+- [Technologies Used](#technologies-used)
+- [How to Run the Project](#how-to-run-the-project)
+    - [Database Setup](#database-setup)
+    - [AI Agent Setup](#ai-agent-setup)
+    - [Running the Application](#running-the-application)
+- [Troubleshooting](#troubleshooting)
+- [How to Use the Program](#how-to-use-the-program)
+    - [User Flow](#user-flow)
+    - [Admin Flow](#admin-flow)
+- [Testing](#testing)
+- [Simulation System](#simulation-system)
+    - [Database Updates](#database-updates)
+    - [Admin Behavior](#admin-behavior)
+    - [User Behavior](#user-behavior)
+- [Data Analyst Agent](#data-analyst-agent)
+- [References](#references)
+
+
 ## Project Overview
 The Football Betting System is a C# Windows Form application that simulates a football betting platform. It allows users to register and log in, view upcoming football matches, place cummulative bets and monitor outcomes of their bets. 
 
@@ -95,7 +121,7 @@ Code/
 
 ## Troubleshooting
 
-## How to use the program
+## How to Use the Program
 
 ### User Flow
 1. Register a new account or log in with existing credentials (Test data has been provided - current password for all users: `Hello123*`)
@@ -127,6 +153,8 @@ Code/
 
 
 ***Note: For simulation purposes, each match lasts 5 minutes***
+
+## Testing
 
 ## Simulation System
 
