@@ -176,6 +176,7 @@ namespace BettingSystem.Forms
         //display matches on the DataGridView
         private async Task DisplayMatches(MyList<FootballMatch> footballMatches)
         {
+            loadingPnl.Show();
             matchDataGridView.Hide();
             matchDataGridView.Rows.Clear();
 
@@ -215,7 +216,7 @@ namespace BettingSystem.Forms
 
                 matchDataGridView.Rows[rowIndex].Tag = game;
             }
-
+            loadingPnl.Hide();
             matchDataGridView.Show();
         }
 
