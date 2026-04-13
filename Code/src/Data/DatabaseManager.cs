@@ -197,7 +197,7 @@ namespace BettingSystem.Data
                 }
 
                 //check if new password is same as old one
-                if (ComparePassword(newPassword, currentHashedPassword))
+                if (currentPasswordEntered == newPassword)
                 {
                     return (false, "New password cannot be the same as your current password");
                 }
