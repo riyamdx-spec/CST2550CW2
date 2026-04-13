@@ -1,6 +1,6 @@
 ﻿namespace BettingSystem.Forms
 {
-    partial class AdminUsersPage
+    partial class AdminUsersPage : BaseForm
     {
         private System.ComponentModel.IContainer components = null;
 
@@ -23,14 +23,16 @@
 
             // adminNavBar1
             adminNavBar1.Dock = DockStyle.Top;
+            adminNavBar1.Location = new Point(0, 0);
             adminNavBar1.Name = "adminNavBar1";
-            adminNavBar1.Size = new Size(1200, 85);
+            adminNavBar1.Size = new Size(1168, 85);
+            adminNavBar1.TabIndex = 0;
 
             // lblTitle
             lblTitle.Dock = DockStyle.Top;
             lblTitle.Font = new Font("Times New Roman", 36F, FontStyle.Bold, GraphicsUnit.Point, 0);
             lblTitle.ForeColor = Color.FromArgb(241, 241, 241);
-            lblTitle.Height = 50;
+            lblTitle.Height = 90;
             lblTitle.Name = "lblTitle";
             lblTitle.Text = "Users";
             lblTitle.TextAlign = ContentAlignment.MiddleCenter;
@@ -62,7 +64,6 @@
             dgvUsers.RowTemplate.Height = 50;
             dgvUsers.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dgvUsers.TabIndex = 0;
-            //dgvUsers.CellClick += dgvUsers_CellClick;
 
             // style
             dgvUsers.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle
