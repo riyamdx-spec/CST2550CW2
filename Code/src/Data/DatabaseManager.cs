@@ -267,6 +267,9 @@ namespace BettingSystem.Data
         }
 
         //hash password 
+        // Adapted from: https://stackoverflow.com/a/32191537
+        // Accessed: 7 February 2026 (CC BY-SA 4.0)
+
         private string HashPassword(string password)
         {
             byte[] salt = RandomNumberGenerator.GetBytes(16);

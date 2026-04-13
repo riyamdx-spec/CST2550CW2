@@ -1,0 +1,223 @@
+# Football Betting System
+
+## Table of Contents
+
+- [Project Overview](#project-overview)
+- [Features](#features)
+    - [System Features](#system-features)
+    - [User Features](#user-features)
+    - [Admin Features](#admin-features)
+- [Folder Structure](#folder-structure)
+- [Technologies Used](#technologies-used)
+- [How to Run the Project](#how-to-run-the-project)
+    - [Database Setup](#database-setup)
+    - [AI Agent Setup](#ai-agent-setup)
+    - [Running the Application](#running-the-application)
+- [Troubleshooting](#troubleshooting)
+- [How to Use the Program](#how-to-use-the-program)
+    - [User Flow](#user-flow)
+    - [Admin Flow](#admin-flow)
+- [Testing](#testing)
+- [Simulation System](#simulation-system)
+    - [Database Updates](#database-updates)
+    - [Admin Behavior](#admin-behavior)
+    - [User Behavior](#user-behavior)
+- [Data Analyst Agent](#data-analyst-agent)
+- [References](#references)
+
+
+## Project Overview
+The Football Betting System is a C# Windows Form application that simulates a football betting platform. It allows users to register and log in, view upcoming football matches, place cummulative bets and monitor outcomes of their bets. 
+
+Users can also manage their account by editing their profile details and password, as well as depositing or withdrawing funds from their digital wallet. The system includes authentication mechanisms, automated bet validation and payout calculations.
+
+In addition, an admin interface is provided for managing users, matches and accessing financial reports
+
+## Features
+### System Features
+- Simulates football matches using a periodic timer that updates the database every minute
+- Generate odds based on team and player ratings
+- Randomly generate results for matches added by Admin
+- Generate odds for matches added by Admin
+- Uses an AI Agent to generate a financial report based on provided financial data
+
+### User Features
+- Search matches by team name
+- Filter matches by league
+- Place bets
+- Remove bets from bet slip (unpaid bets list)
+- Confirm bet slip & make payment
+- View bet history
+- Filter and sort bet history by status and date
+- Claim winnings from completed bet slips
+- View outcomes of each bet in history
+- Edit profile details (except date of birth)
+- Change password
+- Deposit and Withdraw funds (card number must be 16 digits & CVV 3 or 4 digits)
+
+
+### Admin Features
+- View and update user status (banned users cannot be modified)
+- Filter matches by league and team name
+- View results of completed matches
+- Add new scheduled matches 
+- View financial data with graphical representation
+- Generate financial reports
+
+## Folder Structure
+**Code Folder:**
+```text
+Code/
+├── Assets/
+├── db/
+│   ├── DataSource/
+│   ├── CreateDatabaseSQL.txt
+│   ├── PopulateTablesSQL.txt
+│   └── testData.txt
+└── src/
+    ├── Data/
+    ├── Data Structures/
+    ├── Forms/
+    ├── Models/
+    ├── Resources/
+    └── Services/
+```
+
+**Source Folder (src) structure:**
+- Data Structures: Contains custom data structures used in the system 
+- Data: Contains class for database interaction
+- Forms: Contains Windows Forms UI code & Custom controls (CustomControls folder) 
+- Models: Contains data models
+- Resources: Store images and assets used by winforms controls
+- Services: Contains business logic and service classes 
+
+## Technologies Used
+- **C# (.NET Windows Form)** - Application interface
+- **Microsoft SQL Server** - Database
+- **Microsoft.Data.SqlClient** - Database communication
+- **ScottPlot** - Financial graphs
+- **GoogleGenAI** - Financial report generation
+
+## How to Run the Project
+
+### Database Setup
+1. Download the `Code/db/DataSource` folder from the repository
+2. Move `DataSource` folder to your **local drive** (typically, path `C:\`)
+3. Open **SQL Server Management Studio (SSMS)**
+4. Execute `Code/db/CreateDatabaseSQL.txt` in SSMS to create the database schema
+5. Execute `Code/db/PopulateTablesSQL.txt` in SSMS to insert initial data
+6. Execute `Code/db/testData.txt` in SSMS to insert sample data
+
+### AI Agent Setup
+1. Create a **Google Gemini API Key** at https://aistudio.google.com/api-keys
+2. Replace the value of `GOOGLE_API_KEY` in `App.Config` with your key
+3. Replace the connectionString for `BettingDB` in `App.Config` to match your created database
+
+### Running the Application
+1. Open the solution in **Visual studio**
+2. Restore NuGet packages using `dotnet restore`
+3. Build the solution
+2. Run the application
+
+## Troubleshooting
+
+## How to Use the Program
+
+### User Flow
+1. Register a new account or log in with existing credentials (Test data has been provided - current password for all users: `Hello123*`)
+2. Browse upcoming matches on the Main Page
+3. Select matches and place bets using the right panel, which add selections to your bet slip
+4. Deposit funds into your wallet via the `Deposit` button in navigation bar or Profile Page
+---
+5. Navigate to the Bet Slip page to view or remove bets
+6. Enter a stake amount (maximum $1000) and click on `Place Bet`
+---
+7. Access the dropdown in the nav bar to view Profile page or log out 
+8. If logging out or exiting the application, confirm the action as the unpaid bet slip will be lost
+9. On the Profile Page, edit your details or change password
+10. Deposit or withdraw funds within Profile page 
+---
+11. Navigate to History page by clicking on `View History` button
+12. Filter and sort bet slips by status (`All`, `Pending`, `Won`, `Loss`) and date
+13. Click on a bet slip to view outcomes of individual bets
+14. Claim winnings by clicking the Claim Button on winning bet slips
+15. Logout from the dropdown menu in navbar 
+
+### Admin Flow
+1. Login using admin credentials
+2. View all users and update their status from the View Users Page
+3. View and filter matches on the Matches Page
+4. Add new matches on the Add Match Page
+5. Navigate to Finance page to view financial information and graphs
+6. Generate a financial report using the **AI report generation feature** by clicking on `Generate Report`
+
+
+***Note: For simulation purposes, each match lasts 5 minutes***
+
+## Testing
+
+1. Validates custom data structures
+2. Verifies core business-model logic
+3. Checks all input-validation rules
+4. Tests service-layer behaviour in memory
+5. Integration-tests the database access layer
+
+#### Run Tests code
+
+1. Open `Code/src/BettingSystem.slnx` in Visual Studio.
+2. Wait for package restore to finish (or go to **Tools -> NuGet Package Manager -> Restore NuGet Packages**).
+3. Build the solution: **Build -> Build Solution** (`Ctrl + Shift + B`).
+4. Open the test window: **Test -> Test Explorer**.
+5. In Test Explorer, click **Run All Tests**.
+6. Review results:
+   - Green check = passed
+   - Red X = failed (double-click to view failure details and stack trace)
+
+## Simulation System
+
+A periodic timer runs every minute to simulate live match updates by modifying the database automatically.
+Code to handle the simulation system is found in `Simulator.cs`
+
+### Database Updates
+1. Update match status to `Completed` when the match duration has elapsed (5 minutes from current time)
+2. Change match status to `Started` if current time reaches the match start time
+3. Update bet results of completed matches based on user selection and game results
+4. Update bet slips where all associated bets are completed
+---
+
+### Admin Behavior
+- Match status are updated in memory
+- Match status updates are reflected on the admin interface (Match page)
+- Admin can then view results of those matches after update
+---
+
+### User Behavior
+- Started and completed matches are removed from memory
+- When returning to main page, only scheduled matches will be displayed 
+- Remove started and completed matches from bet slip and trigger an event to update UI in real-time
+- Keep count of bets removed from bet slip to display a notification on bet slip page
+- Bet history and associated bet are updated in memory
+- An event is triggered to to update bet slips status displayed
+
+## Data Analyst Agent
+
+1. Code can be found in AdminFinancialManager.cs (`GenerateFinancialReport` method)
+2. System reads Google Gemini API Key
+3. Builds a prompt based on financial data fetched from database (SystemTransaction and BetSlip tables)
+4. Sends request to AI Agent
+5. AI Agent analyses the data and executes a financial summary
+6. Agent returns the report to be displayed on the interface
+
+## References
+Password hashing:
+- Gollhardt, C. (2019) How to hash a password. Available at: https://stackoverflow.com/a/32191537 (Accessed: 7 February 2026). 
+
+Periodic Timer:
+- Kanavos, P. (2022) How to use PeriodicTimer inside of constructor?. Available at: https://stackoverflow.com/questions/70688080/how-to-use-periodictimer-inside-of-constructor (Accessed: 22 March 2026). 
+
+Custom Data Structures:
+- Davis, M. (2021) Building a Linked List System From Scratch in C#, Part 1. Available at: https://medium.com/geekculture/building-a-linked-list-system-from-scratch-in-c-part-1-51aa6c68ea19 (Accessed: 26 March 2026). 
+
+- Microsoft. (2026) Indexers. Available at: https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/indexers/ (Accessed: 26 March 2026). 
+
+- Nemes, A. (2020) Roll your own custom list with C# .NET. Available at: https://dotnetcodr.com/2020/10/13/roll-your-own-custom-list-with-c-net/ (Accessed: 25 March).

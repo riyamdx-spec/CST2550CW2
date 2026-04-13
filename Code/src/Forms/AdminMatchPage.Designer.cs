@@ -32,6 +32,9 @@
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             bgPanel = new Panel();
             matchPanel = new Panel();
+            loadingPnl = new Panel();
+            loadingSpinner = new PictureBox();
+            loadingLbl = new Label();
             matchDataGridView = new DataGridView();
             noMatchLbl = new Label();
             filterBtnBgPanel = new Panel();
@@ -57,6 +60,8 @@
             adminNavBar1 = new BettingSystem.Forms.CustomControls.AdminNavBar();
             bgPanel.SuspendLayout();
             matchPanel.SuspendLayout();
+            loadingPnl.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)loadingSpinner).BeginInit();
             ((System.ComponentModel.ISupportInitialize)matchDataGridView).BeginInit();
             filterBtnBgPanel.SuspendLayout();
             roundedPanel2.SuspendLayout();
@@ -86,6 +91,7 @@
             // 
             // matchPanel
             // 
+            matchPanel.Controls.Add(loadingPnl);
             matchPanel.Controls.Add(matchDataGridView);
             matchPanel.Controls.Add(noMatchLbl);
             matchPanel.Dock = DockStyle.Fill;
@@ -94,6 +100,42 @@
             matchPanel.Padding = new Padding(50, 20, 50, 10);
             matchPanel.Size = new Size(1168, 348);
             matchPanel.TabIndex = 6;
+            // 
+            // loadingPnl
+            // 
+            loadingPnl.Controls.Add(loadingSpinner);
+            loadingPnl.Controls.Add(loadingLbl);
+            loadingPnl.Dock = DockStyle.Fill;
+            loadingPnl.Location = new Point(50, 20);
+            loadingPnl.Name = "loadingPnl";
+            loadingPnl.Padding = new Padding(100);
+            loadingPnl.Size = new Size(1068, 318);
+            loadingPnl.TabIndex = 8;
+            // 
+            // loadingSpinner
+            // 
+            loadingSpinner.Dock = DockStyle.Fill;
+            loadingSpinner.Image = Properties.Resources.loadingSpinner;
+            loadingSpinner.Location = new Point(100, 100);
+            loadingSpinner.Name = "loadingSpinner";
+            loadingSpinner.Padding = new Padding(0, 5, 0, 5);
+            loadingSpinner.Size = new Size(868, 73);
+            loadingSpinner.SizeMode = PictureBoxSizeMode.Zoom;
+            loadingSpinner.TabIndex = 11;
+            loadingSpinner.TabStop = false;
+            // 
+            // loadingLbl
+            // 
+            loadingLbl.Dock = DockStyle.Bottom;
+            loadingLbl.Font = new Font("Times New Roman", 13.875F, FontStyle.Italic, GraphicsUnit.Point, 0);
+            loadingLbl.ForeColor = Color.FromArgb(241, 241, 241);
+            loadingLbl.Location = new Point(100, 173);
+            loadingLbl.Name = "loadingLbl";
+            loadingLbl.Padding = new Padding(0, 10, 0, 5);
+            loadingLbl.Size = new Size(868, 45);
+            loadingLbl.TabIndex = 10;
+            loadingLbl.Text = "Loading Matches...";
+            loadingLbl.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // matchDataGridView
             // 
@@ -439,6 +481,8 @@
             Text = "AdminMatchPage";
             bgPanel.ResumeLayout(false);
             matchPanel.ResumeLayout(false);
+            loadingPnl.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)loadingSpinner).EndInit();
             ((System.ComponentModel.ISupportInitialize)matchDataGridView).EndInit();
             filterBtnBgPanel.ResumeLayout(false);
             roundedPanel2.ResumeLayout(false);
@@ -482,5 +526,8 @@
         private RadioButton serieAradioButton;
         private Label noMatchLbl;
         private DataGridView matchDataGridView;
+        private Panel loadingPnl;
+        private Label loadingLbl;
+        private PictureBox loadingSpinner;
     }
 }

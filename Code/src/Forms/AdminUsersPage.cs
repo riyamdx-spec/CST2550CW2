@@ -21,11 +21,11 @@ namespace BettingSystem.Forms
             _currentSession = session;
 
             adminNavBar1.SetAdmin(_currentAdmin);
-            adminNavBar1.UsersPageClicked += (s, e) => _currentSession.OpenAdminViewUsersPage(this);
             adminNavBar1.SearchMatchesPageClicked += (s, e) => _currentSession.OpenAdminMatchPage(this);
             adminNavBar1.AddMatchesPageClicked += (s, e) => _currentSession.OpenAdminAddMatchPage(this);
             adminNavBar1.FinancialPageClicked += (s, e) => _currentSession.OpenAdminFinancialPage(this);
-            adminNavBar1.LogoutClicked += (s, e) => _currentSession.LogOut(this);
+            adminNavBar1.LogoutClicked += AdminNavBar1_LogoutClicked;
+
 
             this.Load += AdminUsersPage_Load;
             this.FormClosing += AdminUsersPage_FormClosing;
@@ -72,6 +72,15 @@ namespace BettingSystem.Forms
                     _currentSession.IsExiting = true;
                     Application.Exit();
                 }
+            }
+        }
+        private void AdminNavBar1_LogoutClicked(object? sender, EventArgs e)
+        {
+            if (!_currentSession.IsLoggingOut)
+            {
+                logOutPopup closingPopup = new logOutPopup(true, true);
+                if (closingPopup.ShowDialog() == DialogResult.Yes)
+                    _currentSession.LogOut(this);
             }
         }
 
