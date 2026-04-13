@@ -1714,12 +1714,12 @@ public class DatabaseManagerTests
     [TestMethod]
     public async Task FetchFinancialSummaryAsync_WithNewTransactionsAndSlip_ReflectsExpectedDeltas()
     {
-        FinancialSummary baseline = await _db.FetchFinancialSummaryAsync();
 
         string email = $"dbtest_financial_summary_{Guid.NewGuid():N}@gmail.com";
         const string password = "StrongPassword123!";
 
         await DeleteUserByEmailAsync(email);
+        FinancialSummary baseline = await _db.FetchFinancialSummaryAsync();
 
         try
         {
