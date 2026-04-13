@@ -532,7 +532,7 @@ public class DatabaseManagerTests
         await DeleteUserByEmailAsync(oldEmail);
         await DeleteUserByEmailAsync(newEmail);
 
-        var reg = await _db.RegisterAsync("OldFirst", "OldLast", new DateTime(2018, 3, 1), oldEmail, password);
+        var reg = await _db.RegisterAsync("OldFirst", "OldLast", new DateTime(2002, 3, 1), oldEmail, password);
         Assert.IsNotNull(reg.userObj);
 
         AppUser currentUser = reg.userObj!;
