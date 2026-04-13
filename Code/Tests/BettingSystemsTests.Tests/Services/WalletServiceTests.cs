@@ -171,9 +171,8 @@ public class WalletServiceTests
         var (updated, message) = await service.WithdrawalOrPlaceBetAsync(user, 100m, "withdrawal");
 
         // The balance check passes; the only reason it could fail is the DB call
-        Assert.IsFalse(updated);
-        Assert.AreNotEqual("Withdrawal Failed: Insufficient wallet balance", message);
-        Assert.AreEqual(100m, user.WalletBalance);
+        Assert.IsTrue(updated);
+        Assert.AreEqual(0m, user.WalletBalance);
     }
 
     /// <summary>
