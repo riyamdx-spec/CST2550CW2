@@ -89,7 +89,7 @@ public class DatabaseManagerTests
 
     private static async Task SetUserStatusActiveAsync(string email)
     {
-        string query = "UPDATE AppUser SET user_status = 'active' WHERE email = @email";
+        string query = "UPDATE AppUser SET user_status = 'Active' WHERE email = @email";
         await using SqlConnection connection = new SqlConnection(GetConnectionString());
         await using SqlCommand command = new SqlCommand(query, connection);
         command.Parameters.AddWithValue("@email", email);
