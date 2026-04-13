@@ -197,7 +197,7 @@ namespace BettingSystem.Data
                 }
 
                 //check if new password is same as old one
-                if (currentPasswordEntered == newPassword)
+                if (ComparePassword(newPassword, currentHashedPassword))
                 {
                     return (false, "New password cannot be the same as your current password");
                 }
@@ -1411,6 +1411,7 @@ namespace BettingSystem.Data
                 return;
             }
             using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand())
             {
                 await connection.OpenAsync();
                 foreach (var odd in oddList)
@@ -1901,3 +1902,4 @@ namespace BettingSystem.Data
         }
     }
 }
+
