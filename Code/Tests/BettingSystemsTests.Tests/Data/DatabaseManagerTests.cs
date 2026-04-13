@@ -137,7 +137,8 @@ public class DatabaseManagerTests
                                FROM Odd o
                                INNER JOIN Game g ON g.game_id = o.game_id
                                WHERE g.game_status = 'Scheduled'
-                               ORDER BY o.odd_id DESC";
+                               AND g.game_date > GETDATE()
+                               ORDER BY g.game_date DESC";
 
         await using SqlConnection connection = new SqlConnection(GetConnectionString());
         await using SqlCommand command = new SqlCommand(query, connection);
@@ -979,20 +980,31 @@ public class DatabaseManagerTests
             Assert.IsNotNull(reg.userObj);
             int userId = reg.userObj!.UserID;
 
-            await _db.ProcessWalletTransactionAsync(userId, "deposit", 100m, 100m);
+            var depositResult = await _db.ProcessWalletTransactionAsync(userId, "deposit", 100m, 100m);
+
+            //await _db.ProcessWalletTransactionAsync(userId, "deposit", 100m, 100m);
+            Assert.IsTrue(depositResult, "Deposit failed, cannot continue test.");
 
             BetSlip slip = new BetSlip(userId) { Stake = 10m };
-            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Today));
-            await _db.SaveBetSlipAsync(slip);
+            
+            (bool valid, string message) = slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Today));
+            //await _db.SaveBetSlipAsync(slip);
+            var saveResult = await _db.SaveBetSlipAsync(slip);
+            Assert.IsTrue(saveResult.success, saveResult.message);
 
-            int? slipId = await GetLatestSlipIdByUserAsync(userId);
-            Assert.IsNotNull(slipId);
+            MyList<BetHistorySlip> history = await _db.FetchBetHistoryAsync(userId);
+            Assert.IsTrue(history.Count > 0, "No bet slips found for user after saving.");
+
+
+            //int? slipId = history[0].SlipID;
+            int slipId = history.First(s => s.UserID == userId).SlipID;
+            //Assert.IsNotNull(slipId);
 
             decimal payout = slip.CalculatePayout();
             bool result = await _db.ProcessWalletTransactionAsync(userId, "payout", 100m + payout, payout, slipId);
 
             Assert.IsTrue(result);
-            Assert.IsTrue(await IsSlipClaimedAsync(slipId.Value));
+            Assert.IsTrue(await IsSlipClaimedAsync(slipId));
             Assert.IsTrue(await TransactionRowExistsAsync(userId, "payout", payout));
         }
         finally
@@ -1793,12 +1805,6 @@ public class DatabaseManagerTests
     public async Task FetchMonthlyTransactionVolumeAsync_WithCurrentMonthTransactions_IncludesTypeTotals()
     {
         string currentMonth = await GetCurrentMonthLabelAsync();
-        MyList<MonthlyTransactionVolume> baseline = await _db.FetchMonthlyTransactionVolumeAsync();
-
-        decimal baseDeposit = GetMonthlyTransactionAmount(baseline, currentMonth, "deposit");
-        decimal baseWithdrawal = GetMonthlyTransactionAmount(baseline, currentMonth, "withdrawal");
-        decimal baseBet = GetMonthlyTransactionAmount(baseline, currentMonth, "bet");
-        decimal basePayout = GetMonthlyTransactionAmount(baseline, currentMonth, "payout");
 
         string email = $"dbtest_monthly_tv_{Guid.NewGuid():N}@gmail.com";
         const string password = "StrongPassword123!";
@@ -1810,6 +1816,13 @@ public class DatabaseManagerTests
             var reg = await _db.RegisterAsync("Finance", "Volume", new DateTime(2000, 1, 1), email, password);
             Assert.IsNotNull(reg.userObj);
             int userId = reg.userObj!.UserID;
+
+            MyList<MonthlyTransactionVolume> baseline = await _db.FetchMonthlyTransactionVolumeAsync();
+
+            decimal baseDeposit = GetMonthlyTransactionAmount(baseline, currentMonth, "deposit");
+            decimal baseWithdrawal = GetMonthlyTransactionAmount(baseline, currentMonth, "withdrawal");
+            decimal baseBet = GetMonthlyTransactionAmount(baseline, currentMonth, "bet");
+            decimal basePayout = GetMonthlyTransactionAmount(baseline, currentMonth, "payout");
 
             await InsertSystemTransactionAsync(userId, "deposit", 60m, DateTime.UtcNow);
             await InsertSystemTransactionAsync(userId, "withdrawal", 25m, DateTime.UtcNow);
