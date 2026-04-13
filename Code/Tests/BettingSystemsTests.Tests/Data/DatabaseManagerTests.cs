@@ -590,7 +590,7 @@ public class DatabaseManagerTests
 
         await DeleteUserByEmailAsync(email);
 
-        var reg = await _db.RegisterAsync("Change", "Password", new DateTime(2020, 5, 1), email, oldPassword);
+        var reg = await _db.RegisterAsync("Change", "Password", new DateTime(2000, 5, 1), email, oldPassword);
         Assert.IsNotNull(reg.userObj);
 
         var beforeHash = await _db.FetchPasswordAsync(reg.userObj!.UserID);
@@ -628,7 +628,7 @@ public class DatabaseManagerTests
 
         await DeleteUserByEmailAsync(email);
 
-        var reg = await _db.RegisterAsync("Change", "WrongCurrent", new DateTime(2021, 6, 1), email, currentPassword);
+        var reg = await _db.RegisterAsync("Change", "WrongCurrent", new DateTime(2000, 6, 1), email, currentPassword);
         Assert.IsNotNull(reg.userObj);
 
         var (valid, message) = await _db.ChangePasswordAsync(wrongCurrentPassword, "NewPass204!", reg.userObj!.UserID);
@@ -650,7 +650,7 @@ public class DatabaseManagerTests
 
         await DeleteUserByEmailAsync(email);
 
-        var reg = await _db.RegisterAsync("Change", "Same", new DateTime(2021, 7, 1), email, password);
+        var reg = await _db.RegisterAsync("Change", "Same", new DateTime(2000, 7, 1), email, password);
         Assert.IsNotNull(reg.userObj);
 
         var (valid, message) = await _db.ChangePasswordAsync(password, password, reg.userObj!.UserID);
