@@ -287,6 +287,12 @@ namespace BettingSystem.Forms
                 return;
             }
 
+            if (stake > 1000)
+            {
+                new Notification("Stake cannot be more than 1000.", NotificationType.Error, this);
+                return;
+            }
+
             // check user has enough balance
             if (stake > _currentUser.WalletBalance)
             {

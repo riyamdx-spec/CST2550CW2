@@ -39,7 +39,7 @@ namespace BettingSystem.Forms
             specialCharLbl.ForeColor = password.Any(c => !char.IsLetterOrDigit(c)) ? Color.LimeGreen : Color.Firebrick;
         }
 
-        private void ShowError(string message, Control targetControl)
+        private void ShowMessage(string message, Control targetControl)
         {
             errorLbl.Text = message;
             errorLbl.Location = new Point(targetControl.Left, targetControl.Bottom + 5);
@@ -59,14 +59,14 @@ namespace BettingSystem.Forms
             // check empty fields
             if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
             {
-                ShowError("Please fill in all fields.", newPasswordTextbox);
+                ShowMessage("Please fill in all fields.", newPasswordTextbox);
                 return;
             }
 
             // check new password validity
             if (!_validator.CheckPasswordValidity(newPassword))
             {
-                ShowError("New password is in incorrect format.", newPasswordTextbox);
+                ShowMessage("New password is in incorrect format.", newPasswordTextbox);
                 return;
             }
 
@@ -77,11 +77,14 @@ namespace BettingSystem.Forms
 
             if (success)
             {
-
+                ShowMessage(message, newPasswordTextbox); 
+                errorLbl.ForeColor = Color.LimeGreen;
+                await Task.Delay(1500);
+                this.Close();
             }
             else
             {
-                ShowError(message, currentPasswordTextbox);
+                ShowMessage(message, currentPasswordTextbox);
             }
         }
     }
