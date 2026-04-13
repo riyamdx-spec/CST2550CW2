@@ -1,6 +1,5 @@
 using BettingSystem.Models;
 using BettingSystem.Services;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace BettingSystemsTests;
 
@@ -122,15 +121,15 @@ public class WalletServiceTests
     }
 
     /// <summary>
-    /// Payout with slip id passes validation and reaches processing branch.
+    /// Payout with invalid slip id returns processing failure message
     /// </summary>
     [TestMethod]
-    public async Task DepositOrPayoutAsync_PayoutWithSlipId_ReturnsProcessingFailureMessage()
+    public async Task DepositOrPayoutAsync_PayoutWithInvalidSlipId_ReturnsProcessingFailureMessage()
     {
         var service = new WalletService();
         var user = CreateUser(100m);
 
-        var (updated, message) = await service.DepositOrPayoutAsync(user, 50m, "payout", slipId: 10);
+        var (updated, message) = await service.DepositOrPayoutAsync(user, 50m, "payout", slipId: -10);
 
         Assert.IsFalse(updated);
         Assert.AreEqual("Failed to process your transaction. Please try again.", message);
@@ -138,19 +137,18 @@ public class WalletServiceTests
     }
 
     /// <summary>
-    /// Valid deposit amount reaches processing branch and keeps balance unchanged on failure.
+    /// Valid deposit amount updates wallet balance.
     /// </summary>
     [TestMethod]
-    public async Task DepositOrPayoutAsync_DepositValidAmount_ReturnsProcessingFailureMessage()
+    public async Task DepositOrPayoutAsync_DepositValidAmount_ReturnsSuccess()
     {
         var service = new WalletService();
         var user = CreateUser(100m);
 
         var (updated, message) = await service.DepositOrPayoutAsync(user, 25m, "deposit");
-
-        Assert.IsFalse(updated);
-        Assert.AreEqual("Failed to process your transaction. Please try again.", message);
-        Assert.AreEqual(100m, user.WalletBalance);
+        Assert.IsTrue(updated);
+        Assert.AreEqual("Deposit completed successfully", message);
+        Assert.AreEqual(125m, user.WalletBalance);
     }
 
     /// <summary>

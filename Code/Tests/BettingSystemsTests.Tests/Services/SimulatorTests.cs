@@ -33,13 +33,13 @@ public class SimulatorTests
 	/// </summary>
 	private static SessionManager CreateUserSessionWithMatches()
 	{
-		var session = new SessionManager(CreateUser(), new Simulator())
-		{
-			MatchesCollection = new FootballMatchCollection(
+		var session = new SessionManager(CreateUser(), new Simulator());
+
+		session.MatchesCollection = new FootballMatchCollection(
 				new MyList<FootballMatch>(),
-				new MyDictionary<int, MyList<FootballMatch>>()),
-			HistoryBetSlips = new MyList<BetHistorySlip>()
-		};
+				new MyDictionary<int, MyList<FootballMatch>>()
+		);
+		session.HistoryBetSlips = new MyList<BetHistorySlip>();
 
 		var leagueMatches = new MyList<FootballMatch>();
 		var match1 = new FootballMatch(1, 100, 10, 20, DateTime.Today.AddHours(2));
@@ -120,14 +120,16 @@ public class SimulatorTests
 	public void UpdateMemory_RemovesStartedMatches_UpdatesHistory_AndRaisesEvents()
 	{
 		var simulator = new Simulator();
-		var session = CreateUserSessionWithMatches();
-		simulator.SetSession(session);
+        var session = CreateUserSessionWithMatches();
+		//var session = new SessionManager();
 
-            session.UserSlip.AddBet(new Bet(1, "Home Win", 2.00m, 1, 1, DateTime.Today));
-            session.UserSlip.AddBet(new Bet(2, "Away Win", 3.00m, 1, 2, DateTime.Today));
+        simulator.SetSession(session);
+
+        session.UserSlip.AddBet(new Bet(1, "Home Win", 2.00m, 1, 1, DateTime.Now.AddHours(2)));
+        session.UserSlip.AddBet(new Bet(2, "Away Win", 3.00m, 1, 2, DateTime.Now.AddHours(3)));
 
 		var historySlip = new BetHistorySlip(500, 1, DateTime.Today, 10m, 2m, 20m, "Pending", false);
-            var historyBet = new HistoryBet(900, "Home Win", 2m, 1, "Match Winner", "Pending", "A", "B", DateTime.Today, "League", 1, homeId: 10, awayId: 20);
+        var historyBet = new HistoryBet(900, "Home Win", 2m, 1, "Match Winner", "Pending", "A", "B", DateTime.Today, "League", 1, homeId: 10, awayId: 20);
 		historySlip.Bets.Add(historyBet);
 		session.HistoryBetSlips.Add(historySlip);
 
@@ -136,12 +138,10 @@ public class SimulatorTests
 		simulator.BetSlipUpdated += () => slipUpdatedCalls++;
 		simulator.HistoryUpdated += () => historyUpdatedCalls++;
 
-		var startedIds = new MyList<int>();
-		startedIds.Add(1);
+        var startedIds = new MyList<int> { 1 }; // Match 1 started and should be removed
+        var completedIds = new MyList<int>();
 
-		var completedIds = new MyList<int>();
-
-		var updatedBets = new MyDictionary<int, string>();
+        var updatedBets = new MyDictionary<int, string>();
 		updatedBets.Add(900, "Won");
 
 		var updatedSlips = new MyDictionary<int, string>();

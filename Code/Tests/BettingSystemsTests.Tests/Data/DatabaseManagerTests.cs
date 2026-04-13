@@ -238,16 +238,15 @@ public class DatabaseManagerTests
         return Convert.ToInt32(await command.ExecuteScalarAsync());
     }
 
-    private static async Task<List<(Odd odd, DateTime gameDate)>> GetScheduledOddsAsync(int count)
+    private static async Task<List<Odd>> GetScheduledOddsAsync(int count)
     {
-        string query = $@"SELECT TOP {count} o.odd_id, o.game_id, o.bet_type_id, o.selection, o.odd_value, g.game_date
+        string query = $@"SELECT TOP {count} o.odd_id, o.game_id, o.bet_type_id, o.selection, o.odd_value
                           FROM Odd o
                           INNER JOIN Game g ON g.game_id = o.game_id
                           WHERE g.game_status = 'Scheduled'
-                            AND g.game_date > GETDATE()
-                          ORDER BY g.game_date ASC, o.odd_id DESC";
+                          ORDER BY o.odd_id DESC";
 
-        List<(Odd odd, DateTime gameDate)> odds = new List<(Odd odd, DateTime gameDate)>();
+        List<Odd> odds = new List<Odd>();
         await using SqlConnection connection = new SqlConnection(GetConnectionString());
         await using SqlCommand command = new SqlCommand(query, connection);
         await connection.OpenAsync();
@@ -255,15 +254,12 @@ public class DatabaseManagerTests
         await using SqlDataReader reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            odds.Add((
-                new Odd(
-                    Convert.ToInt32(reader["odd_id"]),
-                    Convert.ToInt32(reader["game_id"]),
-                    Convert.ToInt32(reader["bet_type_id"]),
-                    reader["selection"].ToString()!,
-                    Convert.ToDecimal(reader["odd_value"])
-                ),
-                Convert.ToDateTime(reader["game_date"])
+            odds.Add(new Odd(
+                Convert.ToInt32(reader["odd_id"]),
+                Convert.ToInt32(reader["game_id"]),
+                Convert.ToInt32(reader["bet_type_id"]),
+                reader["selection"].ToString()!,
+                Convert.ToDecimal(reader["odd_value"])
             ));
         }
 
@@ -758,7 +754,7 @@ public class DatabaseManagerTests
             Assert.IsNotNull(reg.userObj);
 
             BetSlip slip = new BetSlip(reg.userObj!.UserID) { Stake = 15m };
-            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.UtcNow.AddHours(1)));
+            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Today));
 
             var (success, message) = await _db.SaveBetSlipAsync(slip);
             int? savedSlipId = await GetLatestSlipIdByUserAsync(reg.userObj.UserID);
@@ -787,22 +783,22 @@ public class DatabaseManagerTests
 
         try
         {
-            List<(Odd odd, DateTime gameDate)> odds = await GetScheduledOddsAsync(2);
+            List<Odd> odds = await GetScheduledOddsAsync(2);
             if (odds.Count < 2)
             {
-                Assert.Inconclusive("Need at least two future scheduled odds in seed database for multi-bet slip test.");
+                Assert.Inconclusive("Need at least two scheduled odds in seed database for multi-bet slip test.");
             }
 
             var reg = await _db.RegisterAsync("Slip", "Multi", new DateTime(2001, 3, 1), email, password);
             Assert.IsNotNull(reg.userObj);
 
             BetSlip slip = new BetSlip(reg.userObj!.UserID) { Stake = 20m };
-            foreach ((Odd odd, DateTime gameDate) in odds)
+            foreach (Odd odd in odds)
             {
-                slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, gameDate));
+                slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Today));
             }
 
-            decimal expectedOdds = odds.Aggregate(1m, (current, entry) => current * entry.odd.OddValue);
+            decimal expectedOdds = odds.Aggregate(1m, (current, odd) => current * odd.OddValue);
             decimal expectedPayout = Math.Round(20m * expectedOdds, 2);
 
             var (success, message) = await _db.SaveBetSlipAsync(slip);
@@ -991,13 +987,7 @@ public class DatabaseManagerTests
 
             BetSlip slip = new BetSlip(userId) { Stake = 10m };
             
-            (bool valid, string message) = slip.AddBet(new Bet(
-                odd.OddID,
-                odd.Selection,
-                odd.OddValue,
-                odd.BetTypeID,
-                odd.GameID,
-                DateTime.UtcNow.AddHours(1)));
+            (bool valid, string message) = slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Today));
             //await _db.SaveBetSlipAsync(slip);
             var saveResult = await _db.SaveBetSlipAsync(slip);
             Assert.IsTrue(saveResult.success, saveResult.message);
@@ -1201,7 +1191,7 @@ public class DatabaseManagerTests
             int userId = reg.userObj!.UserID;
 
             BetSlip slip = new BetSlip(userId) { Stake = 5m };
-            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.UtcNow.AddHours(1)));
+            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Today));
             await _db.SaveBetSlipAsync(slip);
 
             MyList<BetHistorySlip> history = await _db.FetchBetHistoryAsync(userId);
