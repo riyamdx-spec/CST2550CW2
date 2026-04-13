@@ -1714,7 +1714,6 @@ public class DatabaseManagerTests
     [TestMethod]
     public async Task FetchFinancialSummaryAsync_WithNewTransactionsAndSlip_ReflectsExpectedDeltas()
     {
-
         string email = $"dbtest_financial_summary_{Guid.NewGuid():N}@gmail.com";
         const string password = "StrongPassword123!";
 
@@ -1812,10 +1811,10 @@ public class DatabaseManagerTests
             Assert.IsNotNull(reg.userObj);
             int userId = reg.userObj!.UserID;
 
-            await InsertSystemTransactionAsync(userId, "deposit", 60m, DateTime.Now);
-            await InsertSystemTransactionAsync(userId, "withdrawal", 25m, DateTime.Now);
-            await InsertSystemTransactionAsync(userId, "bet", 15m, DateTime.Now);
-            await InsertSystemTransactionAsync(userId, "payout", 5m, DateTime.Now);
+            await InsertSystemTransactionAsync(userId, "deposit", 60m, DateTime.UtcNow);
+            await InsertSystemTransactionAsync(userId, "withdrawal", 25m, DateTime.UtcNow);
+            await InsertSystemTransactionAsync(userId, "bet", 15m, DateTime.UtcNow);
+            await InsertSystemTransactionAsync(userId, "payout", 5m, DateTime.UtcNow);
 
             MyList<MonthlyTransactionVolume> after = await _db.FetchMonthlyTransactionVolumeAsync();
 
