@@ -2006,26 +2006,41 @@ public class DatabaseManagerTests
 
     private static async Task<(int LeagueId, int HomeTeamId, int AwayTeamId)?> GetLeagueWithTwoRatedTeamsAsync()
     {
-        const string query = @"SELECT TOP 1 tr1.league_id AS league_id, tr1.team_id AS home_team_id, tr2.team_id AS away_team_id
-                               FROM TeamRating tr1
-                               INNER JOIN TeamRating tr2 ON tr1.league_id = tr2.league_id AND tr1.team_id < tr2.team_id
-                               ORDER BY tr1.league_id, tr1.team_id, tr2.team_id";
+        // Preferred path: two teams in same league from TeamRating (most representative for odds tests).
+        const string ratedQuery = @"SELECT TOP 1 tr1.league_id AS league_id, tr1.team_id AS home_team_id, tr2.team_id AS away_team_id
+                                    FROM TeamRating tr1
+                                    INNER JOIN TeamRating tr2 ON tr1.league_id = tr2.league_id AND tr1.team_id < tr2.team_id
+                                    ORDER BY tr1.league_id, tr1.team_id, tr2.team_id";
+
+        // Fallback 1: two teams in same league from LeagueTeam mapping.
+        const string leagueTeamQuery = @"SELECT TOP 1 lt1.league_id AS league_id, lt1.team_id AS home_team_id, lt2.team_id AS away_team_id
+                                         FROM LeagueTeam lt1
+                                         INNER JOIN LeagueTeam lt2 ON lt1.league_id = lt2.league_id AND lt1.team_id < lt2.team_id
+                                         ORDER BY lt1.league_id, lt1.team_id, lt2.team_id";
+
+        // Fallback 2: any existing game row gives a valid league/home/away tuple.
+        const string gameQuery = @"SELECT TOP 1 league_id, home_team_id AS home_team_id, away_team_id AS away_team_id
+                                   FROM Game
+                                   ORDER BY game_id DESC";
 
         await using SqlConnection connection = new SqlConnection(GetConnectionString());
-        await using SqlCommand command = new SqlCommand(query, connection);
-
         await connection.OpenAsync();
-        await using SqlDataReader reader = await command.ExecuteReaderAsync();
-        if (!await reader.ReadAsync())
+
+        foreach (string query in new[] { ratedQuery, leagueTeamQuery, gameQuery })
         {
-            return null;
+            await using SqlCommand command = new SqlCommand(query, connection);
+            await using SqlDataReader reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return (
+                    Convert.ToInt32(reader["league_id"]),
+                    Convert.ToInt32(reader["home_team_id"]),
+                    Convert.ToInt32(reader["away_team_id"])
+                );
+            }
         }
 
-        return (
-            Convert.ToInt32(reader["league_id"]),
-            Convert.ToInt32(reader["home_team_id"]),
-            Convert.ToInt32(reader["away_team_id"])
-        );
+        return null;
     }
 
     private static async Task<int> InsertTemporaryGameAsync(int leagueId, int homeTeamId, int awayTeamId)
