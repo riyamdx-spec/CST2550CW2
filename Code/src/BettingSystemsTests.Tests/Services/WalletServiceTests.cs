@@ -138,19 +138,19 @@ public class WalletServiceTests
     }
 
     /// <summary>
-    /// Valid deposit amount reaches processing branch and keeps balance unchanged on failure.
+    /// Valid deposit amount reaches processing branch and updates balance on success.
     /// </summary>
     [TestMethod]
-    public async Task DepositOrPayoutAsync_DepositValidAmount_ReturnsProcessingFailureMessage()
+    public async Task DepositOrPayoutAsync_DepositValidAmount_ReturnsSuccessAndUpdatesBalance()
     {
         var service = new WalletService();
         var user = CreateUser(100m);
 
         var (updated, message) = await service.DepositOrPayoutAsync(user, 25m, "deposit");
 
-        Assert.IsFalse(updated);
-        Assert.AreEqual("Failed to process your transaction. Please try again.", message);
-        Assert.AreEqual(100m, user.WalletBalance);
+        Assert.IsTrue(updated);
+        Assert.AreEqual("Deposit completed successfully", message);
+        Assert.AreEqual(125m, user.WalletBalance);
     }
 
     /// <summary>
