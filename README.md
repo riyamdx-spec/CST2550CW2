@@ -162,6 +162,17 @@ Code/
 4. Tests service-layer behaviour in memory
 5. Integration-tests the database access layer
 
+#### Run Tests code
+
+1. Open `Code/src/BettingSystem.slnx` in Visual Studio.
+2. Wait for package restore to finish (or go to **Tools -> NuGet Package Manager -> Restore NuGet Packages**).
+3. Build the solution: **Build -> Build Solution** (`Ctrl + Shift + B`).
+4. Open the test window: **Test -> Test Explorer**.
+5. In Test Explorer, click **Run All Tests**.
+6. Review results:
+   - Green check = passed
+   - Red X = failed (double-click to view failure details and stack trace)
+
 ## Simulation System
 
 A periodic timer runs every minute to simulate live match updates by modifying the database automatically.
