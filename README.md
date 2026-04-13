@@ -156,6 +156,12 @@ Code/
 
 ## Testing
 
+1. Validates custom data structures
+2. Verifies core business-model logic
+3. Checks all input-validation rules
+4. Tests service-layer behaviour in memory
+5. Integration-tests the database access layer
+
 ## Simulation System
 
 A periodic timer runs every minute to simulate live match updates by modifying the database automatically.
