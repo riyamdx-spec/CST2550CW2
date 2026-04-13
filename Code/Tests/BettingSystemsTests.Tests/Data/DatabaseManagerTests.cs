@@ -563,8 +563,8 @@ public class DatabaseManagerTests
         await DeleteUserByEmailAsync(firstEmail);
         await DeleteUserByEmailAsync(secondEmail);
 
-        var firstUser = await _db.RegisterAsync("First", "User", new DateTime(2019, 4, 1), firstEmail, password);
-        var secondUser = await _db.RegisterAsync("Second", "User", new DateTime(2019, 4, 2), secondEmail, password);
+        var firstUser = await _db.RegisterAsync("First", "User", new DateTime(2000, 4, 1), firstEmail, password);
+        var secondUser = await _db.RegisterAsync("Second", "User", new DateTime(2000, 4, 2), secondEmail, password);
 
         Assert.IsNotNull(firstUser.userObj);
         Assert.IsNotNull(secondUser.userObj);
