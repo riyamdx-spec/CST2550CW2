@@ -212,11 +212,11 @@
             // errorLbl
             // 
             errorLbl.AutoSize = true;
-            errorLbl.Font = new Font("Times New Roman", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            errorLbl.Font = new Font("Times New Roman", 9F);
             errorLbl.ForeColor = Color.Firebrick;
             errorLbl.Location = new Point(3, 51);
             errorLbl.Name = "errorLbl";
-            errorLbl.Size = new Size(45, 19);
+            errorLbl.Size = new Size(35, 15);
             errorLbl.TabIndex = 2;
             errorLbl.Text = "label1";
             errorLbl.Visible = false;
