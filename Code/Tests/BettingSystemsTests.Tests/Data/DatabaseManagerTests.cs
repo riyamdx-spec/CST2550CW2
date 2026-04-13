@@ -1836,11 +1836,6 @@ public class DatabaseManagerTests
     [TestMethod]
     public async Task FetchBetStatusBreakdownAsync_WithInsertedStatuses_ReturnsUpdatedCounts()
     {
-        MyList<BetStatusCount> baseline = await _db.FetchBetStatusBreakdownAsync();
-        int baselinePending = GetBetStatusCount(baseline, "Pending");
-        int baselineWon = GetBetStatusCount(baseline, "Won");
-        int baselineLost = GetBetStatusCount(baseline, "Lost");
-
         string email = $"dbtest_bet_status_{Guid.NewGuid():N}@gmail.com";
         const string password = "StrongPassword123!";
 
@@ -1852,15 +1847,26 @@ public class DatabaseManagerTests
             Assert.IsNotNull(reg.userObj);
             int userId = reg.userObj!.UserID;
 
+            MyList<BetStatusCount> before = await _db.FetchBetStatusBreakdownAsync();
+
             await InsertBetSlipWithStatusAsync(userId, "Pending");
             await InsertBetSlipWithStatusAsync(userId, "Won");
             await InsertBetSlipWithStatusAsync(userId, "Lost");
 
             MyList<BetStatusCount> after = await _db.FetchBetStatusBreakdownAsync();
 
-            Assert.AreEqual(baselinePending + 1, GetBetStatusCount(after, "Pending"));
-            Assert.AreEqual(baselineWon + 1, GetBetStatusCount(after, "Won"));
-            Assert.AreEqual(baselineLost + 1, GetBetStatusCount(after, "Lost"));
+            Assert.AreEqual(
+                GetBetStatusCount(before, "Pending") + 1,
+                GetBetStatusCount(after, "Pending") 
+            );
+            Assert.AreEqual(
+                GetBetStatusCount(before, "Won") + 1,
+                GetBetStatusCount(after, "Won")
+            );
+            Assert.AreEqual(
+                GetBetStatusCount(before, "Lost") + 1,
+                GetBetStatusCount(after, "Lost")
+            );
         }
         finally
         {
