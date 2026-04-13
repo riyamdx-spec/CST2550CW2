@@ -1191,7 +1191,8 @@ public class DatabaseManagerTests
             int userId = reg.userObj!.UserID;
 
             BetSlip slip = new BetSlip(userId) { Stake = 5m };
-            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Today));
+
+            slip.AddBet(new Bet(odd.OddID, odd.Selection, odd.OddValue, odd.BetTypeID, odd.GameID, DateTime.Now.AddHours(1)));
             await _db.SaveBetSlipAsync(slip);
 
             MyList<BetHistorySlip> history = await _db.FetchBetHistoryAsync(userId);
