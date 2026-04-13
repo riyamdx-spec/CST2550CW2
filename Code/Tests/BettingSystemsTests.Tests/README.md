@@ -19,3 +19,6 @@ A dedicated MSTest unit and integration test project for the BettingSystem appli
 5. **Integration-tests the database access layer**  
    Tests `DatabaseManager` against a real SQL Server database — covering user registration, login, wallet transactions, match and odds persistence, bet-slip saving, game-result recording, and financial analytics to confirm that every query and stored procedure produces the expected data.
 
+## Notes
+
+Odds-generation methodology and references are documented in the root `README.md` under `Testing -> Odds Generation` and `References -> Odds Generation References`.
