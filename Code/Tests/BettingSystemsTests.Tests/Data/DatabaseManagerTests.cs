@@ -506,15 +506,15 @@ public class DatabaseManagerTests
 
         await DeleteUserByEmailAsync(email);
 
-        var reg = await _db.RegisterAsync("Test", "Suspended", new DateTime(2017, 2, 1), email, password);
+        var reg = await _db.RegisterAsync("Test", "Suspended", new DateTime(2000, 2, 1), email, password);
         Assert.IsNotNull(reg.userObj);
 
-        await SetUserStatusAsync(email, "suspended");
+        await SetUserStatusAsync(email, "Suspended");
 
         var (userObj, message) = await _db.LoginAsync(email, password);
 
         Assert.IsNull(userObj);
-        Assert.AreEqual("Your account has been suspended. Please contact admin@gmail.com for support.", message);
+        Assert.AreEqual("Your account has been Suspended. Please contact admin@gmail.com for support.", message);
 
         await DeleteUserByEmailAsync(email);
     }
