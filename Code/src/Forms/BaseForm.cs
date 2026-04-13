@@ -1,4 +1,5 @@
 ﻿using BettingSystem.Data_Structures;
+using BettingSystem.Forms.CustomControls;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -22,6 +23,10 @@ namespace BettingSystem
                 // store initial position and size 
                 foreach (Control c in parent.Controls)
                 {
+                    // skip AdminNavBar
+                    if (c is AdminNavBar) 
+                        continue;
+
                     _baseRects[c] = new RectangleF(c.Left, c.Top, c.Width, c.Height);
                     if (c.Font != null) _baseFontSizes[c] = c.Font.Size;
                     if (c.HasChildren) Capture(c);
@@ -44,7 +49,13 @@ namespace BettingSystem
                 // loop through controls to resize and reposition
                 foreach (Control c in parent.Controls)
                 {
-                    if (!_baseRects.TryGetValue(c, out RectangleF b)) continue;
+                    // skip AdminNavBar
+                    if (c is AdminNavBar)
+                        continue;
+
+                    if (!_baseRects.TryGetValue(c, out RectangleF b)) 
+                        continue;
+
                     c.Location = new Point((int)(b.X * sx), (int)(b.Y * sy));
                     c.Size = new Size((int)(b.Width * sx), (int)(b.Height * sy));
                     if (_baseFontSizes.TryGetValue(c, out float fs))
