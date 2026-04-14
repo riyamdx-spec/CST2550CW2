@@ -14,6 +14,8 @@
     - [AI Agent Setup](#ai-agent-setup)
     - [Running the Application](#running-the-application)
 - [Troubleshooting](#troubleshooting)
+    - [Database Setup Errors](#database-setup-errors)
+    - [API Key / AI Report Errors](#api-key--ai-report-errors)
 - [How to Use the Program](#how-to-use-the-program)
     - [User Flow](#user-flow)
     - [Admin Flow](#admin-flow)
@@ -65,6 +67,22 @@ In addition, an admin interface is provided for managing users, matches and acce
 - Generate financial reports
 
 ## Folder Structure
+
+**Root Directory:**
+```text
+./
+├── Code/
+├── Project Management/
+├── VideoDemo/
+├── Project Report/
+└── README.md
+```
+
+- Code: Contains the aaplication source code
+- Project Management: Includes project management report, project requirement documentation, Gantt Chart, and activity diagrams
+- VideoDemo: Contains an MP4 video demonstration of the software
+- Project Report: Contains the project report PDF, algorithm analysis documentation and brainstorm doc
+
 **Code Folder:**
 ```text
 Code/
@@ -104,26 +122,94 @@ Code/
 - **ScottPlot** - Financial graphs
 - **GoogleGenAI** - Financial report generation
 
+## Getting the Project
+1. Clone the repository from GitHub:
+```
+git clone https://github.com/riyamdx-spec/CST2550CW2.git
+```
+2. Open the solution `BettingSystem.slnx` in **Visual Studio 2026**
+
+
 ## How to Run the Project
 
 ### Database Setup
-1. Download the `Code/db/DataSource` folder from the repository
-2. Move `DataSource` folder to your **local drive** (typically, path `C:\`)
-3. Open **SQL Server Management Studio (SSMS)**
-4. Execute `Code/db/CreateDatabaseSQL.txt` in SSMS to create the database schema
-5. Execute `Code/db/PopulateTablesSQL.txt` in SSMS to insert initial data
-6. Execute `Code/db/testData.txt` in SSMS to insert sample data
+1. Move or Copy `Code/db/DataSource` folder to your **local drive** (`C:\`)
+2. Open **SQL Server Management Studio (SSMS)**
+3. Execute `Code/db/CreateDatabaseSQL.txt` in SSMS **only once** to create the database schema
+4. Execute `Code/db/PopulateTablesSQL.txt` in SSMS **only once** to insert initial data
 
 ### AI Agent Setup
 1. Create a **Google Gemini API Key** at https://aistudio.google.com/api-keys
-2. Replace the value of `GOOGLE_API_KEY` in `App.Config` with your key
-3. Replace the connectionString for `BettingDB` in `App.Config` to match your created database
+2. Replace the paceholder **YOUR_API_KEY** in the `App.Config` file with your Google Gemini API key
+3. Update the `connectionString` for `BettingDB` in the `App.Config` file to match your local database configuration
 
 ### Running the Application
 1. Open the solution in **Visual studio**
-2. Restore NuGet packages using `dotnet restore`
-3. Build the solution
-2. Run the application
+2. Restore NuGet packages using `dotnet restore` via terminal or go to **Tools -> NuGet Package Manager -> Restore NuGet Packages**
+3. Build the solution (go to **Build -> Build Solution** or use `Ctrl + Shift + B`)
+4. Run the application
+5. The application will generate odds on startup
+
+### Sample Data (Optional)
+To insert sample users and betting data:
+1. Ensure the application has been run at least once so that the `Odd` table is populated
+2. You can verify this by running the following in SSMS:
+
+```sql
+USE BettingSystemDB;
+GO
+
+SELECT COUNT(*) AS OddCount FROM Odd;
+```
+
+3. Proceed if the OddCount is 4041
+4. Execute `Code/db/testData.txt` in SSMS **only once** to insert sample data
+
+## Troubleshooting
+
+### Database Setup Errors
+
+If you encounter **foreign key constraint errors** when running `PopulateTablesSQL.txt`, this is usually caused by missing data in parent tables. Since tables such as `LeagueTeam`, `Player`, and `GameResult` depend on `League`, `Team` and `Game`, they must be populated in the correct order. If an earlier table is empty due to a failed bulk insert, all dependent tables will also fail.
+
+Check each table in order to find where population failed:
+
+1. In SSMS, run: `SELECT * FROM League` and verify rows exist and IDs start at 1.
+2. Then check for `Team`, `LeagueTeam`, `Player`, `Game`, `GameResult` in sequence.
+3. The first table that is empty or has an ID starting at `0` is the source of the issue.
+4. If the `Game` table is empty, this is most likely caused by a line ending mismatch in the temporary table used during population.
+
+**Fix:**
+
+* Locate line 77 in `PopulateTablesSQL.txt`.
+* Find delimeter value in the bulk insert for `#TempGame`.
+* If it currently reads `0x0a`, change it to `0x0d0a`.
+* Run the script again and verify if the `Game` table is now populated.
+
+**If errors persist**, the cleanest fix is to drop the database and start from scratch by running this in SSMS:
+
+```sql
+DROP DATABASE BettingSystemDB;
+```
+
+> **Note:** If SSMS reports that the database is in use and cannot be dropped, run the following command first to force all active connections to close, then retry the DROP:
+>
+> ```sql
+> ALTER DATABASE BettingSystemDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+> ```
+
+> Then repeat the steps from the [How to Run the Project Section](#how-to-run-the-project)
+
+
+### API Key / AI Report Errors
+
+If the **Generate Report** button produces no output or throws an error, this is most likely due to high traffic on the Google Gemini API.
+
+**Steps to resolve:**
+
+1. Wait **2–3 minutes**, then click **Generate Report** again
+2. If the issue persists, verify your API key is correctly set in `App.Config` under `GOOGLE_API_KEY`
+3. Confirm the key is active at [https://aistudio.google.com/api-keys](https://aistudio.google.com/api-keys)
+4. Check that you have not exceeded your free-tier quota for the day
 
 ## How to Use the Program
 
@@ -159,7 +245,7 @@ Code/
 ***Note: For simulation purposes, each match lasts 5 minutes***
 
 ## Testing
-
+Test cases covered the following:
 1. Validates custom data structures
 2. Verifies core business-model logic
 3. Checks all input-validation rules
@@ -211,54 +297,6 @@ Code to handle the simulation system is found in `Simulator.cs`
 4. Sends request to AI Agent
 5. AI Agent analyses the data and executes a financial summary
 6. Agent returns the report to be displayed on the interface
-
-## Troubleshooting
-
-### Database Setup Errors
-
-If you encounter **foreign key constraint errors** when running `PopulateTablesSQL.txt`, this is usually caused by missing data in parent tables. Since tables such as `LeagueTeam`, `Player`, and `GameResult` depend on `League`, `Team` and `Game`, they must be populated in the correct order. If an earlier table is empty due to a failed bulk insert, all dependent tables will also fail.
-
-Check each table in order to find where population failed:
-
-1. In SSMS, run: `SELECT * FROM League` and verify rows exist and IDs start at 1.
-2. Then check `Team`, `LeagueTeam`, `Player`, `Game`, `GameResult` in sequence.
-3. The first table that is empty or has an ID starting at `0` is the source of the issue.
-4. If the `Game` table is empty, this is most likely caused by a line ending mismatch in the temporary table used during population.
-
-**Fix:**
-
-* Locate line 77 in `PopulateTablesSQL.txt`.
-* Find delimeter value in the bulk insert for `#TempGame`.
-* If it currently reads `0x0d0a`, change it to `0x0a`.
-* Run the script again and verify if the `Game` table is now populated.
-
-**If errors persist**, the cleanest fix is to drop the database and start from scratch:
-
-```sql
-DROP DATABASE BettingSystemDB;
-```
-
-> **Note:** If SSMS reports that the database is in use and cannot be dropped, run the following command first to force all active connections to close, then retry the DROP:
->
-> ```sql
-> ALTER DATABASE BettingSystemDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-> ```
-
-Then re-run `CreateDatabaseSQL.txt` followed by `PopulateTablesSQL.txt` and `testData.txt` in order.
-
-> **Note:** `testData.txt` requires odds to already exist in the database.
-> Odds are generated when the application runs. Launch the application once before running `testData.txt`.
-
-### API Key / AI Report Errors
-
-If the **Generate Report** button produces no output or throws an error, this is most likely due to high traffic on the Google Gemini API.
-
-**Steps to resolve:**
-
-1. Wait **2–3 minutes**, then click **Generate Report** again
-2. If the issue persists, verify your API key is correctly set in `App.Config` under `GOOGLE_API_KEY`
-3. Confirm the key is active at [https://aistudio.google.com/api-keys](https://aistudio.google.com/api-keys)
-4. Check that you have not exceeded your free-tier quota for the day
 
 ## References
 Password hashing:
