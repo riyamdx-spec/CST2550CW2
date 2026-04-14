@@ -394,7 +394,7 @@ namespace BettingSystem.Forms
             lnkToSignUp.Font = new Font("Times New Roman", 15F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lnkToSignUp.ForeColor = Color.FromArgb(241, 241, 241);
             lnkToSignUp.LinkColor = Color.FromArgb(27, 42, 58);
-            lnkToSignUp.Location = new Point(285, 428);
+            lnkToSignUp.Location = new Point(315, 428);
             lnkToSignUp.Name = "lnkToSignUp";
             lnkToSignUp.Size = new Size(73, 22);
             lnkToSignUp.TabIndex = 5;
@@ -485,7 +485,7 @@ namespace BettingSystem.Forms
             lnkToLogin.Font = new Font("Times New Roman", 15F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lnkToLogin.ForeColor = Color.FromArgb(241, 241, 241);
             lnkToLogin.LinkColor = Color.FromArgb(27, 42, 58);
-            lnkToLogin.Location = new Point(303, 428);
+            lnkToLogin.Location = new Point(340, 428);
             lnkToLogin.Name = "lnkToLogin";
             lnkToLogin.Size = new Size(60, 22);
             lnkToLogin.TabIndex = 4;
