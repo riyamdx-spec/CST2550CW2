@@ -348,6 +348,8 @@ namespace BettingSystem.Forms
             UpdateSummary();
             txtStake.Clear();
             btnPlaceBet.Enabled = true;
+
+            pnlSummaryContainer.Hide();
         }
 
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)
