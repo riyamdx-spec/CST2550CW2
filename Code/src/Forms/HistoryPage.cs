@@ -294,7 +294,7 @@ namespace BettingSystem.Forms
         private void NavBar1_AccountClicked(object? sender, EventArgs e)
         {
             OnHide();
-            _currentSession.OpenMainPage(this);
+            _currentSession.OpenProfilePage(this);
         }
     }
 }
