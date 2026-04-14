@@ -219,6 +219,8 @@ namespace BettingSystem.Forms
                     // show empty message if no bets left
                     if (!_userSlip.Bets.Any())
                         LoadBetSlips();
+                    else
+                        UpdateSummary();
                 };
                 card.Margin = new Padding(0, 15, 0, 15);
                 pnlSlipList.Controls.Add(card);
