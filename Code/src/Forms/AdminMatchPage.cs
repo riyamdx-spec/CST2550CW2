@@ -183,6 +183,7 @@ namespace BettingSystem.Forms
             // check if there are no matches
             if (footballMatches.Count == 0)
             {
+                loadingPnl.Hide();
                 noMatchLbl.Visible = true;
                 return;
             }
