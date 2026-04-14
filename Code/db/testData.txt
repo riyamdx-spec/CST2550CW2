@@ -1,0 +1,276 @@
+USE BettingSystemDB;
+GO
+
+-- USERS
+INSERT INTO AppUser (first_name, last_name, dob, email, password_hash, registration_date, wallet_balance, user_role, user_status)
+VALUES
+('Admin', 'System', '2004-03-10', 'admin@pitchbet.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -180, GETDATE()), 5000.00, 'admin', 'Active'),
+('Megane', 'Coret', '2004-06-21', 'megane@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -160, GETDATE()), 1240.50, 'user', 'Active'),
+('Riya', 'Nunkoo', '2004-11-03', 'riya@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -140, GETDATE()),  875.00, 'user', 'Active'),
+('Rayan', 'Sedoyeka', '2004-07-14', 'rayan@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -120, GETDATE()),  320.75, 'user', 'Active'),
+('Melanie', 'Hau', '2004-01-28', 'melanie@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -100, GETDATE()), 2100.00, 'user', 'Active'),
+('Syrielle', 'Ramtohul', '2004-09-09', 'syrielle@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -80,  GETDATE()),   50.00, 'user', 'Suspended'); 
+GO
+
+-- SYSTEM TRANSACTIONS
+
+-- MÉGANE (id=2) 
+INSERT INTO SystemTransaction (app_user_id, transaction_type, amount, transaction_timestamp) VALUES
+(2, 'deposit',    600.00, DATEADD(DAY, -158, GETDATE())),
+(2, 'bet',         50.00, DATEADD(DAY, -155, GETDATE())),
+(2, 'bet',         60.00, DATEADD(DAY, -148, GETDATE())),
+(2, 'payout',      90.00, DATEADD(DAY, -145, GETDATE())), 
+(2, 'deposit',    400.00, DATEADD(DAY, -140, GETDATE())),
+(2, 'bet',         70.00, DATEADD(DAY, -135, GETDATE())),
+(2, 'bet',         80.00, DATEADD(DAY, -128, GETDATE())),
+(2, 'payout',     120.00, DATEADD(DAY, -125, GETDATE())),  
+(2, 'deposit',    300.00, DATEADD(DAY, -120, GETDATE())),
+(2, 'bet',         55.00, DATEADD(DAY, -115, GETDATE())),
+(2, 'bet',         45.00, DATEADD(DAY, -108, GETDATE())),
+(2, 'withdrawal', 150.00, DATEADD(DAY, -105, GETDATE())),
+(2, 'deposit',    500.00, DATEADD(DAY, -100, GETDATE())),
+(2, 'bet',         90.00, DATEADD(DAY, -95,  GETDATE())),
+(2, 'bet',        100.00, DATEADD(DAY, -88,  GETDATE())),
+(2, 'payout',     160.00, DATEADD(DAY, -85,  GETDATE())),  
+(2, 'deposit',    350.00, DATEADD(DAY, -80,  GETDATE())),
+(2, 'bet',         75.00, DATEADD(DAY, -75,  GETDATE())),
+(2, 'bet',         60.00, DATEADD(DAY, -68,  GETDATE())),
+(2, 'payout',     100.00, DATEADD(DAY, -65,  GETDATE())), 
+(2, 'deposit',    400.00, DATEADD(DAY, -60,  GETDATE())),
+(2, 'bet',         80.00, DATEADD(DAY, -55,  GETDATE())),
+(2, 'bet',         70.00, DATEADD(DAY, -48,  GETDATE())),
+(2, 'withdrawal', 200.00, DATEADD(DAY, -45,  GETDATE())),
+(2, 'deposit',    300.00, DATEADD(DAY, -40,  GETDATE())),
+(2, 'bet',         50.00, DATEADD(DAY, -35,  GETDATE())),
+(2, 'bet',         65.00, DATEADD(DAY, -28,  GETDATE())),
+(2, 'payout',      95.00, DATEADD(DAY, -25,  GETDATE())),  
+(2, 'deposit',    250.00, DATEADD(DAY, -20,  GETDATE())),
+(2, 'bet',         55.00, DATEADD(DAY, -15,  GETDATE())),
+(2, 'bet',         40.00, DATEADD(DAY, -8,   GETDATE())),
+(2, 'deposit',    200.00, DATEADD(DAY, -3,   GETDATE()));
+
+-- RIYA (id=3) 
+INSERT INTO SystemTransaction (app_user_id, transaction_type, amount, transaction_timestamp) VALUES
+(3, 'deposit',    400.00, DATEADD(DAY, -138, GETDATE())),
+(3, 'bet',         35.00, DATEADD(DAY, -135, GETDATE())),
+(3, 'bet',         40.00, DATEADD(DAY, -128, GETDATE())),
+(3, 'payout',      60.00, DATEADD(DAY, -125, GETDATE())),  
+(3, 'deposit',    300.00, DATEADD(DAY, -120, GETDATE())),
+(3, 'bet',         50.00, DATEADD(DAY, -115, GETDATE())),
+(3, 'bet',         45.00, DATEADD(DAY, -108, GETDATE())),
+(3, 'withdrawal', 100.00, DATEADD(DAY, -105, GETDATE())),
+(3, 'deposit',    350.00, DATEADD(DAY, -98,  GETDATE())),
+(3, 'bet',         55.00, DATEADD(DAY, -92,  GETDATE())),
+(3, 'bet',         60.00, DATEADD(DAY, -85,  GETDATE())),
+(3, 'payout',      85.00, DATEADD(DAY, -82,  GETDATE())),  
+(3, 'deposit',    300.00, DATEADD(DAY, -78,  GETDATE())),
+(3, 'bet',         40.00, DATEADD(DAY, -72,  GETDATE())),
+(3, 'bet',         50.00, DATEADD(DAY, -65,  GETDATE())),
+(3, 'payout',      70.00, DATEADD(DAY, -62,  GETDATE())),  
+(3, 'deposit',    250.00, DATEADD(DAY, -58,  GETDATE())),
+(3, 'bet',         45.00, DATEADD(DAY, -52,  GETDATE())),
+(3, 'bet',         35.00, DATEADD(DAY, -45,  GETDATE())),
+(3, 'withdrawal', 150.00, DATEADD(DAY, -42,  GETDATE())),
+(3, 'deposit',    300.00, DATEADD(DAY, -38,  GETDATE())),
+(3, 'bet',         60.00, DATEADD(DAY, -32,  GETDATE())),
+(3, 'bet',         50.00, DATEADD(DAY, -25,  GETDATE())),
+(3, 'payout',      80.00, DATEADD(DAY, -22,  GETDATE())),  
+(3, 'deposit',    200.00, DATEADD(DAY, -18,  GETDATE())),
+(3, 'bet',         40.00, DATEADD(DAY, -12,  GETDATE())),
+(3, 'bet',         35.00, DATEADD(DAY, -5,   GETDATE()));
+
+-- RAYAN (id=4) 
+INSERT INTO SystemTransaction (app_user_id, transaction_type, amount, transaction_timestamp) VALUES
+(4, 'deposit',    500.00, DATEADD(DAY, -118, GETDATE())),
+(4, 'bet',        100.00, DATEADD(DAY, -115, GETDATE())),
+(4, 'bet',        120.00, DATEADD(DAY, -108, GETDATE())),
+(4, 'payout',     170.00, DATEADD(DAY, -105, GETDATE())), 
+(4, 'deposit',    400.00, DATEADD(DAY, -100, GETDATE())),
+(4, 'bet',        150.00, DATEADD(DAY, -95,  GETDATE())),
+(4, 'bet',        130.00, DATEADD(DAY, -88,  GETDATE())),
+(4, 'withdrawal', 200.00, DATEADD(DAY, -85,  GETDATE())),
+(4, 'deposit',    600.00, DATEADD(DAY, -78,  GETDATE())),
+(4, 'bet',        140.00, DATEADD(DAY, -72,  GETDATE())),
+(4, 'bet',        110.00, DATEADD(DAY, -65,  GETDATE())),
+(4, 'payout',     200.00, DATEADD(DAY, -62,  GETDATE())),  
+(4, 'deposit',    350.00, DATEADD(DAY, -58,  GETDATE())),
+(4, 'bet',        120.00, DATEADD(DAY, -52,  GETDATE())),
+(4, 'bet',        100.00, DATEADD(DAY, -45,  GETDATE())),
+(4, 'payout',     160.00, DATEADD(DAY, -42,  GETDATE())),  
+(4, 'deposit',    400.00, DATEADD(DAY, -38,  GETDATE())),
+(4, 'bet',        130.00, DATEADD(DAY, -32,  GETDATE())),
+(4, 'bet',        110.00, DATEADD(DAY, -25,  GETDATE())),
+(4, 'withdrawal', 150.00, DATEADD(DAY, -22,  GETDATE())),
+(4, 'deposit',    300.00, DATEADD(DAY, -18,  GETDATE())),
+(4, 'bet',         90.00, DATEADD(DAY, -12,  GETDATE())),
+(4, 'bet',         80.00, DATEADD(DAY, -5,   GETDATE()));
+
+-- MÉLANIE (id=5) 
+INSERT INTO SystemTransaction (app_user_id, transaction_type, amount, transaction_timestamp) VALUES
+(5, 'deposit',   1000.00, DATEADD(DAY, -98,  GETDATE())),
+(5, 'bet',        200.00, DATEADD(DAY, -95,  GETDATE())),
+(5, 'bet',        250.00, DATEADD(DAY, -88,  GETDATE())),
+(5, 'payout',     350.00, DATEADD(DAY, -85,  GETDATE())),  
+(5, 'deposit',    800.00, DATEADD(DAY, -80,  GETDATE())),
+(5, 'bet',        300.00, DATEADD(DAY, -75,  GETDATE())),
+(5, 'bet',        200.00, DATEADD(DAY, -68,  GETDATE())),
+(5, 'withdrawal', 400.00, DATEADD(DAY, -65,  GETDATE())),
+(5, 'deposit',   1200.00, DATEADD(DAY, -60,  GETDATE())),
+(5, 'bet',        250.00, DATEADD(DAY, -55,  GETDATE())),
+(5, 'bet',        300.00, DATEADD(DAY, -48,  GETDATE())),
+(5, 'payout',     420.00, DATEADD(DAY, -45,  GETDATE())), 
+(5, 'deposit',    600.00, DATEADD(DAY, -40,  GETDATE())),
+(5, 'bet',        200.00, DATEADD(DAY, -35,  GETDATE())),
+(5, 'bet',        180.00, DATEADD(DAY, -28,  GETDATE())),
+(5, 'payout',     280.00, DATEADD(DAY, -25,  GETDATE())),  
+(5, 'deposit',    900.00, DATEADD(DAY, -20,  GETDATE())),
+(5, 'bet',        220.00, DATEADD(DAY, -15,  GETDATE())),
+(5, 'bet',        200.00, DATEADD(DAY, -8,   GETDATE())),
+(5, 'withdrawal', 500.00, DATEADD(DAY, -5,   GETDATE()));
+
+-- For suspended user
+-- SYRIELLE (id=6) 
+INSERT INTO SystemTransaction (app_user_id, transaction_type, amount, transaction_timestamp) VALUES
+(6, 'deposit',    300.00, DATEADD(DAY, -78,  GETDATE())),
+(6, 'bet',        100.00, DATEADD(DAY, -75,  GETDATE())),
+(6, 'bet',         80.00, DATEADD(DAY, -68,  GETDATE())),
+(6, 'bet',         70.00, DATEADD(DAY, -55,  GETDATE())),
+(6, 'bet',         50.00, DATEADD(DAY, -40,  GETDATE()));
+GO
+
+
+-- BET SLIPS + BETS
+
+DECLARE @o1 INT, @o2 INT, @o3 INT, @o4 INT, @o5 INT,
+        @o6 INT, @o7 INT, @o8 INT, @o9 INT, @o10 INT;
+
+SELECT TOP 1 @o1  = odd_id FROM Odd ORDER BY odd_id ASC;
+SELECT TOP 1 @o2  = odd_id FROM Odd WHERE odd_id > @o1  ORDER BY odd_id ASC;
+SELECT TOP 1 @o3  = odd_id FROM Odd WHERE odd_id > @o2  ORDER BY odd_id ASC;
+SELECT TOP 1 @o4  = odd_id FROM Odd WHERE odd_id > @o3  ORDER BY odd_id ASC;
+SELECT TOP 1 @o5  = odd_id FROM Odd WHERE odd_id > @o4  ORDER BY odd_id ASC;
+SELECT TOP 1 @o6  = odd_id FROM Odd WHERE odd_id > @o5  ORDER BY odd_id ASC;
+SELECT TOP 1 @o7  = odd_id FROM Odd WHERE odd_id > @o6  ORDER BY odd_id ASC;
+SELECT TOP 1 @o8  = odd_id FROM Odd WHERE odd_id > @o7  ORDER BY odd_id ASC;
+SELECT TOP 1 @o9  = odd_id FROM Odd WHERE odd_id > @o8  ORDER BY odd_id ASC;
+SELECT TOP 1 @o10 = odd_id FROM Odd WHERE odd_id > @o9  ORDER BY odd_id ASC;
+
+-- MÉGANE slips 
+INSERT INTO BetSlip (app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed) VALUES
+(2, DATEADD(DAY, -153, GETDATE()), 'Won',     1.80,  50.00,   90.00, 1),
+(2, DATEADD(DAY, -126, GETDATE()), 'Lost',    2.50,  60.00,    0.00, 0),
+(2, DATEADD(DAY, -112, GETDATE()), 'Lost',    2.10,  80.00,    0.00, 0),
+(2, DATEADD(DAY, -93,  GETDATE()), 'Won',     1.60,  90.00,  144.00, 1),
+(2, DATEADD(DAY, -73,  GETDATE()), 'Lost',    3.00,  75.00,    0.00, 0),
+(2, DATEADD(DAY, -53,  GETDATE()), 'Won',     1.50,  50.00,   75.00, 1),
+(2, DATEADD(DAY, -33,  GETDATE()), 'Won',     1.45,  65.00,   94.25, 1),
+(2, DATEADD(DAY, -6,   GETDATE()), 'Pending', 2.10,  55.00,  115.50, 0);
+
+INSERT INTO Bet (slip_id, odd_id, result) VALUES
+(1, @o1, 'Won'),
+(2, @o2, 'Lost'),
+(3, @o3, 'Lost'),
+(4, @o4, 'Won'),
+(5, @o5, 'Lost'),
+(6, @o6, 'Won'),
+(7, @o7, 'Won'),
+(8, @o8, 'Pending');
+
+-- RIYA slips
+INSERT INTO BetSlip (app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed) VALUES
+(3, DATEADD(DAY, -133, GETDATE()), 'Lost',    2.20,  35.00,    0.00, 0),
+(3, DATEADD(DAY, -123, GETDATE()), 'Won',     1.70,  40.00,   68.00, 1),
+(3, DATEADD(DAY, -110, GETDATE()), 'Lost',    2.50,  50.00,    0.00, 0),
+(3, DATEADD(DAY, -90,  GETDATE()), 'Won',     1.55,  55.00,   85.25, 1),
+(3, DATEADD(DAY, -70,  GETDATE()), 'Lost',    1.90,  45.00,    0.00, 0),
+(3, DATEADD(DAY, -50,  GETDATE()), 'Won',     1.65,  60.00,   99.00, 1),
+(3, DATEADD(DAY, -30,  GETDATE()), 'Won',     1.60,  50.00,   80.00, 1),
+(3, DATEADD(DAY, -7,   GETDATE()), 'Pending', 2.00,  40.00,   80.00, 0);
+
+INSERT INTO Bet (slip_id, odd_id, result) VALUES
+(9,  @o2, 'Lost'),
+(10, @o3, 'Won'),
+(11, @o4, 'Lost'),
+(12, @o5, 'Won'),
+(13, @o6, 'Lost'),
+(14, @o7, 'Won'),
+(15, @o8, 'Won'),
+(16, @o9, 'Pending');
+
+-- RAYAN slips 
+INSERT INTO BetSlip (app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed) VALUES
+(4, DATEADD(DAY, -113, GETDATE()), 'Lost',    2.80, 100.00,    0.00, 0),
+(4, DATEADD(DAY, -103, GETDATE()), 'Lost',    2.20, 120.00,    0.00, 0),
+(4, DATEADD(DAY, -93,  GETDATE()), 'Won',     1.70, 150.00,  255.00, 1),
+(4, DATEADD(DAY, -83,  GETDATE()), 'Lost',    3.10, 130.00,    0.00, 0),
+(4, DATEADD(DAY, -63,  GETDATE()), 'Won',     1.55, 140.00,  217.00, 1),
+(4, DATEADD(DAY, -43,  GETDATE()), 'Lost',    2.40, 120.00,    0.00, 0),
+(4, DATEADD(DAY, -23,  GETDATE()), 'Won',     1.45, 110.00,  159.50, 1),
+(4, DATEADD(DAY, -8,   GETDATE()), 'Pending', 2.30,  90.00,  207.00, 0);
+
+INSERT INTO Bet (slip_id, odd_id, result) VALUES
+(17, @o1,  'Lost'),
+(18, @o2,  'Lost'),
+(19, @o3,  'Won'),
+(20, @o4,  'Lost'),
+(21, @o5,  'Won'),
+(22, @o6,  'Lost'),
+(23, @o7,  'Won'),
+(24, @o8,  'Pending');
+
+-- MÉLANIE slips 
+INSERT INTO BetSlip (app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed) VALUES
+(5, DATEADD(DAY, -93,  GETDATE()), 'Lost',    2.50, 200.00,    0.00, 0),
+(5, DATEADD(DAY, -83,  GETDATE()), 'Lost',    3.00, 250.00,    0.00, 0),
+(5, DATEADD(DAY, -73,  GETDATE()), 'Won',     1.75, 300.00,  525.00, 1),
+(5, DATEADD(DAY, -63,  GETDATE()), 'Lost',    2.20, 200.00,    0.00, 0),
+(5, DATEADD(DAY, -53,  GETDATE()), 'Lost',    2.80, 300.00,    0.00, 0),
+(5, DATEADD(DAY, -43,  GETDATE()), 'Won',     1.60, 250.00,  400.00, 1),
+(5, DATEADD(DAY, -23,  GETDATE()), 'Won',     1.55, 200.00,  310.00, 1),
+(5, DATEADD(DAY, -5,   GETDATE()), 'Pending', 2.10, 220.00,  462.00, 0);
+
+INSERT INTO Bet (slip_id, odd_id, result) VALUES
+(25, @o1,  'Lost'),
+(26, @o2,  'Lost'),
+(27, @o3,  'Won'),
+(28, @o4,  'Lost'),
+(29, @o5,  'Lost'),
+(30, @o6,  'Won'),
+(31, @o7,  'Won'),
+(32, @o8,  'Pending');
+
+-- SYRIELLE slips — all lost, suspended
+INSERT INTO BetSlip (app_user_id, bet_date, bet_status, total_odds, stake, payout, claimed) VALUES
+(6, DATEADD(DAY, -73,  GETDATE()), 'Lost',    2.50, 100.00,    0.00, 0),
+(6, DATEADD(DAY, -63,  GETDATE()), 'Lost',    1.95,  80.00,    0.00, 0),
+(6, DATEADD(DAY, -53,  GETDATE()), 'Lost',    2.20,  70.00,    0.00, 0),
+(6, DATEADD(DAY, -38,  GETDATE()), 'Lost',    1.80,  50.00,    0.00, 0);
+
+INSERT INTO Bet (slip_id, odd_id, result) VALUES
+(33, @o9,  'Lost'),
+(34, @o10, 'Lost'),
+(35, @o1,  'Lost'),
+(36, @o2,  'Lost');
+GO
+
+-- Verification
+SELECT 
+    u.first_name, u.last_name, u.user_role, u.user_status, u.wallet_balance,
+    COUNT(DISTINCT bs.slip_id)       AS total_slips,
+    COUNT(DISTINCT t.transaction_id) AS total_transactions,
+    SUM(CASE WHEN t.transaction_type = 'bet'    THEN t.amount ELSE 0 END) AS total_staked,
+    SUM(CASE WHEN t.transaction_type = 'payout' THEN t.amount ELSE 0 END) AS total_paid_out
+FROM AppUser u
+LEFT JOIN BetSlip bs        ON u.app_user_id = bs.app_user_id
+LEFT JOIN SystemTransaction t ON u.app_user_id = t.app_user_id
+GROUP BY u.app_user_id, u.first_name, u.last_name, u.user_role, u.user_status, u.wallet_balance
+ORDER BY u.app_user_id;
+
+-- Overall revenue check
+SELECT
+    SUM(CASE WHEN transaction_type = 'bet'    THEN amount ELSE 0 END) AS total_stakes,
+    SUM(CASE WHEN transaction_type = 'payout' THEN amount ELSE 0 END) AS total_payouts,
+    SUM(CASE WHEN transaction_type = 'bet'    THEN amount ELSE 0 END)
+  - SUM(CASE WHEN transaction_type = 'payout' THEN amount ELSE 0 END) AS house_revenue
+FROM SystemTransaction;
+GO

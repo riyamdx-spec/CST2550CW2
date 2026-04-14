@@ -1,0 +1,315 @@
+﻿using BettingSystem.Data;
+using BettingSystem.Models;
+using BettingSystem.Services;
+
+namespace BettingSystem.Forms
+{
+    public enum ViewPanel { Login, SignUp }
+
+    public partial class RegisterLoginForm : BaseForm
+    {
+        private Validation _validator = new Validation();
+        private DatabaseManager _dbManager = new DatabaseManager();
+        public bool _navigatingBack = false;
+        private Simulator _simulator;
+
+        public RegisterLoginForm(Simulator appSimulator, ViewPanel view = ViewPanel.SignUp)
+        {
+            _simulator = appSimulator;
+            InitializeComponent();
+            this.DoubleBuffered = true;
+            SetupForm(view);
+            CaptureBaseLayout();
+        }
+
+        public void SetupForm(ViewPanel view)
+        {
+            pnlContainer.Location = new Point(
+                (ClientSize.Width - pnlContainer.Width) / 2,
+                (ClientSize.Height - pnlContainer.Height) / 2);
+
+            if (view == ViewPanel.SignUp)
+            {
+                pnlLoginLeft.Visible = false;
+                pnlLoginRight.Visible = false;
+                pnlSignupLeft.Visible = true;
+                pnlSignUpRight.Visible = true;
+                pnlSignupLeft.BringToFront();
+                pnlSignUpRight.BringToFront();
+                backButton.BackColor = Color.FromArgb(84, 139, 66);
+                pnlSignupLeft.BackColor = Color.FromArgb(84, 139, 66);
+                pnlSignUpRight.BackColor = Color.FromArgb(48, 48, 48);
+            }
+            else
+            {
+                pnlSignupLeft.Visible = false;
+                pnlSignUpRight.Visible = false;
+                pnlLoginLeft.Visible = true;
+                pnlLoginRight.Visible = true;
+                pnlLoginLeft.BringToFront();
+                pnlLoginRight.BringToFront();
+                backButton.BackColor = Color.FromArgb(48, 48, 48);
+                pnlLoginLeft.BackColor = Color.FromArgb(48, 48, 48);
+                pnlLoginRight.BackColor = Color.FromArgb(84, 139, 66);
+            }
+
+            backButton.BringToFront();
+            txtSignUpPassword.TextChanged += txtPassword_TextChanged;
+        }
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                const int CS_NOCLOSE = 0x200;
+                CreateParams cp = base.CreateParams;
+                cp.ClassStyle |= CS_NOCLOSE;
+                return cp;
+            }
+        }
+
+        protected override void AfterScaling()
+        {
+            CentreHorizontally(lblWelcomeBack);
+            CentreHorizontally(lblSignupWelcome);
+            CentreHorizontally(lblSignupJoin);
+            CentreHorizontally(lblReady);
+            CentreHorizontally(lblCreate);
+        }
+
+        private async void lnkGoToLogin_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            lnkToLogin.Enabled = false;
+
+            // Fade out signup 
+            for (int i = 100; i >= 0; i -= 5)
+            {
+                pnlSignupLeft.BackColor = Color.FromArgb(
+                    48 + (84 - 48) * i / 100,
+                    48 + (139 - 48) * i / 100,
+                    48 + (66 - 48) * i / 100);
+                await Task.Delay(10);
+            }
+
+            backButton.BackColor = Color.FromArgb(48, 48, 48);
+
+            pnlContainer.SuspendLayout();
+            pnlLoginLeft.Visible = true;
+            pnlLoginRight.Visible = true;
+            pnlSignUpRight.Visible = false;
+            pnlSignupLeft.Visible = false;
+            pnlLoginRight.BackColor = Color.FromArgb(48, 48, 48); // start dark
+
+            pnlLoginLeft.BringToFront();
+            pnlLoginRight.BringToFront();
+            pnlContainer.ResumeLayout();
+
+            // Fade in login 
+            for (int i = 0; i <= 100; i += 5)
+            {
+                pnlLoginRight.BackColor = Color.FromArgb(
+                    48 + (84 - 48) * i / 100,
+                    48 + (139 - 48) * i / 100,
+                    48 + (66 - 48) * i / 100);
+                await Task.Delay(10);
+            }
+
+            // Restore colours
+            pnlLoginLeft.BackColor = Color.FromArgb(48, 48, 48);
+            pnlLoginRight.BackColor = Color.FromArgb(84, 139, 66);
+
+            lnkToLogin.Enabled = true;
+            backButton.BringToFront();
+
+        }
+
+        private async void lnkGoToSignUp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            lnkToSignUp.Enabled = false;
+
+            // Fade out login
+            for (int i = 100; i >= 0; i -= 5)
+            {
+                pnlLoginRight.BackColor = Color.FromArgb(
+                    48 + (84 - 48) * i / 100,
+                    48 + (139 - 48) * i / 100,
+                    48 + (66 - 48) * i / 100);
+                await Task.Delay(10);
+            }
+
+            backButton.BackColor = Color.FromArgb(84, 139, 66);
+
+            pnlLoginLeft.BackColor = Color.FromArgb(48, 48, 48); //reset
+            pnlContainer.SuspendLayout();
+            pnlSignupLeft.Visible = true;
+            pnlSignUpRight.Visible = true;
+            pnlLoginLeft.Visible = false;
+            pnlLoginRight.Visible = false;
+
+            pnlSignupLeft.BackColor = Color.FromArgb(48, 48, 48); // start dark
+
+            pnlSignupLeft.BringToFront();
+            pnlSignUpRight.BringToFront();
+            backButton.BringToFront();
+            pnlContainer.ResumeLayout();
+
+            // Fade in signup
+            for (int i = 0; i <= 100; i += 5)
+            {
+                pnlSignupLeft.BackColor = Color.FromArgb(
+                    48 + (84 - 48) * i / 100,
+                    48 + (139 - 48) * i / 100,
+                    48 + (66 - 48) * i / 100);
+
+                await Task.Delay(10);
+            }
+
+            pnlSignupLeft.BackColor = Color.FromArgb(84, 139, 66);
+            pnlSignUpRight.BackColor = Color.FromArgb(48, 48, 48);
+
+            lnkToSignUp.Enabled = true;
+        }
+
+        // Password validation colour changes
+        private void txtPassword_TextChanged(object? sender, EventArgs e)
+        {
+            string password = txtSignUpPassword.Text;
+
+            lblCritLen.ForeColor = password.Length >= 8 ? Color.LimeGreen : Color.Firebrick;
+            lblCritUpper.ForeColor = password.Any(char.IsUpper) ? Color.LimeGreen : Color.Firebrick;
+            lblCritNum.ForeColor = password.Any(char.IsDigit) ? Color.LimeGreen : Color.Firebrick;
+            lblCritSpec.ForeColor = password.Any(c => !char.IsLetterOrDigit(c)) ? Color.LimeGreen : Color.Firebrick;
+        }
+        private void backButton_Click(object sender, EventArgs e)
+        {
+            landingPage? appLandingPage = Application.OpenForms.OfType<landingPage>().FirstOrDefault();
+            if (appLandingPage is null)
+            {
+                appLandingPage = new landingPage(_simulator);
+            }
+            appLandingPage.Size = this.Size;
+            appLandingPage.Location = this.Location;
+            appLandingPage.WindowState = this.WindowState;
+            appLandingPage.Show();
+            this.Hide();
+            _navigatingBack = true;
+        }
+
+        // Button login 
+        private async void btnLogin_Click(object sender, EventArgs e)
+        {
+            string email = txtLoginEmail.Text.Trim();
+            string password = txtLoginPassword.Text;
+
+            // check empty fields
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                new Notification("Please fill in all fields.", NotificationType.Warning, this);
+                return;
+            }
+
+            btnLogin.Enabled = false;
+            var (user, message) = await _dbManager.LoginAsync(email, password);
+            btnLogin.Enabled = true;
+
+            if (user == null)
+            {
+                new Notification(message, NotificationType.Error, this);
+                return;
+            }
+
+            new Notification(message, NotificationType.Success, this);
+
+            //Main page
+            await OpenMainPage(user);
+        }
+
+        // Sign up button
+        private async void btnSignUp_Click(object sender, EventArgs e)
+        {
+            string firstName = txtFirstName.Text.Trim();
+            string lastName = txtLastName.Text.Trim();
+            string email = txtSignUpEmail.Text.Trim();
+            string password = txtSignUpPassword.Text;
+            DateTime dob = dtpDOB.Value;
+
+            // check empty fields
+            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) ||
+                string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                new Notification("Please fill in all fields", NotificationType.Warning, this);
+                return;
+            }
+
+            // check name length
+            if (!_validator.CheckNameLength(firstName) || !_validator.CheckNameLength(lastName))
+            {
+                new Notification("Name must be between 3 and 50 characters.", NotificationType.Warning, this);
+                return;
+            }
+
+            // check name doesn't contain numbers
+            if (_validator.CheckNumber(firstName) || _validator.CheckNumber(lastName))
+            {
+                new Notification("Name should not contain numbers.", NotificationType.Warning, this);
+                return;
+            }
+
+            // check password validity
+            if (!_validator.CheckPasswordValidity(password))
+            {
+                new Notification("Password is in incorrect format.", NotificationType.Warning, this);
+                return;
+            }
+
+            // check age
+            var (ageValid, ageMsg) = _validator.CheckAge(dob);
+            if (!ageValid)
+            {
+                new Notification(ageMsg, NotificationType.Error, this);
+                return;
+            }
+
+            // check 18 checkbox
+            if (!chk18.Checked)
+            {
+                new Notification("Please confirm that you are 18 years old or older.", NotificationType.Error, this);
+                return;
+            }
+
+            btnSignUp.Enabled = false;
+            var (user, message) = await _dbManager.RegisterAsync(firstName, lastName, dob, email, password);
+            btnSignUp.Enabled = true;
+
+            if (user == null)
+            {
+                new Notification(message, NotificationType.Error, this);
+                return;
+            }
+
+            new Notification(message, NotificationType.Success, this);
+
+            // main form
+            await OpenMainPage(user);
+        }
+
+        private async Task OpenMainPage(AppUser user)
+        {
+            SessionManager currentSession = new SessionManager(user, _simulator);
+            currentSession.AppSimulator = _simulator;
+            _simulator.SetSession(currentSession);
+
+            if (user.Role == "admin")
+            {
+                await currentSession.FetchAdminData();
+                currentSession.OpenAdminViewUsersPage(this);
+            }
+            else
+            {
+                await currentSession.FetchUserData();
+                currentSession.OpenMainPage(this);
+            }
+        }
+    }
+}
+
