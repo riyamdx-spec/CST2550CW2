@@ -1,34 +1,15 @@
 USE BettingSystemDB;
 GO
 
-DELETE FROM Bet;
-DELETE FROM BetSlip;
-DELETE FROM SystemTransaction;
-DELETE FROM AppUser;
-
-DBCC CHECKIDENT ('AppUser', RESEED, 0);
-DBCC CHECKIDENT ('SystemTransaction', RESEED, 0);
-DBCC CHECKIDENT ('BetSlip', RESEED, 0);
-DBCC CHECKIDENT ('Bet', RESEED, 0);
-GO
-
--- Reschedule completed games
-UPDATE Game
-SET 
-    game_status = 'Scheduled',
-    game_date = DATEADD(MINUTE, 15, SYSDATETIME())
-WHERE game_status = 'Completed';
-GO
-
 -- USERS
 INSERT INTO AppUser (first_name, last_name, dob, email, password_hash, registration_date, wallet_balance, user_role, user_status)
 VALUES
 ('Admin', 'System', '2004-03-10', 'admin@pitchbet.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -180, GETDATE()), 5000.00, 'admin', 'Active'),
-('Mégane', 'Coret', '2004-06-21', 'mégane@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -160, GETDATE()), 1240.50, 'user', 'Active'),
+('Megane', 'Coret', '2004-06-21', 'megane@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -160, GETDATE()), 1240.50, 'user', 'Active'),
 ('Riya', 'Nunkoo', '2004-11-03', 'riya@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -140, GETDATE()),  875.00, 'user', 'Active'),
 ('Rayan', 'Sedoyeka', '2004-07-14', 'rayan@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -120, GETDATE()),  320.75, 'user', 'Active'),
-('Mélanie', 'Hao', '2004-01-28', 'mélanie@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -100, GETDATE()), 2100.00, 'user', 'Active'),
-('Syrielle', 'Ramtohul', '2004-09-09', 'syrielle@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -80,  GETDATE()),   50.00, 'user', 'Suspended');
+('Melanie', 'Hau', '2004-01-28', 'melanie@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -100, GETDATE()), 2100.00, 'user', 'Active'),
+('Syrielle', 'Ramtohul', '2004-09-09', 'syrielle@gmail.com', 'PFxJ1tgHWRXluLQl+BHJukGPW4eGgifSlrtcMjHbNtIexUg/', DATEADD(DAY, -80,  GETDATE()),   50.00, 'user', 'Suspended'); 
 GO
 
 -- SYSTEM TRANSACTIONS
@@ -147,7 +128,8 @@ INSERT INTO SystemTransaction (app_user_id, transaction_type, amount, transactio
 (5, 'bet',        200.00, DATEADD(DAY, -8,   GETDATE())),
 (5, 'withdrawal', 500.00, DATEADD(DAY, -5,   GETDATE()));
 
--- SYRIELLE (id=6) — suspended, short history, all losing
+-- For suspended user
+-- SYRIELLE (id=6) 
 INSERT INTO SystemTransaction (app_user_id, transaction_type, amount, transaction_timestamp) VALUES
 (6, 'deposit',    300.00, DATEADD(DAY, -78,  GETDATE())),
 (6, 'bet',        100.00, DATEADD(DAY, -75,  GETDATE())),
