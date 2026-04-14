@@ -74,7 +74,7 @@ CREATE TABLE #TempGame (
 );
 BULK INSERT #TempGame
 FROM 'C:\DataSource\insert_games.csv'
-WITH (FIRSTROW=2, FIELDTERMINATOR=',', ROWTERMINATOR='0x0d0a', TABLOCK);
+WITH (FIRSTROW=2, FIELDTERMINATOR=',', ROWTERMINATOR='0x0a', TABLOCK);
 INSERT INTO Game (league_id, home_team_id, away_team_id, game_date, game_status)
 SELECT league_id, home_team_id, away_team_id, game_date, game_status FROM #TempGame;
 DROP TABLE #TempGame;
