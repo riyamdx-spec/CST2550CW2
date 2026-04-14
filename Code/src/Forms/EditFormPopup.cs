@@ -104,6 +104,7 @@ namespace BettingSystem.Forms
                 _currentUser.LastName = lastName;
                 _currentUser.Email = email;
 
+                new Notification(message, NotificationType.Success, this);
                 DialogResult = DialogResult.OK;
                 this.Close();
             }

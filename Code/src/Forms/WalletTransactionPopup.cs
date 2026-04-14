@@ -129,10 +129,12 @@ namespace BettingSystem.Forms
             if (_walletAction == "Deposit") // to deposit money
             {
                 (valid, message) = await _walletServices.DepositOrPayoutAsync(_currentUser, amountEntered, "deposit");
+                new Notification(message, NotificationType.Success, this);
             }
             else //to withdraw money
             {
                 (valid, message) = await _walletServices.WithdrawalOrPlaceBetAsync(_currentUser, amountEntered, "withdrawal");
+                new Notification(message, NotificationType.Success, this);
             }
             if (valid)
             {
