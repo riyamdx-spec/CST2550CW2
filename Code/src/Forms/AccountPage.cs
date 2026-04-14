@@ -101,6 +101,7 @@ namespace BettingSystem.Forms
             if (editPopup.ShowDialog() == DialogResult.OK)
             {
                 DisplayDetails();
+                navBar1.SetCurrentUser(_currentUser);
             }
         }
 
