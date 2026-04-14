@@ -1,4 +1,3 @@
-using BettingSystem.Data;
 using BettingSystem.Forms;
 using BettingSystem.Services;
 
@@ -7,10 +6,9 @@ namespace BettingSystem
     internal static class Program
     {
         [STAThread]
-        //static async Task Main()
         static void Main()
-
         {
+            Application.SetHighDpiMode(HighDpiMode.DpiUnaware);
             ApplicationConfiguration.Initialize();
 
             try
@@ -41,7 +39,6 @@ namespace BettingSystem
             {
                 Console.WriteLine($"Odds auto-generator could not start: {ex.Message}");
             }
-
         }
     }
 }
