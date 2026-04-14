@@ -70,6 +70,8 @@ namespace BettingSystem.Forms
 
         protected override void AfterScaling()
         {
+            CentreHorizontally(lblWelcomeBack);
+            CentreHorizontally(lblSignupWelcome);
             CentreHorizontally(lblSignupJoin);
             CentreHorizontally(lblReady);
             CentreHorizontally(lblCreate);
