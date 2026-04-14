@@ -340,6 +340,10 @@ namespace BettingSystem.Forms
         private async void clearSearchIcon_Click(object sender, EventArgs e)
         {
             searchbarTextBox.Clear();
+
+            if (CurrentSearchTerm == "")
+                return;
+
             CurrentSearchTerm = "";
             if (CurrentLeague == 0)
             {
