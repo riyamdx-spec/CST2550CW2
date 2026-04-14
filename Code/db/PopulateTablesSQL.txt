@@ -8,12 +8,6 @@ IF OBJECT_ID('tempdb..#TempTeam') IS NOT NULL DROP TABLE #TempTeam;
 IF OBJECT_ID('tempdb..#TempPlayer') IS NOT NULL DROP TABLE #TempPlayer;
 IF OBJECT_ID('tempdb..#TempGame') IS NOT NULL DROP TABLE #TempGame;
 
--- reset identity counter
-DBCC CHECKIDENT ('League', RESEED, 0);
-DBCC CHECKIDENT ('Team', RESEED, 0);
-DBCC CHECKIDENT ('Player', RESEED, 0);
-DBCC CHECKIDENT ('Game', RESEED, 0);
-
 -- Populate table BetType
 INSERT INTO BetType(bet_type_id, bet_type_name)
 VALUES
@@ -80,35 +74,15 @@ CREATE TABLE #TempGame (
 );
 BULK INSERT #TempGame
 FROM 'C:\DataSource\insert_games.csv'
-WITH (FIRSTROW=2, FIELDTERMINATOR=',', ROWTERMINATOR='0x0a', TABLOCK);
+WITH (FIRSTROW=2, FIELDTERMINATOR=',', ROWTERMINATOR='0x0d0a', TABLOCK);
 INSERT INTO Game (league_id, home_team_id, away_team_id, game_date, game_status)
 SELECT league_id, home_team_id, away_team_id, game_date, game_status FROM #TempGame;
 DROP TABLE #TempGame;
 
 -- Game Results
-CREATE TABLE #TempGameResult (
-    game_id INT,
-    home_team_score INT,
-    away_team_score INT,
-    first_scorer_id FLOAT,
-    total_corners INT,
-    red_cards INT,
-    yellow_cards INT
-);
-BULK INSERT #TempGameResult
+BULK INSERT GameResult
 FROM 'C:\DataSource\insert_game_results.csv'
 WITH (FIRSTROW=2, FIELDTERMINATOR=',', ROWTERMINATOR='0x0a', TABLOCK);
-INSERT INTO GameResult (game_id, home_team_score, away_team_score, first_scorer_id, total_corners, red_cards, yellow_cards)
-SELECT
-    game_id,
-    home_team_score,
-    away_team_score,
-    CASE WHEN first_scorer_id IS NULL THEN NULL ELSE CAST(first_scorer_id AS INT) END,
-    total_corners,
-    red_cards,
-    yellow_cards
-FROM #TempGameResult;
-DROP TABLE #TempGameResult;
 
 -- Generate player ratings based on position with some randomness
 INSERT INTO PlayerRating (player_id, scoring_rating, is_active)
