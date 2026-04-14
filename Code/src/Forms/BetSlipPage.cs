@@ -345,11 +345,8 @@ namespace BettingSystem.Forms
 
             // reload to show empty state
             LoadBetSlips();
-            UpdateSummary();
             txtStake.Clear();
             btnPlaceBet.Enabled = true;
-
-            pnlSummaryContainer.Hide();
         }
 
         private void NavBar1_MatchesClicked(object? sender, EventArgs e)

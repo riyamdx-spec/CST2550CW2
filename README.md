@@ -91,6 +91,12 @@ Code/
 - Resources: Store images and assets used by winforms controls
 - Services: Contains business logic and service classes 
 
+**Database Folder (db) structure:**
+- DataSource: Contains CSV files used for bulk insertion into the database (leagues, teams, league-team, players, games, and game results), as well as `insert_team_ratings.xlsx` used to populate player rating data
+- `CreateDatabaseSQL.txt`: SQL script to create the database schema
+- `PopulateTablesSQL.txt`: SQL script to bulk insert base data into the database
+- `testData.txt`: SQL script to insert sample user and transaction data for testing
+
 ## Technologies Used
 - **C# (.NET Windows Form)** - Application interface
 - **Microsoft SQL Server** - Database
@@ -118,8 +124,6 @@ Code/
 2. Restore NuGet packages using `dotnet restore`
 3. Build the solution
 2. Run the application
-
-## Troubleshooting
 
 ## How to Use the Program
 
@@ -207,6 +211,54 @@ Code to handle the simulation system is found in `Simulator.cs`
 4. Sends request to AI Agent
 5. AI Agent analyses the data and executes a financial summary
 6. Agent returns the report to be displayed on the interface
+
+## Troubleshooting
+
+### Database Setup Errors
+
+If you encounter **foreign key constraint errors** when running `PopulateTablesSQL.txt`, this is usually caused by missing data in parent tables. Since tables such as `LeagueTeam`, `Player`, and `GameResult` depend on `League`, `Team` and `Game`, they must be populated in the correct order. If an earlier table is empty due to a failed bulk insert, all dependent tables will also fail.
+
+Check each table in order to find where population failed:
+
+1. In SSMS, run: `SELECT * FROM League` and verify rows exist and IDs start at 1.
+2. Then check `Team`, `LeagueTeam`, `Player`, `Game`, `GameResult` in sequence.
+3. The first table that is empty or has an ID starting at `0` is the source of the issue.
+4. If the `Game` table is empty, this is most likely caused by a line ending mismatch in the temporary table used during population.
+
+**Fix:**
+
+* Locate line 77 in `PopulateTablesSQL.txt`.
+* Find delimeter value in the bulk insert for `#TempGame`.
+* If it currently reads `0x0d0a`, change it to `0x0a`.
+* Run the script again and verify if the `Game` table is now populated.
+
+**If errors persist**, the cleanest fix is to drop the database and start from scratch:
+
+```sql
+DROP DATABASE BettingSystemDB;
+```
+
+> **Note:** If SSMS reports that the database is in use and cannot be dropped, run the following command first to force all active connections to close, then retry the DROP:
+>
+> ```sql
+> ALTER DATABASE BettingSystemDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+> ```
+
+Then re-run `CreateDatabaseSQL.txt` followed by `PopulateTablesSQL.txt` and `testData.txt` in order.
+
+> **Note:** `testData.txt` requires odds to already exist in the database.
+> Odds are generated when the application runs. Launch the application once before running `testData.txt`.
+
+### API Key / AI Report Errors
+
+If the **Generate Report** button produces no output or throws an error, this is most likely due to high traffic on the Google Gemini API.
+
+**Steps to resolve:**
+
+1. Wait **2–3 minutes**, then click **Generate Report** again
+2. If the issue persists, verify your API key is correctly set in `App.Config` under `GOOGLE_API_KEY`
+3. Confirm the key is active at [https://aistudio.google.com/api-keys](https://aistudio.google.com/api-keys)
+4. Check that you have not exceeded your free-tier quota for the day
 
 ## References
 Password hashing:
