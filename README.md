@@ -9,10 +9,12 @@
     - [Admin Features](#admin-features)
 - [Folder Structure](#folder-structure)
 - [Technologies Used](#technologies-used)
+- [Getting the Project](#getting-the-project)
 - [How to Run the Project](#how-to-run-the-project)
     - [Database Setup](#database-setup)
     - [AI Agent Setup](#ai-agent-setup)
     - [Running the Application](#running-the-application)
+    - [Sample Data](#sample-data-optional)
 - [Troubleshooting](#troubleshooting)
     - [Database Setup Errors](#database-setup-errors)
     - [API Key / AI Report Errors](#api-key--ai-report-errors)
@@ -29,7 +31,7 @@
 
 
 ## Project Overview
-The Football Betting System is a C# Windows Form application that simulates a football betting platform. It allows users to register and log in, view upcoming football matches, place cummulative bets and monitor outcomes of their bets. 
+The Football Betting System is a C# Windows Form application that simulates a football betting platform. It allows users to register and log in, view upcoming football matches, place cumulative bets and monitor outcomes of their bets. 
 
 Users can also manage their account by editing their profile details and password, as well as depositing or withdrawing funds from their digital wallet. The system includes authentication mechanisms, automated bet validation and payout calculations.
 
@@ -78,10 +80,10 @@ In addition, an admin interface is provided for managing users, matches and acce
 └── README.md
 ```
 
-- Code: Contains the aaplication source code
+- Code: Contains the aplication source code
 - Project Management: Includes project management report, project requirement documentation, Gantt Chart, and activity diagrams
 - VideoDemo: Contains an MP4 video demonstration of the software
-- Project Report: Contains the project report PDF, algorithm analysis documentation and brainstorm doc
+- Project Report: Contains the project report PDF, algorithm analysis documentation and brainstorm documentation
 
 **Code Folder:**
 ```text
@@ -101,7 +103,7 @@ Code/
     └── Services/
 ```
 
-**Source Folder (src) structure:**
+**Source Folder (src):**
 - Data Structures: Contains custom data structures used in the system 
 - Data: Contains class for database interaction
 - Forms: Contains Windows Forms UI code & Custom controls (CustomControls folder) 
@@ -109,11 +111,11 @@ Code/
 - Resources: Store images and assets used by winforms controls
 - Services: Contains business logic and service classes 
 
-**Database Folder (db) structure:**
+**Database Folder (db):**
 - DataSource: Contains CSV files used for bulk insertion into the database (leagues, teams, league-team, players, games, and game results), as well as `insert_team_ratings.xlsx` used to populate player rating data
-- `CreateDatabaseSQL.txt`: SQL script to create the database schema
-- `PopulateTablesSQL.txt`: SQL script to bulk insert base data into the database
-- `testData.txt`: SQL script to insert sample user and transaction data for testing
+- `CreateDatabaseSQL.txt`: Text file with the SQL script to create the database schema
+- `PopulateTablesSQL.txt`: Text file with the SQL script to bulk insert base data into the database
+- `testData.txt`: Text file with the SQL script to insert sample user and transaction data for testing
 
 ## Technologies Used
 - **C# (.NET Windows Form)** - Application interface
@@ -127,8 +129,8 @@ Code/
 ```
 git clone https://github.com/riyamdx-spec/CST2550CW2.git
 ```
-2. Open the solution `BettingSystem.slnx` in **Visual Studio 2026**
-
+2. Ensure you are on the **main branch**.
+3. Open the solution `BettingSystem.slnx` in **Visual Studio 2026**
 
 ## How to Run the Project
 
@@ -140,7 +142,7 @@ git clone https://github.com/riyamdx-spec/CST2550CW2.git
 
 ### AI Agent Setup
 1. Create a **Google Gemini API Key** at https://aistudio.google.com/api-keys
-2. Replace the paceholder **YOUR_API_KEY** in the `App.Config` file with your Google Gemini API key
+2. Replace the placeholder **YOUR_API_KEY** in the `App.Config` file with your Google Gemini API key
 3. Update the `connectionString` for `BettingDB` in the `App.Config` file to match your local database configuration
 
 ### Running the Application
@@ -234,7 +236,7 @@ If the **Generate Report** button produces no output or throws an error, this is
 15. Logout from the dropdown menu in navbar 
 
 ### Admin Flow
-1. Login using admin credentials
+1. Login using admin credentials (email: `admin@pitchbet.com`, password: `Hello123*`)
 2. View all users and update their status from the View Users Page
 3. View and filter matches on the Matches Page
 4. Add new matches on the Add Match Page
