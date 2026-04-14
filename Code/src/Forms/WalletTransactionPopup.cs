@@ -130,11 +130,13 @@ namespace BettingSystem.Forms
             {
                 (valid, message) = await _walletServices.DepositOrPayoutAsync(_currentUser, amountEntered, "deposit");
                 new Notification(message, NotificationType.Success, this);
+                await Task.Delay(1500);
             }
             else //to withdraw money
             {
                 (valid, message) = await _walletServices.WithdrawalOrPlaceBetAsync(_currentUser, amountEntered, "withdrawal");
                 new Notification(message, NotificationType.Success, this);
+                await Task.Delay(1500);
             }
             if (valid)
             {
