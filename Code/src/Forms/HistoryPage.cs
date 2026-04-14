@@ -166,7 +166,7 @@ namespace BettingSystem.Forms
             foreach (BetHistorySlip slip in betSlips)
             {
                 BetSlipPanel slipPanel = new BetSlipPanel(slip, _currentUser);
-                slipPanel.Margin = new Padding(0, 15, 0, 0);
+                slipPanel.Margin = new Padding(0, 15, 0, 15);
                 slipPanel.ClaimClicked += SlipPanel_ClaimClicked;
                 slipPanel.Click += SlipPanel_Click;
                 slipPanel.Tag = slip;
