@@ -22,6 +22,7 @@ namespace BettingSystem.Forms
         public ChangePasswordPopup(AppUser currentUser)
         {
             InitializeComponent();
+            confirmChangeBtn.Enabled = true;
             confirmChangeBtn.Click += confirmChangeBtn_Click;
             cancelBtn.Click += (s, e) => this.Close();
             _currentUser = currentUser;
@@ -53,6 +54,8 @@ namespace BettingSystem.Forms
 
         private async void confirmChangeBtn_Click(object? sender, EventArgs e)
         {
+            confirmChangeBtn.Enabled = false;
+
             string currentPassword = currentPasswordTextbox.Text;
             string newPassword = newPasswordTextbox.Text;
 
@@ -60,6 +63,7 @@ namespace BettingSystem.Forms
             if (string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
             {
                 ShowMessage("Please fill in all fields.", newPasswordTextbox);
+                confirmChangeBtn.Enabled = true;
                 return;
             }
 
@@ -67,13 +71,11 @@ namespace BettingSystem.Forms
             if (!_validator.CheckPasswordValidity(newPassword))
             {
                 ShowMessage("New password is in incorrect format.", newPasswordTextbox);
+                confirmChangeBtn.Enabled = true;
                 return;
             }
 
-            confirmChangeBtn.Enabled = false;
-
             var (success, message) = await _dbManager.ChangePasswordAsync(currentPassword, newPassword, _currentUser.UserID);
-            confirmChangeBtn.Enabled = true;
 
             if (success)
             {
@@ -85,6 +87,7 @@ namespace BettingSystem.Forms
             else
             {
                 ShowMessage(message, currentPasswordTextbox);
+                confirmChangeBtn.Enabled = true;
             }
         }
     }
