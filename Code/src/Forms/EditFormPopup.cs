@@ -105,6 +105,7 @@ namespace BettingSystem.Forms
                 _currentUser.Email = email;
 
                 new Notification(message, NotificationType.Success, this);
+                await Task.Delay(1500); 
                 DialogResult = DialogResult.OK;
                 this.Close();
             }
