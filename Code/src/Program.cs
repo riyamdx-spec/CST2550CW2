@@ -11,7 +11,6 @@ namespace BettingSystem
         static void Main()
 
         {
-            Application.SetHighDpiMode(HighDpiMode.DpiUnaware);
             ApplicationConfiguration.Initialize();
 
             try
