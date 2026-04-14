@@ -16,6 +16,7 @@ namespace BettingSystem.Forms
             _currentUser = loggedInUser;
 
             InitializeComponent();
+            confirmEditBtn.Enabled = true;
             ClearForm();
             displayInitialDetails();
         }
@@ -86,6 +87,7 @@ namespace BettingSystem.Forms
         //confirm changes and update database
         private async void confirmEditBtn_Click(object sender, EventArgs e)
         {
+            confirmEditBtn.Enabled = false;
             ClearForm();
 
             string firstName = fNameTextbox.Text.Trim();
@@ -94,8 +96,11 @@ namespace BettingSystem.Forms
 
             //validate fields
             if (!ValidateEntries(firstName, lastName, email))
+            {
+                confirmEditBtn.Enabled = true;
                 return;
-            
+            }
+                
             (bool valid, string message) = await _dbManager.UpdateUserDetailsAsync(_currentUser.UserID, firstName, lastName, email);
             if (valid)
             {
@@ -112,6 +117,7 @@ namespace BettingSystem.Forms
             else
             {
                 DisplayErrorMessage(emailErrorMsg, message);
+                confirmEditBtn.Enabled = true;
             }
         }
 

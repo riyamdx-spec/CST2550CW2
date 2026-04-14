@@ -257,7 +257,7 @@ namespace BettingSystem.Forms
             editBtn.Anchor = AnchorStyles.None;
             editBtn.Cursor = Cursors.Hand;
             editBtn.Image = Resources.editBtn;
-            editBtn.Location = new Point(8, 287);
+            editBtn.Location = new Point(8, 265);
             editBtn.Name = "editBtn";
             editBtn.Size = new Size(42, 40);
             editBtn.SizeMode = PictureBoxSizeMode.Zoom;

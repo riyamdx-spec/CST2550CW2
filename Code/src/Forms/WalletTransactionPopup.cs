@@ -19,6 +19,8 @@ namespace BettingSystem.Forms
 
             InitializeComponent();
 
+            confirmTransactionBtn.Enabled = true;
+
             LoadDetails();
         }
 
@@ -124,6 +126,8 @@ namespace BettingSystem.Forms
             decimal amountEntered = Math.Round(decimal.Parse(amount), 2);
             bool valid;
             string message;
+
+            confirmTransactionBtn.Enabled = false;
 
             // do transaction
             if (_walletAction == "Deposit") // to deposit money
