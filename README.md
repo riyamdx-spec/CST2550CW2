@@ -22,14 +22,14 @@
     - [User Flow](#user-flow)
     - [Admin Flow](#admin-flow)
 - [Testing](#testing)
-    - [Odds Generation](#odds-generation)
+    - [Run Tests code](#run-tests-code)
+- [Odds Generation](#odds-generation)
 - [Simulation System](#simulation-system)
     - [Database Updates](#database-updates)
     - [Admin Behavior](#admin-behavior)
     - [User Behavior](#user-behavior)
 - [Data Analyst Agent](#data-analyst-agent)
 - [References](#references)
-    - [Odds Generation References](#odds-generation-references)
 
 
 ## Project Overview
@@ -42,9 +42,9 @@ In addition, an admin interface is provided for managing users, matches and acce
 ## Features
 ### System Features
 - Simulates football matches using a periodic timer that updates the database every minute
-- Generate odds based on team and player ratings
-- Randomly generate results for matches added by Admin
-- Generate odds for matches added by Admin
+- Generates odds based on team and player ratings
+- Randomly generates results for matches added by Admin
+- Generates odds for matches added by Admin
 - Uses an AI Agent to generate a financial report based on provided financial data
 
 ### User Features
@@ -76,16 +76,18 @@ In addition, an admin interface is provided for managing users, matches and acce
 ```text
 ./
 ├── Code/
+├── Daily Standups/
 ├── Project Management/
-├── VideoDemo/
+├── BettingSystemDemo.mp4
 ├── Project Report/
 └── README.md
 ```
 
 - Code: Contains the aplication source code
+- Daily Standups: Contains all meeting minutes
 - Project Management: Includes project management report, project requirement documentation, Gantt Chart, and activity diagrams
-- VideoDemo: Contains an MP4 video demonstration of the software
-- Project Report: Contains the project report PDF, algorithm analysis documentation and brainstorm documentation
+- BettingSystemDemo.mp4: MP4 video demonstration of the software
+- Project Report: Contains the main project report PDF, algorithm analysis documentation, brainstorm documentation and detailed test cases
 
 **Code Folder:**
 ```text
@@ -127,7 +129,7 @@ Code/
 - `PopulateTablesSQL.txt`: Text file with the SQL script to bulk insert base data into the database
 - `testData.txt`: Text file with the SQL script to insert sample user and transaction data for testing
 
-**Test Folder (`Code/Tests/BettingSystemsTests.Tests`) structure:**
+**Test Folder (`Code/Tests/BettingSystemsTests.Tests` on the **test** branch):**
 - Data Structures: Tests for custom data structures
 - Data: Integration tests for database operations
 - Models: Unit tests for core domain models
@@ -145,16 +147,19 @@ Code/
 
 ## Getting the Project
 1. Clone the repository from GitHub:
-```
+```bash
 git clone https://github.com/riyamdx-spec/CST2550CW2.git
 ```
-2. Ensure you are on the **main branch**.
+2. Ensure you are on the **main branch** to get the final deployed version of the app:
+```bash
+git checkout main
+```
 3. Open the solution `BettingSystem.slnx` in **Visual Studio 2026**
 
 ## How to Run the Project
 
 ### Database Setup
-1. Move or Copy `Code/db/DataSource` folder to your **local drive** (`C:\`)
+1. Copy `Code/db/DataSource` folder to your **local drive** (`C:\`)
 2. Open **SQL Server Management Studio (SSMS)**
 3. Execute `Code/db/CreateDatabaseSQL.txt` in SSMS **only once** to create the database schema
 4. Execute `Code/db/PopulateTablesSQL.txt` in SSMS **only once** to insert initial data
@@ -169,11 +174,11 @@ git clone https://github.com/riyamdx-spec/CST2550CW2.git
 2. Restore NuGet packages using `dotnet restore` via terminal or go to **Tools -> NuGet Package Manager -> Restore NuGet Packages**
 3. Build the solution (go to **Build -> Build Solution** or use `Ctrl + Shift + B`)
 4. Run the application
-5. The application will generate odds on startup
+5. The application will generate odds and populate `Odd` table on startup
 
 ### Sample Data (Optional)
 To insert sample users and betting data:
-1. Ensure the application has been run at least once so that the `Odd` table is populated
+1. Ensure the application has been launched at least once so that the `Odd` table is automatically populated
 2. You can verify this by running the following in SSMS:
 
 ```sql
@@ -183,7 +188,7 @@ GO
 SELECT COUNT(*) AS OddCount FROM Odd;
 ```
 
-3. Proceed if the OddCount is 4041
+3. Proceed if the **OddCount** is **4041**
 4. Execute `Code/db/testData.txt` in SSMS **only once** to insert sample data
 
 ## Troubleshooting
@@ -266,7 +271,7 @@ If the **Generate Report** button produces no output or throws an error, this is
 ***Note: For simulation purposes, each match lasts 5 minutes***
 
 ## Testing
-Test cases covered the following:
+Test cases cover the following:
 
 1. Validates custom data structures
 2. Verifies core business-model logic
@@ -274,18 +279,21 @@ Test cases covered the following:
 4. Tests service-layer behaviour in memory
 5. Integration-tests the database access layer
 
-#### Run Tests code
-
-1. Open `Code/src/BettingSystem.slnx` in Visual Studio.
-2. Wait for package restore to finish (or go to **Tools -> NuGet Package Manager -> Restore NuGet Packages**).
-3. Build the solution: **Build -> Build Solution** (`Ctrl + Shift + B`).
-4. Open the test window: **Test -> Test Explorer**.
-5. In Test Explorer, click **Run All Tests**.
-6. Review results:
+### Run Tests code
+1. Switch to the **tester** branch to find the testing code:
+```bash
+git checkout tester
+```
+2. Open `Code/src/BettingSystem.slnx` in Visual Studio.
+3. Wait for package restore to finish (or go to **Tools -> NuGet Package Manager -> Restore NuGet Packages**).
+4. Build the solution: **Build -> Build Solution** (`Ctrl + Shift + B`).
+5. Open the test window: **Test -> Test Explorer**.
+6. In Test Explorer, click **Run All Tests**.
+7. Review results:
    - Green check = passed
    - Red X = failed (double-click to view failure details and stack trace)
 
-### Odds Generation
+## Odds Generation
 
 The odds logic is implemented in `Code/src/Services/OddsGenerator.cs` and applies a hybrid approach:
 
@@ -300,8 +308,8 @@ The odds logic is implemented in `Code/src/Services/OddsGenerator.cs` and applie
 
 ## Simulation System
 
-A periodic timer runs every minute to simulate live match updates by modifying the database automatically.
-Code to handle the simulation system is found in `Simulator.cs`
+A periodic timer runs every minute to simulate live match updates by automatically modifying the database .
+The simulation system logic is implemented in `Code/src/Service/Simulator.cs`, while database updates operation are handled in `Code/src/Data/DatabaseManager.cs`
 
 ### Database Updates
 1. Update match status to `Completed` when the match duration has elapsed (5 minutes from current time)
@@ -334,20 +342,17 @@ Code to handle the simulation system is found in `Simulator.cs`
 6. Agent returns the report to be displayed on the interface
 
 ## References
-Password hashing:
-- Gollhardt, C. (2019) How to hash a password. Available at: https://stackoverflow.com/a/32191537 (Accessed: 7 February 2026). 
+Password Hashing:
+- Gollhardt, C. (2019) *How to hash a password*. Available at: https://stackoverflow.com/a/32191537 (Accessed: 7 February 2026). 
 
 Periodic Timer:
-- Kanavos, P. (2022) How to use PeriodicTimer inside of constructor?. Available at: https://stackoverflow.com/questions/70688080/how-to-use-periodictimer-inside-of-constructor (Accessed: 22 March 2026). 
-
+- Kanavos, P. (2022) *How to use PeriodicTimer inside of constructor?*. Available at: https://stackoverflow.com/questions/70688080/how-to-use-periodictimer-inside-of-constructor (Accessed: 22 March 2026). 
 Custom Data Structures:
-- Davis, M. (2021) Building a Linked List System From Scratch in C#, Part 1. Available at: https://medium.com/geekculture/building-a-linked-list-system-from-scratch-in-c-part-1-51aa6c68ea19 (Accessed: 26 March 2026). 
+- Davis, M. (2021) *Building a Linked List System From Scratch in C#, Part 1*. Available at: https://medium.com/geekculture/building-a-linked-list-system-from-scratch-in-c-part-1-51aa6c68ea19 (Accessed: 26 March 2026). 
+- Microsoft. (2026) *Indexers*. Available at: https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/indexers/ (Accessed: 26 March 2026). 
+- Nemes, A. (2020) *Roll your own custom list with C# .NET*. Available at: https://dotnetcodr.com/2020/10/13/roll-your-own-custom-list-with-c-net/ (Accessed: 25 March).
 
-- Microsoft. (2026) Indexers. Available at: https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/indexers/ (Accessed: 26 March 2026). 
-
-- Nemes, A. (2020) Roll your own custom list with C# .NET. Available at: https://dotnetcodr.com/2020/10/13/roll-your-own-custom-list-with-c-net/ (Accessed: 25 March).
-
-### Odds Generation References
+Odds Generation:
 - Maher, M. J. (1982) *Modelling association football scores*. Statistica Neerlandica, 36(3), 109-118.
 - Dixon, M. J. and Coles, S. G. (1997) *Modelling association football scores and inefficiencies in the football betting market*. Journal of the Royal Statistical Society: Series C (Applied Statistics), 46(2), 265-280.
 - Smarkets (n.d.) *Overround explained*. Available at: https://help.smarkets.com/hc/en-gb/articles/214554985-How-to-calculate-betting-margins (Accessed: 13 April 2026).
