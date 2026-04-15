@@ -191,6 +191,9 @@ SELECT COUNT(*) AS OddCount FROM Odd;
 3. Proceed if the **OddCount** is **4041**
 4. Execute `Code/db/testData.txt` in SSMS **only once** to insert sample data
 
+> **Note:** The sample betting results are not representative of actual outcomes.  
+> They were intentionally generated for testing purposes to demonstrate the functionality of the betting history page, including filtering by **Won**, **Lost**, and **Pending** statuses.
+
 ## Troubleshooting
 
 ### Database Setup Errors
@@ -334,12 +337,13 @@ The simulation system logic is implemented in `Code/src/Service/Simulator.cs`, w
 
 ## Data Analyst Agent
 
-1. Code can be found in AdminFinancialManager.cs (`GenerateFinancialReport` method)
-2. System reads Google Gemini API Key
-3. Builds a prompt based on financial data fetched from database (SystemTransaction and BetSlip tables)
-4. Sends request to AI Agent
-5. AI Agent analyses the data and executes a financial summary
-6. Agent returns the report to be displayed on the interface
+1. Implementation located in `AdminFinancialManager.cs` (`GenerateFinancialReport` method).
+2. The system retrieves the Google Gemini API key from the configuration file.
+3. Financial data is fetched from the `SystemTransaction` and `BetSlip` tables.
+4. A structured prompt is constructed using the retrieved data.
+5. The prompt is sent to the AI agent via the Gemini API.
+6. The AI agent analyses the data and generates a financial summary report.
+7. The generated report is displayed on the interface for the admin to review.
 
 ## References
 Password Hashing:
