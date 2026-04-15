@@ -78,16 +78,16 @@ In addition, an admin interface is provided for managing users, matches and acce
 ├── Code/
 ├── Daily Standups/
 ├── Project Management/
-├── BettingSystemDemo.mp4
 ├── Project Report/
+├── BettingSystemDemoFinal.mp4
 └── README.md
 ```
 
 - Code: Contains the aplication source code
 - Daily Standups: Contains all meeting minutes
 - Project Management: Includes project management report, project requirements documentation, Gantt Chart, and activity diagrams
-- BettingSystemDemo.mp4: MP4 video demonstration of the software
-- Project Report: Contains the main project report PDF, algorithm analysis documentation, brainstorm documentation and detailed test cases
+- Project Report: Contains the main project report (*CST2550_project_report.pdf*), data structures analysis documentation, brainstorm documentation and detailed test cases
+- BettingSystemDemoFinal.mp4: MP4 video demonstration of the software
 
 **Code Folder:**
 ```text
