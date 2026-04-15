@@ -22,12 +22,14 @@
     - [User Flow](#user-flow)
     - [Admin Flow](#admin-flow)
 - [Testing](#testing)
+    - [Odds Generation](#odds-generation)
 - [Simulation System](#simulation-system)
     - [Database Updates](#database-updates)
     - [Admin Behavior](#admin-behavior)
     - [User Behavior](#user-behavior)
 - [Data Analyst Agent](#data-analyst-agent)
 - [References](#references)
+    - [Odds Generation References](#odds-generation-references)
 
 
 ## Project Overview
@@ -94,13 +96,21 @@ Code/
 │   ├── CreateDatabaseSQL.txt
 │   ├── PopulateTablesSQL.txt
 │   └── testData.txt
-└── src/
-    ├── Data/
-    ├── Data Structures/
-    ├── Forms/
-    ├── Models/
-    ├── Resources/
-    └── Services/
+├── src/
+│   ├── Data/
+│   ├── Data Structures/
+│   ├── Forms/
+│   ├── Models/
+│   ├── Resources/
+│   └── Services/
+└── Tests/
+    └── BettingSystemsTests.Tests/
+        ├── Data/
+        ├── Data Structures/
+        ├── Models/
+        ├── Services/
+        ├── MSTestSettings.cs
+        └── App.Config
 ```
 
 **Source Folder (src):**
@@ -117,12 +127,21 @@ Code/
 - `PopulateTablesSQL.txt`: Text file with the SQL script to bulk insert base data into the database
 - `testData.txt`: Text file with the SQL script to insert sample user and transaction data for testing
 
+**Test Folder (`Code/Tests/BettingSystemsTests.Tests`) structure:**
+- Data Structures: Tests for custom data structures
+- Data: Integration tests for database operations
+- Models: Unit tests for core domain models
+- Services: Unit tests for service-layer logic
+- MSTestSettings.cs: Shared MSTest setup/configuration helpers
+
 ## Technologies Used
 - **C# (.NET Windows Form)** - Application interface
 - **Microsoft SQL Server** - Database
 - **Microsoft.Data.SqlClient** - Database communication
 - **ScottPlot** - Financial graphs
 - **GoogleGenAI** - Financial report generation
+- **MSTest (v4)** - Unit and integration testing framework used in `Code/Tests/BettingSystemsTests.Tests`
+- **Visual Studio Test Explorer** - Test execution and result inspection
 
 ## Getting the Project
 1. Clone the repository from GitHub:
@@ -248,6 +267,7 @@ If the **Generate Report** button produces no output or throws an error, this is
 
 ## Testing
 Test cases covered the following:
+
 1. Validates custom data structures
 2. Verifies core business-model logic
 3. Checks all input-validation rules
@@ -264,6 +284,19 @@ Test cases covered the following:
 6. Review results:
    - Green check = passed
    - Red X = failed (double-click to view failure details and stack trace)
+
+### Odds Generation
+
+The odds logic is implemented in `Code/src/Services/OddsGenerator.cs` and applies a hybrid approach:
+
+1. **Poisson probability model**
+   Used in `GenerateCorrectScoreOdd` (via `PoissonProbability`) to estimate exact scoreline likelihood from expected goals before converting that probability into bookmaker odds.
+
+2. **Overround margin model**
+   Applied in `ToOdds` using `STANDARD_MARGIN` and `HIGH_VARIANCE_MARGIN` so fair probabilities are converted to priced odds that include bookmaker margin.
+
+3. **Project heuristics (rule-based calibration)**
+   Used across methods such as `CalculateOutcomeOdds`, `BuildOverUnderOdds`, `BuildCornerOdds`, `BuildYellowCardOdds`, `BuildRedCardOdds`, and `BuildFirstGoalScorerOdds` through tuned thresholds and weighting rules for match, cards, corners, and scorer markets.
 
 ## Simulation System
 
@@ -313,3 +346,9 @@ Custom Data Structures:
 - Microsoft. (2026) Indexers. Available at: https://learn.microsoft.com/en-us/dotnet/csharp/programming-guide/indexers/ (Accessed: 26 March 2026). 
 
 - Nemes, A. (2020) Roll your own custom list with C# .NET. Available at: https://dotnetcodr.com/2020/10/13/roll-your-own-custom-list-with-c-net/ (Accessed: 25 March).
+
+### Odds Generation References
+- Maher, M. J. (1982) *Modelling association football scores*. Statistica Neerlandica, 36(3), 109-118.
+- Dixon, M. J. and Coles, S. G. (1997) *Modelling association football scores and inefficiencies in the football betting market*. Journal of the Royal Statistical Society: Series C (Applied Statistics), 46(2), 265-280.
+- Smarkets (n.d.) *Overround explained*. Available at: https://help.smarkets.com/hc/en-gb/articles/214554985-How-to-calculate-betting-margins (Accessed: 13 April 2026).
+- Wikipedia (n.d.) *Poisson distribution*. Available at: https://en.wikipedia.org/wiki/Poisson_distribution (Accessed: 13 April 2026).
