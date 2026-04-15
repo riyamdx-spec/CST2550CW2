@@ -78,16 +78,16 @@ In addition, an admin interface is provided for managing users, matches and acce
 ├── Code/
 ├── Daily Standups/
 ├── Project Management/
-├── BettingSystemDemo.mp4
 ├── Project Report/
+├── BettingSystemDemoFinal.mp4
 └── README.md
 ```
 
 - Code: Contains the aplication source code
 - Daily Standups: Contains all meeting minutes
-- Project Management: Includes project management report, project requirement documentation, Gantt Chart, and activity diagrams
-- BettingSystemDemo.mp4: MP4 video demonstration of the software
-- Project Report: Contains the main project report PDF, algorithm analysis documentation, brainstorm documentation and detailed test cases
+- Project Management: Includes project management report, project requirements documentation, Gantt Chart, and activity diagrams
+- Project Report: Contains the main project report (*CST2550_project_report.pdf*), data structures analysis documentation, brainstorm documentation and detailed test cases
+- BettingSystemDemoFinal.mp4: MP4 video demonstration of the software
 
 **Code Folder:**
 ```text
@@ -116,8 +116,8 @@ Code/
 ```
 
 **Source Folder (src):**
+- Data: Contains a class for database interaction
 - Data Structures: Contains custom data structures used in the system 
-- Data: Contains class for database interaction
 - Forms: Contains Windows Forms UI code & Custom controls (CustomControls folder) 
 - Models: Contains data models
 - Resources: Store images and assets used by winforms controls
@@ -127,7 +127,7 @@ Code/
 - DataSource: Contains CSV files used for bulk insertion into the database (leagues, teams, league-team, players, games, and game results), as well as `insert_team_ratings.xlsx` used to populate player rating data
 - `CreateDatabaseSQL.txt`: Text file with the SQL script to create the database schema
 - `PopulateTablesSQL.txt`: Text file with the SQL script to bulk insert base data into the database
-- `testData.txt`: Text file with the SQL script to insert sample user and transaction data for testing
+- `testData.txt`: Text file with the SQL script to insert sample user and transaction data
 
 **Test Folder (`Code/Tests/BettingSystemsTests.Tests` on the **test** branch):**
 - Data Structures: Tests for custom data structures
@@ -191,6 +191,9 @@ SELECT COUNT(*) AS OddCount FROM Odd;
 3. Proceed if the **OddCount** is **4041**
 4. Execute `Code/db/testData.txt` in SSMS **only once** to insert sample data
 
+> **Note:** The sample betting results are not representative of actual outcomes.  
+> They were intentionally generated for testing purposes to demonstrate the functionality of the betting history page, including filtering by **Won**, **Lost**, and **Pending** statuses.
+
 ## Troubleshooting
 
 ### Database Setup Errors
@@ -240,7 +243,7 @@ If the **Generate Report** button produces no output or throws an error, this is
 ## How to Use the Program
 
 ### User Flow
-1. Register a new account or log in with existing credentials (Test data has been provided - current password for all users: `Hello123*`)
+1. Register a new account or log in with existing credentials (Sample data has been provided - current password for all users: `Hello123*`)
 2. Browse upcoming matches on the Main Page
 3. Select matches and place bets using the right panel, which add selections to your bet slip
 4. Deposit funds into your wallet via the `Deposit` button in navigation bar or Profile Page
@@ -249,7 +252,7 @@ If the **Generate Report** button produces no output or throws an error, this is
 6. Enter a stake amount (maximum $1000) and click on `Place Bet`
 ---
 7. Access the dropdown in the nav bar to view Profile page or log out 
-8. If logging out or exiting the application, confirm the action as the unpaid bet slip will be lost
+8. When logging out or exiting the application, confirm the action as the unpaid bet slip will be lost
 9. On the Profile Page, edit your details or change password
 10. Deposit or withdraw funds within Profile page 
 ---
@@ -312,7 +315,7 @@ A periodic timer runs every minute to simulate live match updates by automatical
 The simulation system logic is implemented in `Code/src/Service/Simulator.cs`, while database updates operation are handled in `Code/src/Data/DatabaseManager.cs`
 
 ### Database Updates
-1. Update match status to `Completed` when the match duration has elapsed (5 minutes from current time)
+1. Update match status to `Completed` when the match duration has elapsed (5 minutes from match start time)
 2. Change match status to `Started` if current time reaches the match start time
 3. Update bet results of completed matches based on user selection and game results
 4. Update bet slips where all associated bets are completed
@@ -321,25 +324,26 @@ The simulation system logic is implemented in `Code/src/Service/Simulator.cs`, w
 ### Admin Behavior
 - Match status are updated in memory
 - Match status updates are reflected on the admin interface (Match page)
-- Admin can then view results of those matches after update
+- Admin can then view results of those completed matches after update
 ---
 
 ### User Behavior
 - Started and completed matches are removed from memory
 - When returning to main page, only scheduled matches will be displayed 
 - Remove started and completed matches from bet slip and trigger an event to update UI in real-time
-- Keep count of bets removed from bet slip to display a notification on bet slip page
-- Bet history and associated bet are updated in memory
-- An event is triggered to to update bet slips status displayed
+- Keep count of bets removed from bet slip to display a notification of how many bets were removed on bet slip page
+- Bet history and associated bets are updated in memory
+- An event is triggered to update bet slips status displayed and allow winning slips to be claimed
 
 ## Data Analyst Agent
 
-1. Code can be found in AdminFinancialManager.cs (`GenerateFinancialReport` method)
-2. System reads Google Gemini API Key
-3. Builds a prompt based on financial data fetched from database (SystemTransaction and BetSlip tables)
-4. Sends request to AI Agent
-5. AI Agent analyses the data and executes a financial summary
-6. Agent returns the report to be displayed on the interface
+1. Implementation located in `AdminFinancialManager.cs` (`GenerateFinancialReport` method).
+2. The system retrieves the Google Gemini API key from the configuration file.
+3. Financial data is fetched from the `SystemTransaction` and `BetSlip` tables.
+4. A structured prompt is constructed using the retrieved data.
+5. The prompt is sent to the AI agent via the Gemini API.
+6. The AI agent analyses the data and generates a financial summary report.
+7. The generated report is displayed on the interface for the admin to review.
 
 ## References
 Password Hashing:
